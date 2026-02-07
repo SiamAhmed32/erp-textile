@@ -16,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`bg-primaryBg text-primaryText antialiased`}>
-        <ReduxProvider>{children}</ReduxProvider>
+        <ReduxProvider>
+          {children}
+        </ReduxProvider>
       </body>
     </html>
   );

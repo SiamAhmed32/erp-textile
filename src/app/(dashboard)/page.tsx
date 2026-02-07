@@ -1,5 +1,4 @@
 import React from "react";
-import Layout from "@/components/Layout/Layout";
 import {
   PrimaryHeading,
   PrimarySubHeading,
@@ -12,7 +11,7 @@ import {
 
 const Home = () => {
   return (
-    <Layout>
+    <>
       <Container className="py-20">
         <Flex className="flex-col items-center text-center max-w-4xl mx-auto">
           <PrimaryHeading className="mb-6">
@@ -64,7 +63,7 @@ const Home = () => {
       </Container>
 
       <SectionGap />
-    </Layout>
+    </>
   );
 };
 
