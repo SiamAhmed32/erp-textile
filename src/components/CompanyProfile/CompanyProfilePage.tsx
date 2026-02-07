@@ -118,10 +118,6 @@ export function CompanyProfilePage() {
         onSave={handleSave}
         onCancel={handleCancel}
       />
-      <PrimaryText className="mt-2 max-w-3xl">
-        Manage the company details used across invoices, banking, and export documents. All changes are
-        local-only until backend integration is ready.
-      </PrimaryText>
 
       <SectionGap />
 
