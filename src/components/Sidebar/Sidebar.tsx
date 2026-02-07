@@ -4,6 +4,7 @@ import {
     FileText,
     Home,
     Settings2,
+    Building2,
     Tag,
     Package,
     Box,
@@ -32,6 +33,7 @@ import {
     CollapsibleContent,
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import Link from "next/link"
 
 // Navigation data
 const data = {
@@ -41,6 +43,11 @@ const data = {
             url: "/",
             icon: Home,
             isActive: true,
+        },
+        {
+            title: "Company Profile",
+            url: "/company-profile",
+            icon: Building2,
         },
         {
             title: "Order Management",
@@ -95,7 +102,7 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <a href="/">
+                            <Link href="/">
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                                     <Package className="size-4" />
                                 </div>
@@ -103,7 +110,7 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                                     <span className="truncate font-semibold">ERP Textile</span>
                                     <span className="truncate text-xs">Management</span>
                                 </div>
-                            </a>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -134,10 +141,10 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                                                     {item.items.map((subItem) => (
                                                         <SidebarMenuSubItem key={subItem.title}>
                                                             <SidebarMenuSubButton asChild>
-                                                                <a href={subItem.url}>
+                                                                <Link href={subItem.url}>
                                                                     {subItem.icon && <subItem.icon className="size-4" />}
                                                                     <span>{subItem.title}</span>
-                                                                </a>
+                                                                </Link>
                                                             </SidebarMenuSubButton>
                                                         </SidebarMenuSubItem>
                                                     ))}
@@ -146,10 +153,10 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                                         </>
                                     ) : (
                                         <SidebarMenuButton tooltip={item.title} asChild>
-                                            <a href={item.url}>
+                                            <Link href={item.url}>
                                                 {item.icon && <item.icon />}
                                                 <span>{item.title}</span>
-                                            </a>
+                                            </Link>
                                         </SidebarMenuButton>
                                     )}
                                 </SidebarMenuItem>
@@ -162,10 +169,10 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton asChild>
-                            <a href="/settings">
+                            <Link href="/settings">
                                 <Settings2 />
                                 <span>Settings</span>
-                            </a>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

@@ -7,6 +7,8 @@ type FormTextareaProps = {
   placeholder: string;
   rows?: number;
   className?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
 };
 
 const FormTextarea = ({
@@ -15,6 +17,8 @@ const FormTextarea = ({
   placeholder,
   rows = 4,
   className = '',
+  disabled = false,
+  readOnly = false,
 }: FormTextareaProps) => {
   return (
     <textarea
@@ -22,6 +26,8 @@ const FormTextarea = ({
       onChange={onChange}
       placeholder={placeholder}
       rows={rows}
+      disabled={disabled}
+      readOnly={readOnly}
       className={`border border-borderBg rounded-none focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button px-4 py-3 w-full text-foreground ${className}`}
     />
   );
