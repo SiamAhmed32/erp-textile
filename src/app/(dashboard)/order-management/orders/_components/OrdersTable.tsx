@@ -1,5 +1,7 @@
+
+"use client";
 import CustomTable from "@/components/reusables/CustomTable";
-import React from "react";
+import React, { useState } from "react";
 
 type Order = {
     id: string;
@@ -11,6 +13,8 @@ type Order = {
 };
 
 const OrdersTable = () => {
+    const [currentPage, setCurrentPage] = useState(1);
+
     // Sample data
     const orders: Order[] = [
         {
@@ -83,7 +87,13 @@ const OrdersTable = () => {
                 title="Orders"
                 description="Manage and track all your orders"
                 data={orders}
-                columns={columns} />
+                columns={columns}
+                pagination={{
+                    currentPage,
+                    totalPages: 2, // Example total pages
+                    onPageChange: (page) => setCurrentPage(page),
+                }}
+            />
         </div>
     );
 };
