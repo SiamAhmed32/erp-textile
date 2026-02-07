@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Import necessary constants and functions from libraries
 
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
