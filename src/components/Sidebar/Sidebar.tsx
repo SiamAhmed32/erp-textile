@@ -1,15 +1,15 @@
 import * as React from "react"
 import {
-    AudioWaveform,
-    BookOpen,
-    Bot,
-    Command,
-    Frame,
-    GalleryVerticalEnd,
-    Map,
-    PieChart,
+    ChevronRight,
+    FileText,
+    Home,
     Settings2,
-    SquareTerminal,
+    Tag,
+    Package,
+    Box,
+    ShoppingCart,
+    Truck,
+    ClipboardList,
 } from "lucide-react"
 
 import {
@@ -17,140 +17,74 @@ import {
     SidebarContent,
     SidebarFooter,
     SidebarGroup,
+    SidebarGroupLabel,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
     SidebarRail,
 } from "@/components/ui/sidebar"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
-// This is sample data.
+// Navigation data
 const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
-    },
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise",
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup",
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free",
-        },
-    ],
     navMain: [
         {
-            title: "Playground",
-            url: "#",
-            icon: SquareTerminal,
+            title: "Dashboard",
+            url: "/",
+            icon: Home,
             isActive: true,
+        },
+        {
+            title: "Order Management",
+            icon: ShoppingCart,
             items: [
                 {
-                    title: "History",
-                    url: "#",
+                    title: "Order List",
+                    url: "/order-management/orders",
+                    icon: ClipboardList,
                 },
                 {
-                    title: "Starred",
-                    url: "#",
-                },
-                {
-                    title: "Settings",
-                    url: "#",
+                    title: "Order Delivered",
+                    url: "/order-management/delivered",
+                    icon: Truck,
                 },
             ],
         },
         {
-            title: "Models",
-            url: "#",
-            icon: Bot,
+            title: "Proforma Invoice",
+            icon: FileText,
             items: [
                 {
-                    title: "Genesis",
-                    url: "#",
+                    title: "All Invoices",
+                    url: "/proforma-invoice/all",
+                    icon: FileText,
                 },
                 {
-                    title: "Explorer",
-                    url: "#",
+                    title: "Create - Labels",
+                    url: "/proforma-invoice/create-labels",
+                    icon: Tag,
                 },
                 {
-                    title: "Quantum",
-                    url: "#",
+                    title: "Create - Fabric",
+                    url: "/proforma-invoice/create-fabric",
+                    icon: Package,
+                },
+                {
+                    title: "Create - Cartons",
+                    url: "/proforma-invoice/create-cartons",
+                    icon: Box,
                 },
             ],
         },
-        {
-            title: "Documentation",
-            url: "#",
-            icon: BookOpen,
-            items: [
-                {
-                    title: "Introduction",
-                    url: "#",
-                },
-                {
-                    title: "Get Started",
-                    url: "#",
-                },
-                {
-                    title: "Tutorials",
-                    url: "#",
-                },
-                {
-                    title: "Changelog",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Settings",
-            url: "#",
-            icon: Settings2,
-            items: [
-                {
-                    title: "General",
-                    url: "#",
-                },
-                {
-                    title: "Team",
-                    url: "#",
-                },
-                {
-                    title: "Billing",
-                    url: "#",
-                },
-                {
-                    title: "Limits",
-                    url: "#",
-                },
-            ],
-        },
-    ],
-    projects: [
-        {
-            name: "Design Engineering",
-            url: "#",
-            icon: Frame,
-        },
-        {
-            name: "Sales & Marketing",
-            url: "#",
-            icon: PieChart,
-        },
-        {
-            name: "Travel",
-            url: "#",
-            icon: Map,
-        },
+
     ],
 }
 
@@ -161,13 +95,13 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <a href="#">
+                            <a href="/">
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <GalleryVerticalEnd className="size-4" />
+                                    <Package className="size-4" />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">Acme Inc</span>
-                                    <span className="truncate text-xs">Enterprise</span>
+                                    <span className="truncate font-semibold">ERP Textile</span>
+                                    <span className="truncate text-xs">Management</span>
                                 </div>
                             </a>
                         </SidebarMenuButton>
@@ -176,14 +110,50 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
+                    <SidebarGroupLabel>Navigation</SidebarGroupLabel>
                     <SidebarMenu>
                         {data.navMain.map((item) => (
-                            <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton tooltip={item.title}>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            <Collapsible
+                                key={item.title}
+                                asChild
+                                defaultOpen={item.isActive}
+                                className="group/collapsible"
+                            >
+                                <SidebarMenuItem>
+                                    {item.items ? (
+                                        <>
+                                            <CollapsibleTrigger asChild>
+                                                <SidebarMenuButton tooltip={item.title}>
+                                                    {item.icon && <item.icon />}
+                                                    <span>{item.title}</span>
+                                                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                                </SidebarMenuButton>
+                                            </CollapsibleTrigger>
+                                            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                                                <SidebarMenuSub>
+                                                    {item.items.map((subItem) => (
+                                                        <SidebarMenuSubItem key={subItem.title}>
+                                                            <SidebarMenuSubButton asChild>
+                                                                <a href={subItem.url}>
+                                                                    {subItem.icon && <subItem.icon className="size-4" />}
+                                                                    <span>{subItem.title}</span>
+                                                                </a>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            </CollapsibleContent>
+                                        </>
+                                    ) : (
+                                        <SidebarMenuButton tooltip={item.title} asChild>
+                                            <a href={item.url}>
+                                                {item.icon && <item.icon />}
+                                                <span>{item.title}</span>
+                                            </a>
+                                        </SidebarMenuButton>
+                                    )}
+                                </SidebarMenuItem>
+                            </Collapsible>
                         ))}
                     </SidebarMenu>
                 </SidebarGroup>
@@ -191,9 +161,11 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton>
-                            <Settings2 />
-                            <span>Settings</span>
+                        <SidebarMenuButton asChild>
+                            <a href="/settings">
+                                <Settings2 />
+                                <span>Settings</span>
+                            </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
