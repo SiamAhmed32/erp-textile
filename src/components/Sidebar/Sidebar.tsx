@@ -1,3 +1,4 @@
+"use client"
 import * as React from "react"
 import {
     ChevronRight,
@@ -137,13 +138,13 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                                                 </SidebarMenuButton>
                                             </CollapsibleTrigger>
                                             <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
-                                                <SidebarMenuSub>
+                                                <SidebarMenuSub className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
                                                     {item.items.map((subItem) => (
                                                         <SidebarMenuSubItem key={subItem.title}>
-                                                            <SidebarMenuSubButton asChild>
+                                                            <SidebarMenuSubButton asChild className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:p-0">
                                                                 <Link href={subItem.url}>
                                                                     {subItem.icon && <subItem.icon className="size-4" />}
-                                                                    <span>{subItem.title}</span>
+                                                                    <span className="group-data-[collapsible=icon]:hidden">{subItem.title}</span>
                                                                 </Link>
                                                             </SidebarMenuSubButton>
                                                         </SidebarMenuSubItem>

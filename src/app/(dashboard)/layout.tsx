@@ -22,11 +22,10 @@ export default function DashboardLayout({
                         <Navbar />
                     </div>
                 </header>
-                <Box className='min-h-screen flex-1 flex flex-col'>
+                <Box className=' flex-1 flex flex-col'>
                     <div className="flex-1 p-4">
                         {children}
                     </div>
-                    <Footer />
                 </Box>
             </SidebarInset>
         </SidebarProvider>
