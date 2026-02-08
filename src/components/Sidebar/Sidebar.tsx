@@ -2,14 +2,15 @@
 import * as React from "react"
 import {
     ChevronRight,
-    FileText,
     Home,
     Settings2,
     Building2,
+    Users,
     Tag,
     Package,
     Box,
     ShoppingCart,
+    FileText,
     Truck,
     ClipboardList,
 } from "lucide-react"
@@ -49,6 +50,16 @@ const data = {
             title: "Company Profile",
             url: "/company-profile",
             icon: Building2,
+        },
+        {
+            title: "Buyers",
+            url: "/buyers",
+            icon: Users,
+        },
+        {
+            title: "Invoice Terms",
+            url: "/invoice-terms",
+            icon: FileText,
         },
         {
             title: "Order Management",
