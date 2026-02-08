@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-const DEFAULT_BASE_URL = "http://192.168.0.114:3030/api"
+const DEFAULT_BASE_URL = process.env.API_BASE_URL
 const DEFAULT_TOKEN = process.env.API_BEARER_TOKEN || ""
 
 const getBaseUrl = () =>
