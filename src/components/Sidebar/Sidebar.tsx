@@ -131,7 +131,21 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                                     {item.items ? (
                                         <>
                                             <CollapsibleTrigger asChild>
-                                                <SidebarMenuButton tooltip={item.title}>
+                                                <SidebarMenuButton
+                                                    tooltip={{
+                                                        children: (
+                                                            <div className="flex flex-col gap-2 p-1">
+                                                                <div className="font-semibold border-b pb-1 mb-1">{item.title}</div>
+                                                                {item.items.map((subItem) => (
+                                                                    <div key={subItem.title} className="flex items-center gap-2 text-xs">
+                                                                        {subItem.icon && <subItem.icon className="size-3" />}
+                                                                        <span>{subItem.title}</span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ),
+                                                    }}
+                                                >
                                                     {item.icon && <item.icon />}
                                                     <span>{item.title}</span>
                                                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
