@@ -2,9 +2,10 @@ import React from "react";
 import CompanyProfileDetails from "../_components/CompanyProfileDetails";
 
 type Props = {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 };
 
-export default function Page({ params }: Props) {
-    return <CompanyProfileDetails id={params.id} />;
+export default async function Page({ params }: Props) {
+    const { id } = await params;
+    return <CompanyProfileDetails id={id} />;
 }

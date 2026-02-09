@@ -35,6 +35,8 @@ interface CustomTableProps<T> {
     className?: string;
     title?: string;
     description?: string;
+    onRowClick?: (row: T) => void;
+    rowClassName?: string;
     pagination?: PaginationProps;
     scrollAreaHeight?: string;
 }
@@ -45,6 +47,8 @@ function CustomTable<T extends Record<string, any>>({
     className,
     title,
     description,
+    onRowClick,
+    rowClassName,
     pagination,
     scrollAreaHeight = "h-[calc(100vh-250px)]",
 }: CustomTableProps<T>) {
@@ -129,10 +133,12 @@ function CustomTable<T extends Record<string, any>>({
 
     return (
         <div className={className}>
-            <div className="mb-6">
-                <h1 className="text-2xl font-bold">{title}</h1>
-                <p className="text-muted-foreground">{description}</p>
-            </div>
+            {(title || description) && (
+                <div className="mb-6">
+                    {title && <h1 className="text-2xl font-bold">{title}</h1>}
+                    {description && <p className="text-muted-foreground">{description}</p>}
+                </div>
+            )}
             <div className={`overflow-auto border rounded-md ${scrollAreaHeight}`}>
                 <Table>
                     <TableHeader className="sticky top-0 bg-secondary z-10">
@@ -156,7 +162,11 @@ function CustomTable<T extends Record<string, any>>({
                             </TableRow>
                         ) : (
                             data.map((row, rowIndex) => (
-                                <TableRow key={rowIndex}>
+                                <TableRow
+                                    key={rowIndex}
+                                    onClick={() => onRowClick?.(row)}
+                                    className={rowClassName}
+                                >
                                     {columns.map((column, colIndex) => (
                                         <TableCell key={colIndex} className={column.className}>
                                             {typeof column.accessor === "function"

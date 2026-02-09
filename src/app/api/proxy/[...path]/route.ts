@@ -17,7 +17,13 @@ const filterHeaders = (headers: Headers) => {
 }
 
 const proxyRequest = async (request: NextRequest, path: string[]) => {
-  const baseUrl = getBaseUrl().replace(/\/$/, "")
+  const baseUrl = (getBaseUrl() ?? "").replace(/\/$/, "")
+  if (!baseUrl) {
+    return new NextResponse(JSON.stringify({ error: "API base URL is not configured." }), {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    })
+  }
   const url = `${baseUrl}/${path.join("/")}${request.nextUrl.search}`
   const headers = filterHeaders(request.headers)
   if (DEFAULT_TOKEN && !headers.get("authorization")) {
