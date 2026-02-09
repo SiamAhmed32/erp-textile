@@ -35,6 +35,8 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import Link from "next/link"
+import Image from "next/image"
+import logo from "@/app/logo.png"
 
 // Navigation data
 const data = {
@@ -104,11 +106,12 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <Package className="size-4" />
-                                </div>
+
+                                {/* <Package className="size-4" /> */}
+                                <Image src={logo} alt="Logo" width={50} height={50} />
+
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">ERP Textile</span>
+                                    <span className="truncate font-semibold">Moon Tex</span>
                                     <span className="truncate text-xs">Management</span>
                                 </div>
                             </Link>
