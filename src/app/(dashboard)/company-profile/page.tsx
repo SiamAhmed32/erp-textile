@@ -1,6 +1,6 @@
 import React from "react"
-import { CompanyProfilePage } from "@/components/CompanyProfile/CompanyProfilePage"
+import { CompanyProfilesPage } from "@/components/CompanyProfiles/CompanyProfilesPage"
 
 export default function Page() {
-  return <CompanyProfilePage />
+  return <CompanyProfilesPage />
 }
