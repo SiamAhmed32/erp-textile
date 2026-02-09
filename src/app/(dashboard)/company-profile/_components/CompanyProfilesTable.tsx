@@ -139,8 +139,8 @@ const CompanyProfilesTable = ({
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
                     <div className="w-full sm:max-w-[180px]">
                         <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Filter by type" />
+                            <SelectTrigger className="whitespace-nowrap">
+                                <SelectValue placeholder="Filter by type" className="whitespace-nowrap" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Types</SelectItem>
@@ -154,8 +154,8 @@ const CompanyProfilesTable = ({
                     </div>
                     <div className="w-full sm:max-w-[180px]">
                         <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Filter by status" />
+                            <SelectTrigger className="whitespace-nowrap">
+                                <SelectValue placeholder="Filter by status" className="whitespace-nowrap" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Status</SelectItem>
