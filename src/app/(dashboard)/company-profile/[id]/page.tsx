@@ -1,10 +1,10 @@
-import React from "react"
-import { CompanyProfileDetailPage } from "@/components/CompanyProfiles/CompanyProfileDetailPage"
+import React from "react";
+import CompanyProfileDetails from "../_components/CompanyProfileDetails";
 
 type Props = {
-  params: { id: string }
-}
+    params: { id: string };
+};
 
 export default function Page({ params }: Props) {
-  return <CompanyProfileDetailPage id={params.id} />
+    return <CompanyProfileDetails id={params.id} />;
 }
