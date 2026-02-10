@@ -13,6 +13,8 @@ const CompanyAvatar = ({ name, logoUrl }: Props) => {
             <Image
                 src={logoUrl}
                 alt={name}
+                width={36}
+                height={36}
                 className="h-9 w-9 rounded-full border object-cover"
             />
         );

@@ -36,6 +36,7 @@ export const toFormData = (profile: CompanyProfile): CompanyProfileFormData => (
     email: profile.email,
     website: profile.website,
     logoUrl: profile.logoUrl ?? "",
+    logoFile: null,
     city: profile.city,
     country: profile.country,
     companyType: profile.companyType,
@@ -80,6 +81,47 @@ export const toApiPayload = (data: CompanyProfileFormData) => {
     }
 
     return payload;
+};
+
+export const toApiFormData = (data: CompanyProfileFormData) => {
+    const formData = new FormData();
+    const payload = toApiPayload({ ...data, logoUrl: "" });
+
+    const keys = [
+        "name",
+        "address",
+        "phone",
+        "email",
+        "website",
+        "city",
+        "country",
+        "postalCode",
+        "companyType",
+        "taxId",
+        "registrationNumber",
+        "tradeLicenseNumber",
+        "tradeLicenseExpiryDate",
+        "bankName",
+        "bankAccountNumber",
+        "branchName",
+        "routingNumber",
+        "swiftCode",
+        "status",
+    ];
+
+    const requiredKeys = ["name", "companyType", "status"];
+
+    keys.forEach((key) => {
+        const value = (payload as Record<string, string | undefined>)[key] ?? "";
+        const isRequired = requiredKeys.includes(key);
+        if (!value && !isRequired) return;
+        formData.append(key, value);
+    });
+
+    if (data.logoFile) {
+        formData.append("logo", data.logoFile);
+    }
+    return formData;
 };
 
 export const getInitials = (name: string) => {

@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryHeading, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractItem } from "@/lib/api";
+import { apiRequest, extractItem, getApiBaseUrl } from "@/lib/api";
 import { CompanyProfile, CompanyProfileApiItem, CompanyProfileFormData } from "./types";
 import CompanyProfileForm from "./CompanyProfileForm";
-import { isValidEmail, isValidId, isValidUrl, normalizeProfile, toApiPayload, toFormData } from "./helpers";
+import { isValidId, normalizeProfile, toApiFormData, toFormData } from "./helpers";
+import { companyProfileSchema, toFieldErrors } from "./validation";
 
 type Props = {
     id: string;
@@ -23,6 +24,7 @@ const emptyForm: CompanyProfileFormData = {
     email: "",
     website: "",
     logoUrl: "",
+    logoFile: null,
     city: "",
     country: "",
     companyType: "",
@@ -79,27 +81,34 @@ const CompanyProfileEdit = ({ id }: Props) => {
         fetchProfile();
     }, [fetchProfile]);
 
-    const handleChange = (field: keyof CompanyProfileFormData, value: string) => {
-        setDraft((prev) => ({ ...prev, [field]: value }));
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
+    const handleChange = (field: keyof CompanyProfileFormData, value: string | File | null) => {
+        if (field === "logoFile" && value instanceof File) {
+            const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+            if (!allowedTypes.includes(value.type)) {
+                setErrors((prev) => ({
+                    ...prev,
+                    logoUrl: "Only PNG, JPG, JPEG, or WEBP images are allowed.",
+                }));
+                return;
+            }
+        }
+        setDraft((prev) => ({ ...prev, [field]: value as any }));
+        setErrors((prev) => ({ ...prev, [field]: undefined, logoUrl: undefined }));
     };
 
     const handleSave = async () => {
-        const nextErrors: Partial<Record<keyof CompanyProfileFormData, string>> = {};
-        if (!draft.name.trim() || draft.name.trim().length < 2) {
-            nextErrors.name = "Name must be at least 2 characters.";
-        }
-        if (!draft.email.trim() || !isValidEmail(draft.email)) {
-            nextErrors.email = "Enter a valid email address.";
-        }
-        if (!draft.website.trim() || !isValidUrl(draft.website)) {
-            nextErrors.website = "Enter a valid website URL (https://...).";
-        }
-        if (!draft.companyType) {
-            nextErrors.companyType = "Select a company type.";
-        }
-        if (!draft.status) {
-            nextErrors.status = "Select a status.";
+        const schemaResult = companyProfileSchema.safeParse(draft);
+        const nextErrors: Partial<Record<keyof CompanyProfileFormData, string>> = schemaResult.success
+            ? {}
+            : (toFieldErrors(schemaResult.error.issues) as Partial<
+                  Record<keyof CompanyProfileFormData, string>
+              >);
+
+        if (draft.logoFile) {
+            const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+            if (!allowedTypes.includes(draft.logoFile.type)) {
+                nextErrors.logoUrl = "Only PNG, JPG, JPEG, or WEBP images are allowed.";
+            }
         }
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length > 0) return;
@@ -111,10 +120,19 @@ const CompanyProfileEdit = ({ id }: Props) => {
         setSaving(true);
         setError("");
         try {
-            await apiRequest(`/company-profiles/${draft.id}`, {
+            const response = await fetch(`${getApiBaseUrl()}/company-profiles/${draft.id}`, {
                 method: "PATCH",
-                body: toApiPayload(draft),
+                body: toApiFormData(draft),
             });
+            const text = await response.text();
+            if (!response.ok) {
+                try {
+                    const json = JSON.parse(text);
+                    throw new Error(json?.error?.message || json?.message || "Failed to save company profile");
+                } catch {
+                    throw new Error(text || "Failed to save company profile");
+                }
+            }
             router.push(`/company-profile/${draft.id}`);
         } catch (err: any) {
             setError(err.message || "Failed to save company profile");

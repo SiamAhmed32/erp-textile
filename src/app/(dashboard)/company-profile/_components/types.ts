@@ -24,6 +24,8 @@ export type CompanyProfile = {
     updatedAt: string;
 };
 
-export type CompanyProfileFormData = Omit<CompanyProfile, "createdAt" | "updatedAt">;
+export type CompanyProfileFormData = Omit<CompanyProfile, "createdAt" | "updatedAt"> & {
+    logoFile?: File | null;
+};
 
 export type CompanyProfileApiItem = Partial<CompanyProfile>;

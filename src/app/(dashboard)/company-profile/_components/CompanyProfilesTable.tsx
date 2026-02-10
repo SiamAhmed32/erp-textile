@@ -167,7 +167,9 @@ const CompanyProfilesTable = ({
                             </SelectContent>
                         </Select>
                     </div>
-                    <Button onClick={onAddCompany}>Add Company</Button>
+                    <Button className="bg-black text-white hover:bg-black/90" onClick={onAddCompany}>
+                        Add Company
+                    </Button>
                 </div>
             </div>
 

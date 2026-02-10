@@ -30,7 +30,8 @@ const proxyRequest = async (request: NextRequest, path: string[]) => {
     headers.set("authorization", `Bearer ${DEFAULT_TOKEN}`)
   }
 
-  const body = request.method === "GET" || request.method === "HEAD" ? undefined : await request.text()
+  const body =
+    request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer()
 
   const response = await fetch(url, {
     method: request.method,
