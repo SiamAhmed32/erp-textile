@@ -14,6 +14,7 @@ import {
     Truck,
     ClipboardList,
 } from "lucide-react"
+import logo from "@/assets/logo.png"
 
 import {
     Sidebar as SidebarComponent,
@@ -36,6 +37,7 @@ import {
     CollapsibleTrigger,
 } from "@/components/ui/collapsible"
 import Link from "next/link"
+import Image from "next/image"
 
 // Navigation data
 const data = {
@@ -115,12 +117,11 @@ const Sidebar = ({ ...props }: React.ComponentProps<typeof SidebarComponent>) =>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <Package className="size-4" />
-                                </div>
+                                <Image src={logo} alt="Logo" width={50} height={50} />
+
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold">ERP Textile</span>
-                                    <span className="truncate text-xs">Management</span>
+                                    <span className="truncate font-semibold">Moon Textile</span>
+                                    <span className="truncate text-xs">ERP System</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
