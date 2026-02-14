@@ -85,23 +85,13 @@ const data = {
             items: [
                 {
                     title: "All Invoices",
-                    url: "/proforma-invoice/all",
+                    url: "/invoice-management/invoices",
                     icon: FileText,
                 },
                 {
-                    title: "Create - Labels",
-                    url: "/proforma-invoice/create-labels",
-                    icon: Tag,
-                },
-                {
-                    title: "Create - Fabric",
-                    url: "/proforma-invoice/create-fabric",
-                    icon: Package,
-                },
-                {
-                    title: "Create - Cartons",
-                    url: "/proforma-invoice/create-cartons",
-                    icon: Box,
+                    title: "Create Invoice",
+                    url: "/invoice-management/invoices/add-new-invoice",
+                    icon: FileText,
                 },
             ],
         },
