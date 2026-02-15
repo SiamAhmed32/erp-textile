@@ -13,6 +13,8 @@ const tags = [
 	'user',
 	'upload',
 	'organization',
+	'filters',
+	'resource',
 ];
 
 export const mainApi = createApi({

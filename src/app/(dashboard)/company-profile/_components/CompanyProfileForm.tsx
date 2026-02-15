@@ -31,11 +31,24 @@ const CompanyProfileForm = ({
   errors = {},
 }: Props) => {
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [preview, setPreview] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!data.logoFile) {
+      setPreview(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(data.logoFile);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [data.logoFile]);
 
   const handleFileTrigger = () => {
     if (!isEditing) return;
     fileInputRef.current?.click();
   };
+
+  const displayUrl = preview || data.logoUrl;
 
   return (
     <div className="space-y-6">
@@ -44,43 +57,70 @@ const CompanyProfileForm = ({
           <CardTitle>Company Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="logoFile">Logo</Label>
-            <div className="flex flex-col gap-3 rounded-md border border-input bg-muted/30 p-3">
-              <div className="flex items-center gap-3">
-                {data.logoFile ? (
-                  <span className="text-sm text-foreground">
-                    Selected: {data.logoFile.name}
-                  </span>
-                ) : data.logoUrl ? (
-                  <div className="flex items-center gap-3">
+          <div className="space-y-4">
+            <Label htmlFor="logoFile" className="text-sm font-medium">
+              Company Logo
+            </Label>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-6 p-5 rounded-lg border border-input bg-muted/20 transition-all">
+              {/* Image Preview Area */}
+              <div className="shrink-0">
+                {displayUrl ? (
+                  <div className="relative group">
                     <img
-                      src={data.logoUrl}
-                      alt="Current logo"
-                      className="h-12 w-12 rounded-md border object-cover"
+                      src={displayUrl}
+                      alt="Logo preview"
+                      className="h-24 w-24 rounded-lg border-4 border-white shadow-sm object-cover bg-white"
                     />
-                    <span className="text-sm text-foreground">
-                      Current logo
-                    </span>
                   </div>
                 ) : (
-                  <span className="text-sm text-muted-foreground">
-                    No logo uploaded
-                  </span>
+                  <div className="h-24 w-24 rounded-lg border-2 border-dashed border-input/50 flex items-center justify-center bg-white/50 text-muted-foreground bg-muted/30">
+                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+                      No Image
+                    </span>
+                  </div>
                 )}
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleFileTrigger}
-                  disabled={!isEditing}
-                >
-                  Choose Image
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  PNG, JPG, JPEG, or WEBP
-                </span>
+
+              {/* Action Area */}
+              <div className="flex flex-col gap-3 flex-grow min-w-0">
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-foreground truncate">
+                    {displayUrl
+                      ? preview
+                        ? "New Logo Selected"
+                        : "Current Company Logo"
+                      : "No logo uploaded yet"}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {data.logoFile
+                      ? `File: ${data.logoFile.name}`
+                      : "Accepted formats: PNG, JPG, JPEG, or WEBP"}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFileTrigger}
+                    disabled={!isEditing}
+                    className="cursor-pointer h-9 px-4"
+                  >
+                    Choose Image
+                  </Button>
+                  {isEditing && (data.logoFile || data.logoUrl) && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 px-4 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+                      onClick={() => onChange("logoFile", null)}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
             <input

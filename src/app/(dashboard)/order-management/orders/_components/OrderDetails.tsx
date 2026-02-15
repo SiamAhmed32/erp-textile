@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Download, Pencil, Copy } from "lucide-react";
 import { Container, Flex, PrimaryHeading, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractItem } from "@/lib/api";
+import { useGetByIdQuery } from "@/store/services/commonApi";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder, statusBadgeClass, formatDate } from "./helpers";
 import OrderReadOnly from "./OrderReadOnly";
@@ -15,39 +15,37 @@ import autoTable from "jspdf-autotable";
 
 type Props = {
     id: string;
+    shouldExport?: boolean;
 };
 
-const OrderDetails = ({ id }: Props) => {
+const OrderDetails = ({ id, shouldExport = false }: Props) => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const shouldExport = searchParams.get("export") === "pdf";
 
     const [order, setOrder] = React.useState<Order | null>(null);
-    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState("");
     const exportTriggered = React.useRef(false);
-
-    const fetchOrder = React.useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const payload = await apiRequest(`/orders/${id}`);
-            const item = extractItem<OrderApiItem>(payload);
-            if (!item) {
-                setError("Order not found");
-                return;
-            }
-            setOrder(normalizeOrder(item));
-        } catch (err: any) {
-            setError(err.message || "Failed to load order");
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
+    const { data: orderPayload, isFetching: loading, error: orderError } = useGetByIdQuery({
+        path: "orders",
+        id,
+    });
 
     React.useEffect(() => {
-        fetchOrder();
-    }, [fetchOrder]);
+        const item = (orderPayload as any)?.data as OrderApiItem | undefined;
+        if (!item) return;
+        setOrder(normalizeOrder(item));
+        setError("");
+    }, [orderPayload]);
+
+    React.useEffect(() => {
+        const parsed = orderError as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load order";
+        setError(message);
+    }, [orderError]);
 
     const handleExportPdf = React.useCallback(() => {
         if (!order) return;
@@ -78,7 +76,12 @@ const OrderDetails = ({ id }: Props) => {
 
         let startY = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : 30;
 
-        const item = order.orderItems?.[0] || {};
+        const item = order.orderItems?.[0];
+        if (!item) {
+            const filename = `order-${order.orderNumber || order.id}.pdf`;
+            doc.save(filename);
+            return;
+        }
         if (order.productType === "FABRIC" && item.fabricItem) {
             autoTable(doc, {
                 startY,

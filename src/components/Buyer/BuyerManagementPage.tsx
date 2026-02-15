@@ -6,7 +6,12 @@ import { Buyer, BuyerFormData } from "./types"
 import { BuyerList } from "./BuyerList"
 import { BuyerForm } from "./BuyerForm"
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog"
-import { apiRequest, extractArray, extractMeta } from "@/lib/api"
+import {
+  useGetAllQuery,
+  usePatchMutation,
+  usePostMutation,
+  usePutMutation,
+} from "@/store/services/commonApi"
 
 const emptyBuyer: BuyerFormData = {
   name: "",
@@ -29,37 +34,33 @@ const validate = (data: BuyerFormData) => {
 }
 
 export function BuyerManagementPage() {
-  const [buyers, setBuyers] = React.useState<Buyer[]>([])
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
-  const [totalPages, setTotalPages] = React.useState(1)
-  const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")
   const [formOpen, setFormOpen] = React.useState(false)
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create")
   const [formData, setFormData] = React.useState<BuyerFormData>(emptyBuyer)
   const [formErrors, setFormErrors] = React.useState<Partial<Record<keyof BuyerFormData, string>>>({})
   const [deleteTarget, setDeleteTarget] = React.useState<Buyer | null>(null)
-
-  const fetchBuyers = React.useCallback(async () => {
-    setLoading(true)
-    setError("")
-    try {
-      const payload = await apiRequest(`/buyers?page=${page}&limit=10&search=${search}`)
-      const list = extractArray<Buyer>(payload)
-      const meta = extractMeta(payload)
-      setBuyers(list)
-      setTotalPages(meta?.totalPage || meta?.totalPages || 1)
-    } catch (err: any) {
-      setError(err.message || "Failed to load buyers")
-    } finally {
-      setLoading(false)
-    }
-  }, [page, search])
+  const [postItem] = usePostMutation()
+  const [patchItem] = usePatchMutation()
+  const [putItem] = usePutMutation()
+  const { data: buyersPayload, isFetching: loading, error: buyersError, refetch } = useGetAllQuery({
+    path: "buyers",
+    page,
+    limit: 10,
+    search,
+  })
+  const buyers = ((buyersPayload as any)?.data || []) as Buyer[]
+  const totalPages = (buyersPayload as any)?.meta?.pagination?.totalPages || 1
 
   React.useEffect(() => {
-    fetchBuyers()
-  }, [fetchBuyers])
+    const parsed = buyersError as any
+    if (!parsed) return
+    const message =
+      parsed?.data?.error?.message || parsed?.data?.message || parsed?.error || "Failed to load buyers"
+    setError(message)
+  }, [buyersError])
 
   const handleCreate = () => {
     setFormMode("create")
@@ -82,13 +83,15 @@ export function BuyerManagementPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return
     try {
-      await apiRequest(`/buyers/${deleteTarget.id}`, {
-        method: "PUT",
+      await putItem({
+        path: `buyers/${deleteTarget.id}`,
         body: { isDeleted: true },
-      })
-      fetchBuyers()
+        invalidate: ["buyers"],
+      }).unwrap()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to delete buyer")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to delete buyer"
+      setError(message)
     } finally {
       setDeleteTarget(null)
     }
@@ -113,14 +116,19 @@ export function BuyerManagementPage() {
         location: formData.location,
       }
       if (formMode === "create") {
-        await apiRequest("/buyers", { method: "POST", body: payload })
+        await postItem({ path: "buyers", body: payload, invalidate: ["buyers"] }).unwrap()
       } else if (formMode === "edit" && formData.id) {
-        await apiRequest(`/buyers/${formData.id}`, { method: "PATCH", body: payload })
+        await patchItem({
+          path: `buyers/${formData.id}`,
+          body: payload,
+          invalidate: ["buyers"],
+        }).unwrap()
       }
       setFormOpen(false)
-      fetchBuyers()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to save buyer")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to save buyer"
+      setError(message)
     }
   }
 

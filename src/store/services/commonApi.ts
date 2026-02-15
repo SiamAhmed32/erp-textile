@@ -32,8 +32,7 @@ export const userApi = mainApi.injectEndpoints({
     }),
 
 		getById: builder.query({
-			query: ({ path, id, invalidate = [] }) =>
-				`${path}/${id}?invalidate=${invalidate}`,
+			query: ({ path, id }) => `${path}/${id}`,
 			providesTags: (_result, _error, { path, invalidate = [] }) => [
 				path,
 				...invalidate,
@@ -46,16 +45,50 @@ export const userApi = mainApi.injectEndpoints({
 			providesTags: (_result, _error, { path }) => [path],
 		}),
    
-    getByIdLazy: builder.query({
-      query: ({ path, id }) => `${path}/${id}`,
-      providesTags: (_result, _error, { path }) => [path],
-    }),
-
     post: builder.mutation({
       query: ({ path, body }) => ({
         url: path,
         method: "POST",
         body: body,
+      }),
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
+        "filters",
+        path,
+        ...invalidate,
+      ],
+    }),
+
+    patch: builder.mutation({
+      query: ({ path, body }) => ({
+        url: path,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
+        "filters",
+        path,
+        ...invalidate,
+      ],
+    }),
+
+    put: builder.mutation({
+      query: ({ path, body }) => ({
+        url: path,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
+        "filters",
+        path,
+        ...invalidate,
+      ],
+    }),
+
+    deleteOne: builder.mutation({
+      query: ({ path, body }) => ({
+        url: path,
+        method: "DELETE",
+        body,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
         "filters",
@@ -70,6 +103,11 @@ export const {
   useGetByIdQuery,
   useGetAllQuery,
   useLazyGetByIdQuery,
+  useLazyGetAllQuery,
   usePostMutation,
-  useGetCountQuery, useGetByParentCategoryQuery,
+  usePatchMutation,
+  usePutMutation,
+  useDeleteOneMutation,
+  useGetCountQuery,
+  useGetByParentCategoryQuery,
 } = userApi;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryHeading, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractArray, extractItem, getApiBaseUrl } from "@/lib/api";
+import { useGetAllQuery, useGetByIdQuery, usePatchMutation, usePutMutation } from "@/store/services/commonApi";
 import { Order, OrderApiItem, OrderFormData, Buyer, CompanyProfile } from "./types";
 import { normalizeOrder, toOrderFormData, toOrderUpdatePayload } from "./helpers";
 import OrderForm from "./OrderForm";
@@ -45,48 +45,49 @@ const OrderEdit = ({ id }: Props) => {
     const router = useRouter();
     const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
     const [activeStep, setActiveStep] = React.useState(0);
-    const [buyers, setBuyers] = React.useState<Buyer[]>([]);
-    const [companies, setCompanies] = React.useState<CompanyProfile[]>([]);
     const [saving, setSaving] = React.useState(false);
-    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState("");
     const [errors, setErrors] = React.useState<FormErrors>({});
     const [originalStatus, setOriginalStatus] = React.useState<OrderFormData["status"]>("DRAFT");
+    const [patchItem] = usePatchMutation();
+    const [putItem] = usePutMutation();
+
+    const { data: buyersPayload, error: buyersError } = useGetAllQuery({
+        path: "buyers",
+        page: 1,
+        limit: 100,
+    });
+    const { data: companiesPayload, error: companiesError } = useGetAllQuery({
+        path: "company-profiles",
+        page: 1,
+        limit: 100,
+    });
+    const { data: orderPayload, isFetching: loading, error: orderError } = useGetByIdQuery({
+        path: "orders",
+        id,
+    });
+    const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
+    const companies = ((companiesPayload as any)?.data || []) as CompanyProfile[];
 
     React.useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const buyersPayload = await apiRequest("/buyers?page=1&limit=100");
-                const companiesPayload = await apiRequest("/company-profiles?page=1&limit=100");
-                setBuyers(extractArray<Buyer>(buyersPayload));
-                setCompanies(extractArray<CompanyProfile>(companiesPayload));
-            } catch (err: any) {
-                setError(err.message || "Failed to load options");
-            }
-        };
-        fetchOptions();
-    }, []);
+        const item = (orderPayload as any)?.data as OrderApiItem | undefined;
+        if (!item) return;
+        const normalized = normalizeOrder(item);
+        const form = toOrderFormData(normalized);
+        setDraft(form);
+        setOriginalStatus(form.status);
+    }, [orderPayload]);
 
     React.useEffect(() => {
-        const fetchOrder = async () => {
-            setLoading(true);
-            setError("");
-            try {
-                const payload = await apiRequest(`/orders/${id}`);
-                const item = extractItem<OrderApiItem>(payload);
-                if (!item) return;
-                const normalized = normalizeOrder(item);
-                const form = toOrderFormData(normalized);
-                setDraft(form);
-                setOriginalStatus(form.status);
-            } catch (err: any) {
-                setError(err.message || "Failed to load order");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchOrder();
-    }, [id]);
+        const parsed = (buyersError || companiesError || orderError) as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load order";
+        setError(message);
+    }, [buyersError, companiesError, orderError]);
 
     const handleChange = (field: keyof OrderFormData, value: any) => {
         setDraft((prev) => ({ ...prev, [field]: value }));
@@ -112,31 +113,29 @@ const OrderEdit = ({ id }: Props) => {
         setSaving(true);
         setError("");
         try {
-            const response = await fetch(`${getApiBaseUrl()}/orders/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(toOrderUpdatePayload(draft)),
-            });
-            const text = await response.text();
-            if (!response.ok) {
-                throw new Error(text || "Failed to save order");
-            }
+            await patchItem({
+                path: `orders/${id}`,
+                body: toOrderUpdatePayload(draft),
+                invalidate: ["orders"],
+            }).unwrap();
 
             if (draft.status !== originalStatus) {
-                const statusResponse = await fetch(`${getApiBaseUrl()}/orders/${id}/status`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: draft.status }),
-                });
-                const statusText = await statusResponse.text();
-                if (!statusResponse.ok) {
-                    throw new Error(statusText || "Failed to update status");
-                }
+                await putItem({
+                    path: `orders/${id}/status`,
+                    body: { status: draft.status },
+                    invalidate: ["orders"],
+                }).unwrap();
             }
 
             router.push(`/order-management/orders/${id}`);
         } catch (err: any) {
-            setError(err.message || "Failed to save order");
+            const message =
+                err?.data?.error?.message ||
+                err?.data?.message ||
+                err?.error ||
+                err?.message ||
+                "Failed to save order";
+            setError(message);
         } finally {
             setSaving(false);
         }

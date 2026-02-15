@@ -6,7 +6,7 @@ import { Container, PrimaryHeading, PrimaryText, SectionGap } from "@/components
 import { InvoiceTerms, InvoiceTermsErrors, InvoiceTermsFormData } from "./types"
 import { InvoiceTermsDetail } from "./InvoiceTermsDetail"
 import { InvoiceTermsForm } from "./InvoiceTermsForm"
-import { apiRequest, extractItem } from "@/lib/api"
+import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi"
 
 const emptyTerms: InvoiceTermsFormData = {
   name: "",
@@ -54,21 +54,26 @@ export function InvoiceTermsDetailPage() {
   const [formData, setFormData] = React.useState<InvoiceTermsFormData>(emptyTerms)
   const [formErrors, setFormErrors] = React.useState<InvoiceTermsErrors>({})
   const [error, setError] = React.useState("")
-
-  const fetchTerms = React.useCallback(async () => {
-    setError("")
-    try {
-      const payload = await apiRequest(`/invoice-terms/${id}`)
-      const item = extractItem<InvoiceTerms>(payload)
-      setTerms(item)
-    } catch (err: any) {
-      setError(err.message || "Failed to load terms")
-    }
-  }, [id])
+  const [patchItem] = usePatchMutation()
+  const { data: termsPayload, error: termsError, refetch } = useGetByIdQuery(
+    { path: "invoice-terms", id: id || "" },
+    { skip: !id }
+  )
 
   React.useEffect(() => {
-    fetchTerms()
-  }, [fetchTerms])
+    const item = (termsPayload as any)?.data as InvoiceTerms | undefined
+    if (!item) return
+    setTerms(item)
+    setError("")
+  }, [termsPayload])
+
+  React.useEffect(() => {
+    const parsed = termsError as any
+    if (!parsed) return
+    const message =
+      parsed?.data?.error?.message || parsed?.data?.message || parsed?.error || "Failed to load terms"
+    setError(message)
+  }, [termsError])
 
   if (!terms) {
     return (
@@ -116,11 +121,16 @@ export function InvoiceTermsDetailPage() {
         hsCode: formData.hsCode,
         remarks: formData.remarks,
       }
-      await apiRequest(`/invoice-terms/${terms.id}`, { method: "PATCH", body: payload })
+      await patchItem({
+        path: `invoice-terms/${terms.id}`,
+        body: payload,
+        invalidate: ["invoice-terms"],
+      }).unwrap()
       setFormOpen(false)
-      fetchTerms()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to update terms")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to update terms"
+      setError(message)
     }
   }
 

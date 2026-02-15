@@ -11,7 +11,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { apiRequest, extractItem } from "@/lib/api";
+import { useGetByIdQuery } from "@/store/services/commonApi";
 import { CompanyProfile, CompanyProfileApiItem } from "./types";
 import { isValidId, normalizeProfile } from "./helpers";
 import CompanyProfileReadOnly from "./CompanyProfileReadOnly";
@@ -24,35 +24,37 @@ type Props = {
 
 const CompanyProfileDetails = ({ id }: Props) => {
     const [profile, setProfile] = React.useState<CompanyProfile | null>(null);
-    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState("");
-
-    const fetchProfile = React.useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            if (!isValidId(id)) {
-                setError("Invalid company ID.");
-                return;
-            }
-            const payload = await apiRequest(`/company-profiles/${id}`);
-            const item = extractItem<CompanyProfileApiItem>(payload);
-            if (!item) {
-                setError("Company profile not found");
-                return;
-            }
-            const normalized = normalizeProfile(item);
-            setProfile(normalized);
-        } catch (err: any) {
-            setError(err.message || "Failed to load company profile");
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
+    const isInvalidId = !isValidId(id);
+    const { data: profilePayload, isFetching: loading, error: apiError } = useGetByIdQuery(
+        {
+            path: "company-profiles",
+            id,
+        },
+        { skip: isInvalidId }
+    );
 
     React.useEffect(() => {
-        fetchProfile();
-    }, [fetchProfile]);
+        if (isInvalidId) {
+            setError("Invalid company ID.");
+            return;
+        }
+        const item = (profilePayload as any)?.data as CompanyProfileApiItem | undefined;
+        if (!item) return;
+        setProfile(normalizeProfile(item));
+        setError("");
+    }, [profilePayload, isInvalidId]);
+
+    React.useEffect(() => {
+        const parsed = apiError as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load company profile";
+        setError(message);
+    }, [apiError]);
 
     const handleExportPdf = () => {
         if (!profile) return;

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractArray, extractItem, getApiBaseUrl } from "@/lib/api";
+import { useGetAllQuery, useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
 import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
 import { normalizeInvoice, toInvoiceFormData, toInvoicePayload } from "./helpers";
@@ -29,45 +29,44 @@ const emptyInvoice: InvoiceFormData = {
 const InvoiceEdit = ({ id }: Props) => {
     const router = useRouter();
     const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
-    const [orders, setOrders] = React.useState<OrderSummary[]>([]);
-    const [terms, setTerms] = React.useState<InvoiceTerms[]>([]);
     const [saving, setSaving] = React.useState(false);
-    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState("");
     const [errors, setErrors] = React.useState<FormErrors>({});
+    const [patchItem] = usePatchMutation();
+    const { data: ordersPayload, error: ordersError } = useGetAllQuery({
+        path: "orders",
+        page: 1,
+        limit: 100,
+    });
+    const { data: termsPayload, error: termsError } = useGetAllQuery({
+        path: "invoice-terms",
+        page: 1,
+        limit: 100,
+    });
+    const { data: invoicePayload, isFetching: loading, error: invoiceError } = useGetByIdQuery({
+        path: "invoices",
+        id,
+    });
+    const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
+    const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
 
     React.useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const ordersPayload = await apiRequest("/orders?page=1&limit=100");
-                const termsPayload = await apiRequest("/invoice-terms?page=1&limit=100");
-                setOrders(extractArray<OrderSummary>(ordersPayload));
-                setTerms(extractArray<InvoiceTerms>(termsPayload));
-            } catch (err: any) {
-                setError(err.message || "Failed to load options");
-            }
-        };
-        fetchOptions();
-    }, []);
+        const item = (invoicePayload as any)?.data as InvoiceApiItem | undefined;
+        if (!item) return;
+        const normalized = normalizeInvoice(item);
+        setDraft(toInvoiceFormData(normalized));
+    }, [invoicePayload]);
 
     React.useEffect(() => {
-        const fetchInvoice = async () => {
-            setLoading(true);
-            setError("");
-            try {
-                const payload = await apiRequest(`/invoices/${id}`);
-                const item = extractItem<InvoiceApiItem>(payload);
-                if (!item) return;
-                const normalized = normalizeInvoice(item);
-                setDraft(toInvoiceFormData(normalized));
-            } catch (err: any) {
-                setError(err.message || "Failed to load invoice");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchInvoice();
-    }, [id]);
+        const parsed = (ordersError || termsError || invoiceError) as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load invoice";
+        setError(message);
+    }, [ordersError, termsError, invoiceError]);
 
     const handleChange = (field: keyof InvoiceFormData, value: any) => {
         setDraft((prev) => ({ ...prev, [field]: value }));
@@ -85,18 +84,20 @@ const InvoiceEdit = ({ id }: Props) => {
         setSaving(true);
         setError("");
         try {
-            const response = await fetch(`${getApiBaseUrl()}/invoices/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(toInvoicePayload(draft)),
-            });
-            const text = await response.text();
-            if (!response.ok) {
-                throw new Error(text || "Failed to save invoice");
-            }
+            await patchItem({
+                path: `invoices/${id}`,
+                body: toInvoicePayload(draft),
+                invalidate: ["invoices"],
+            }).unwrap();
             router.push(`/invoice-management/invoices/${id}`);
         } catch (err: any) {
-            setError(err.message || "Failed to save invoice");
+            const message =
+                err?.data?.error?.message ||
+                err?.data?.message ||
+                err?.error ||
+                err?.message ||
+                "Failed to save invoice";
+            setError(message);
         } finally {
             setSaving(false);
         }

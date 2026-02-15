@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Download, Pencil } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractItem } from "@/lib/api";
+import { useGetByIdQuery } from "@/store/services/commonApi";
 import { Invoice, InvoiceApiItem } from "./types";
 import { formatDate, normalizeInvoice, statusBadgeClass } from "./helpers";
 import InvoiceReadOnly from "./InvoiceReadOnly";
@@ -15,39 +15,37 @@ import autoTable from "jspdf-autotable";
 
 type Props = {
     id: string;
+    shouldExport?: boolean;
 };
 
-const InvoiceDetails = ({ id }: Props) => {
+const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const shouldExport = searchParams.get("export") === "pdf";
 
     const [invoice, setInvoice] = React.useState<Invoice | null>(null);
-    const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState("");
     const exportTriggered = React.useRef(false);
-
-    const fetchInvoice = React.useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const payload = await apiRequest(`/invoices/${id}`);
-            const item = extractItem<InvoiceApiItem>(payload);
-            if (!item) {
-                setError("Invoice not found");
-                return;
-            }
-            setInvoice(normalizeInvoice(item));
-        } catch (err: any) {
-            setError(err.message || "Failed to load invoice");
-        } finally {
-            setLoading(false);
-        }
-    }, [id]);
+    const { data: invoicePayload, isFetching: loading, error: invoiceError } = useGetByIdQuery({
+        path: "invoices",
+        id,
+    });
 
     React.useEffect(() => {
-        fetchInvoice();
-    }, [fetchInvoice]);
+        const item = (invoicePayload as any)?.data as InvoiceApiItem | undefined;
+        if (!item) return;
+        setInvoice(normalizeInvoice(item));
+        setError("");
+    }, [invoicePayload]);
+
+    React.useEffect(() => {
+        const parsed = invoiceError as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load invoice";
+        setError(message);
+    }, [invoiceError]);
 
     const handleExportPdf = React.useCallback(() => {
         if (!invoice) return;

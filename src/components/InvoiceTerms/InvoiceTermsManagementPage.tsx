@@ -6,7 +6,12 @@ import { InvoiceTerms, InvoiceTermsErrors, InvoiceTermsFormData } from "./types"
 import { InvoiceTermsList } from "./InvoiceTermsList"
 import { InvoiceTermsForm } from "./InvoiceTermsForm"
 import { DeleteConfirmDialog } from "../shared/DeleteConfirmDialog"
-import { apiRequest, extractArray, extractMeta } from "@/lib/api"
+import {
+  useGetAllQuery,
+  usePatchMutation,
+  usePostMutation,
+  usePutMutation,
+} from "@/store/services/commonApi"
 
 const emptyTerms: InvoiceTermsFormData = {
   name: "",
@@ -45,37 +50,33 @@ const validate = (data: InvoiceTermsFormData): InvoiceTermsErrors => {
 }
 
 export function InvoiceTermsManagementPage() {
-  const [terms, setTerms] = React.useState<InvoiceTerms[]>([])
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
-  const [totalPages, setTotalPages] = React.useState(1)
-  const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")
   const [formOpen, setFormOpen] = React.useState(false)
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create")
   const [formData, setFormData] = React.useState<InvoiceTermsFormData>(emptyTerms)
   const [formErrors, setFormErrors] = React.useState<InvoiceTermsErrors>({})
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceTerms | null>(null)
-
-  const fetchTerms = React.useCallback(async () => {
-    setLoading(true)
-    setError("")
-    try {
-      const payload = await apiRequest(`/invoice-terms?page=${page}&limit=10&search=${search}`)
-      const list = extractArray<InvoiceTerms>(payload)
-      const meta = extractMeta(payload)
-      setTerms(list)
-      setTotalPages(meta?.totalPage || meta?.totalPages || 1)
-    } catch (err: any) {
-      setError(err.message || "Failed to load terms")
-    } finally {
-      setLoading(false)
-    }
-  }, [page, search])
+  const [postItem] = usePostMutation()
+  const [patchItem] = usePatchMutation()
+  const [putItem] = usePutMutation()
+  const { data: termsPayload, isFetching: loading, error: termsError, refetch } = useGetAllQuery({
+    path: "invoice-terms",
+    page,
+    limit: 10,
+    search,
+  })
+  const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[]
+  const totalPages = (termsPayload as any)?.meta?.pagination?.totalPages || 1
 
   React.useEffect(() => {
-    fetchTerms()
-  }, [fetchTerms])
+    const parsed = termsError as any
+    if (!parsed) return
+    const message =
+      parsed?.data?.error?.message || parsed?.data?.message || parsed?.error || "Failed to load terms"
+    setError(message)
+  }, [termsError])
 
   const handleCreate = () => {
     setFormMode("create")
@@ -98,13 +99,15 @@ export function InvoiceTermsManagementPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return
     try {
-      await apiRequest(`/invoice-terms/${deleteTarget.id}`, {
-        method: "PUT",
+      await putItem({
+        path: `invoice-terms/${deleteTarget.id}`,
         body: { isDeleted: true },
-      })
-      fetchTerms()
+        invalidate: ["invoice-terms"],
+      }).unwrap()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to delete terms")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to delete terms"
+      setError(message)
     } finally {
       setDeleteTarget(null)
     }
@@ -133,14 +136,23 @@ export function InvoiceTermsManagementPage() {
         remarks: formData.remarks,
       }
       if (formMode === "create") {
-        await apiRequest("/invoice-terms", { method: "POST", body: payload })
+        await postItem({
+          path: "invoice-terms",
+          body: payload,
+          invalidate: ["invoice-terms"],
+        }).unwrap()
       } else if (formMode === "edit" && formData.id) {
-        await apiRequest(`/invoice-terms/${formData.id}`, { method: "PATCH", body: payload })
+        await patchItem({
+          path: `invoice-terms/${formData.id}`,
+          body: payload,
+          invalidate: ["invoice-terms"],
+        }).unwrap()
       }
       setFormOpen(false)
-      fetchTerms()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to save terms")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to save terms"
+      setError(message)
     }
   }
 

@@ -11,11 +11,12 @@ import {
   PrimaryText,
 } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { extractItem, getApiBaseUrl } from "@/lib/api";
+import { usePostMutation } from "@/store/services/commonApi";
 import { CompanyProfileApiItem, CompanyProfileFormData } from "./types";
 import CompanyProfileForm from "./CompanyProfileForm";
 import { normalizeProfile, toApiFormData } from "./helpers";
 import { companyProfileSchema, toFieldErrors } from "./validation";
+import { notify } from "@/lib/notifications";
 
 const emptyForm: CompanyProfileFormData = {
   id: "",
@@ -46,10 +47,10 @@ const CompanyProfileCreate = () => {
   const router = useRouter();
   const [draft, setDraft] = React.useState<CompanyProfileFormData>(emptyForm);
   const [saving, setSaving] = React.useState(false);
-  const [error, setError] = React.useState("");
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof CompanyProfileFormData, string>>
   >({});
+  const [postItem] = usePostMutation();
 
   const handleChange = (
     field: keyof CompanyProfileFormData,
@@ -99,35 +100,24 @@ const CompanyProfileCreate = () => {
     if (Object.keys(nextErrors).length > 0) return;
 
     setSaving(true);
-    setError("");
     try {
-      const response = await fetch(`${getApiBaseUrl()}/company-profiles`, {
-        method: "POST",
+      const payload = (await postItem({
+        path: "company-profiles",
         body: toApiFormData(draft),
-      });
-      const text = await response.text();
-      if (!response.ok) {
-        try {
-          const json = JSON.parse(text);
-          throw new Error(
-            json?.error?.message ||
-              json?.message ||
-              "Failed to create company profile",
-          );
-        } catch {
-          throw new Error(text || "Failed to create company profile");
-        }
-      }
-      const payload = text ? JSON.parse(text) : {};
-      const item = extractItem<CompanyProfileApiItem>(payload);
+        invalidate: ["company-profiles"],
+      }).unwrap()) as any;
+      const item = (payload?.data || payload) as CompanyProfileApiItem;
       const normalized = item ? normalizeProfile(item) : null;
       if (normalized?.id) {
+        notify.success("Company profile created successfully");
         router.push(`/company-profile/${normalized.id}`);
       } else {
+        notify.success("Company profile created successfully");
         router.push(`/company-profile`);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create company profile");
+      const message = err?.message || "Failed to create company profile";
+      notify.error(message);
     } finally {
       setSaving(false);
     }
@@ -161,10 +151,6 @@ const CompanyProfileCreate = () => {
       </Flex>
 
       <div className="mt-4" />
-
-      {error && (
-        <PrimaryText className="text-sm text-destructive">{error}</PrimaryText>
-      )}
 
       <CompanyProfileForm
         data={draft}

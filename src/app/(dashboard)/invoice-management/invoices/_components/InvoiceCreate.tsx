@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractArray, getApiBaseUrl } from "@/lib/api";
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { InvoiceFormData, InvoiceTerms, OrderSummary } from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
 import { toInvoicePayload } from "./helpers";
@@ -25,25 +25,33 @@ const emptyInvoice: InvoiceFormData = {
 const InvoiceCreate = () => {
     const router = useRouter();
     const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
-    const [orders, setOrders] = React.useState<OrderSummary[]>([]);
-    const [terms, setTerms] = React.useState<InvoiceTerms[]>([]);
     const [saving, setSaving] = React.useState(false);
     const [error, setError] = React.useState("");
     const [errors, setErrors] = React.useState<FormErrors>({});
+    const [postItem] = usePostMutation();
+    const { data: ordersPayload, error: ordersError } = useGetAllQuery({
+        path: "orders",
+        page: 1,
+        limit: 100,
+    });
+    const { data: termsPayload, error: termsError } = useGetAllQuery({
+        path: "invoice-terms",
+        page: 1,
+        limit: 100,
+    });
+    const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
+    const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
 
     React.useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const ordersPayload = await apiRequest("/orders?page=1&limit=100");
-                const termsPayload = await apiRequest("/invoice-terms?page=1&limit=100");
-                setOrders(extractArray<OrderSummary>(ordersPayload));
-                setTerms(extractArray<InvoiceTerms>(termsPayload));
-            } catch (err: any) {
-                setError(err.message || "Failed to load options");
-            }
-        };
-        fetchOptions();
-    }, []);
+        const parsed = (ordersError || termsError) as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load options";
+        setError(message);
+    }, [ordersError, termsError]);
 
     const handleChange = (field: keyof InvoiceFormData, value: any) => {
         setDraft((prev) => ({ ...prev, [field]: value }));
@@ -61,16 +69,11 @@ const InvoiceCreate = () => {
         setSaving(true);
         setError("");
         try {
-            const response = await fetch(`${getApiBaseUrl()}/invoices`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(toInvoicePayload(draft)),
-            });
-            const text = await response.text();
-            if (!response.ok) {
-                throw new Error(text || "Failed to create invoice");
-            }
-            const payload = text ? JSON.parse(text) : {};
+            const payload = (await postItem({
+                path: "invoices",
+                body: toInvoicePayload(draft),
+                invalidate: ["invoices"],
+            }).unwrap()) as any;
             const id = payload?.data?.id || payload?.id;
             if (id) {
                 router.push(`/invoice-management/invoices/${id}`);
@@ -78,7 +81,13 @@ const InvoiceCreate = () => {
                 router.push(`/invoice-management/invoices`);
             }
         } catch (err: any) {
-            setError(err.message || "Failed to create invoice");
+            const message =
+                err?.data?.error?.message ||
+                err?.data?.message ||
+                err?.error ||
+                err?.message ||
+                "Failed to create invoice";
+            setError(message);
         } finally {
             setSaving(false);
         }

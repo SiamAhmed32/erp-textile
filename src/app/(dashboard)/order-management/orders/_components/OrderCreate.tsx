@@ -2,11 +2,11 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryHeading, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { apiRequest, extractArray, extractItem, getApiBaseUrl } from "@/lib/api";
+import { useGetAllQuery, useGetByIdQuery, usePostMutation } from "@/store/services/commonApi";
 import { Order, OrderApiItem, OrderFormData, Buyer, CompanyProfile } from "./types";
 import { normalizeOrder, toOrderFormData, toOrderPayload } from "./helpers";
 import OrderForm from "./OrderForm";
@@ -37,51 +37,62 @@ const setNestedValue = (obj: any, path: string, value: any) => {
     if (last) current[last] = value;
 };
 
-const OrderCreate = () => {
+type Props = {
+    duplicateId?: string;
+};
+
+const OrderCreate = ({ duplicateId }: Props) => {
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const duplicateId = searchParams.get("duplicateId");
 
     const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
     const [activeStep, setActiveStep] = React.useState(0);
-    const [buyers, setBuyers] = React.useState<Buyer[]>([]);
-    const [companies, setCompanies] = React.useState<CompanyProfile[]>([]);
     const [saving, setSaving] = React.useState(false);
     const [error, setError] = React.useState("");
     const [errors, setErrors] = React.useState<FormErrors>({});
+    const [postItem] = usePostMutation();
+
+    const { data: buyersPayload, error: buyersError } = useGetAllQuery({
+        path: "buyers",
+        page: 1,
+        limit: 100,
+    });
+    const { data: companiesPayload, error: companiesError } = useGetAllQuery({
+        path: "company-profiles",
+        page: 1,
+        limit: 100,
+    });
+    const { data: duplicatePayload, error: duplicateError } = useGetByIdQuery(
+        {
+            path: "orders",
+            id: duplicateId || "",
+        },
+        { skip: !duplicateId }
+    );
+
+    const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
+    const companies = ((companiesPayload as any)?.data || []) as CompanyProfile[];
 
     React.useEffect(() => {
-        const fetchOptions = async () => {
-            try {
-                const buyersPayload = await apiRequest("/buyers?page=1&limit=100");
-                const companiesPayload = await apiRequest("/company-profiles?page=1&limit=100");
-                setBuyers(extractArray<Buyer>(buyersPayload));
-                setCompanies(extractArray<CompanyProfile>(companiesPayload));
-            } catch (err: any) {
-                setError(err.message || "Failed to load options");
-            }
-        };
-        fetchOptions();
-    }, []);
+        if (!duplicateId) return;
+        const item = (duplicatePayload as any)?.data as OrderApiItem | undefined;
+        if (!item) return;
+        const normalized = normalizeOrder(item);
+        const form = toOrderFormData(normalized);
+        form.orderNumber = "";
+        form.status = "DRAFT";
+        setDraft(form);
+    }, [duplicatePayload, duplicateId]);
 
     React.useEffect(() => {
-        const loadDuplicate = async () => {
-            if (!duplicateId) return;
-            try {
-                const payload = await apiRequest(`/orders/${duplicateId}`);
-                const item = extractItem<OrderApiItem>(payload);
-                if (!item) return;
-                const normalized = normalizeOrder(item);
-                const form = toOrderFormData(normalized);
-                form.orderNumber = "";
-                form.status = "DRAFT";
-                setDraft(form);
-            } catch (err) {
-                // ignore
-            }
-        };
-        loadDuplicate();
-    }, [duplicateId]);
+        const parsed = (buyersError || companiesError || duplicateError) as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load options";
+        setError(message);
+    }, [buyersError, companiesError, duplicateError]);
 
     const handleChange = (field: keyof OrderFormData, value: any) => {
         setDraft((prev) => ({ ...prev, [field]: value }));
@@ -107,17 +118,12 @@ const OrderCreate = () => {
         setSaving(true);
         setError("");
         try {
-            const response = await fetch(`${getApiBaseUrl()}/orders`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(toOrderPayload(draft)),
-            });
-            const text = await response.text();
-            if (!response.ok) {
-                throw new Error(text || "Failed to create order");
-            }
-            const payload = text ? JSON.parse(text) : {};
-            const item = extractItem<OrderApiItem>(payload);
+            const payload = (await postItem({
+                path: "orders",
+                body: toOrderPayload(draft),
+                invalidate: ["orders"],
+            }).unwrap()) as any;
+            const item = (payload?.data || payload) as OrderApiItem;
             const normalized = item ? normalizeOrder(item) : null;
             if (normalized?.id) {
                 router.push(`/order-management/orders/${normalized.id}`);
@@ -125,7 +131,13 @@ const OrderCreate = () => {
                 router.push(`/order-management/orders`);
             }
         } catch (err: any) {
-            setError(err.message || "Failed to create order");
+            const message =
+                err?.data?.error?.message ||
+                err?.data?.message ||
+                err?.error ||
+                err?.message ||
+                "Failed to create order";
+            setError(message);
         } finally {
             setSaving(false);
         }

@@ -2,58 +2,61 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest, extractArray, extractMeta } from "@/lib/api";
+import { useDeleteOneMutation, useGetAllQuery } from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
 import { Invoice, InvoiceApiItem } from "./types";
 import { countByType, normalizeInvoice } from "./helpers";
 
 const InvoicePage = () => {
     const router = useRouter();
-    const [invoices, setInvoices] = useState<Invoice[]>([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [typeFilter, setTypeFilter] = useState("all");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+    const [deleteOne] = useDeleteOneMutation();
 
     useEffect(() => {
         const handle = setTimeout(() => setDebouncedSearch(search), 300);
         return () => clearTimeout(handle);
     }, [search]);
 
-    const fetchInvoices = useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const params = new URLSearchParams();
-            params.set("page", String(page));
-            params.set("limit", "10");
-            if (debouncedSearch) params.set("search", debouncedSearch);
-            if (statusFilter !== "all") params.set("status", statusFilter);
-            if (typeFilter !== "all") params.set("productType", typeFilter);
-            if (dateFrom) params.set("dateFrom", dateFrom);
-            if (dateTo) params.set("dateTo", dateTo);
-
-            const payload = await apiRequest(`/invoices?${params.toString()}`);
-            const list = extractArray<InvoiceApiItem>(payload).map(normalizeInvoice);
-            const meta = extractMeta(payload);
-            setInvoices(list);
-            setTotalPages(meta?.totalPage || meta?.totalPages || 1);
-        } catch (err: any) {
-            setError(err.message || "Failed to load invoices");
-        } finally {
-            setLoading(false);
-        }
-    }, [page, debouncedSearch, statusFilter, typeFilter, dateFrom, dateTo]);
+    const {
+        data: invoicesPayload,
+        isFetching: loading,
+        error: invoicesError,
+        refetch,
+    } = useGetAllQuery({
+        path: "invoices",
+        page,
+        limit: 10,
+        search: debouncedSearch || "",
+        filters: {
+            ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+            ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
+            ...(dateFrom ? { dateFrom } : {}),
+            ...(dateTo ? { dateTo } : {}),
+        },
+    });
+    const invoices = useMemo(
+        () => ((invoicesPayload as any)?.data || []).map((item: InvoiceApiItem) => normalizeInvoice(item)),
+        [invoicesPayload]
+    );
+    const totalPages = (invoicesPayload as any)?.meta?.pagination?.totalPages || 1;
 
     useEffect(() => {
-        fetchInvoices();
-    }, [fetchInvoices]);
+        const parsed = invoicesError as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load invoices";
+        setError(message);
+    }, [invoicesError]);
 
     const handleRowClick = useCallback(
         (row: Invoice) => {
@@ -86,13 +89,13 @@ const InvoicePage = () => {
     const handleDelete = useCallback(
         async (row: Invoice) => {
             try {
-                await apiRequest(`/invoices/${row.id}`, { method: "DELETE" });
-                fetchInvoices();
+                await deleteOne({ path: `invoices/${row.id}`, invalidate: ["invoices"] }).unwrap();
+                refetch();
             } catch (err: any) {
                 setError(err.message || "Failed to delete invoice");
             }
         },
-        [fetchInvoices]
+        [deleteOne, refetch]
     );
 
     const handleSearchSubmit = useCallback(() => {

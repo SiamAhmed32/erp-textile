@@ -2,58 +2,62 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest, extractArray, extractMeta } from "@/lib/api";
+import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
 
 const OrderPage = () => {
     const router = useRouter();
-    const [orders, setOrders] = useState<Order[]>([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
     const [search, setSearch] = useState("");
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [typeFilter, setTypeFilter] = useState("all");
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+    const [patchItem] = usePatchMutation();
 
     useEffect(() => {
         const handle = setTimeout(() => setDebouncedSearch(search), 300);
         return () => clearTimeout(handle);
     }, [search]);
 
-    const fetchOrders = useCallback(async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const params = new URLSearchParams();
-            params.set("page", String(page));
-            params.set("limit", "10");
-            if (debouncedSearch) params.set("search", debouncedSearch);
-            if (statusFilter !== "all") params.set("status", statusFilter);
-            if (typeFilter !== "all") params.set("productType", typeFilter);
-            if (dateFrom) params.set("dateFrom", dateFrom);
-            if (dateTo) params.set("dateTo", dateTo);
+    const {
+        data: ordersPayload,
+        isFetching: loading,
+        error: ordersError,
+        refetch,
+    } = useGetAllQuery({
+        path: "orders",
+        page,
+        limit: 10,
+        search: debouncedSearch || "",
+        filters: {
+            ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+            ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
+            ...(dateFrom ? { dateFrom } : {}),
+            ...(dateTo ? { dateTo } : {}),
+        },
+    });
 
-            const payload = await apiRequest(`/orders?${params.toString()}`);
-            const list = extractArray<OrderApiItem>(payload).map(normalizeOrder);
-            const meta = extractMeta(payload);
-            setOrders(list);
-            setTotalPages(meta?.totalPage || meta?.totalPages || 1);
-        } catch (err: any) {
-            setError(err.message || "Failed to load orders");
-        } finally {
-            setLoading(false);
-        }
-    }, [page, debouncedSearch, statusFilter, typeFilter, dateFrom, dateTo]);
+    const orders = useMemo(
+        () => ((ordersPayload as any)?.data || []).map((item: OrderApiItem) => normalizeOrder(item)),
+        [ordersPayload]
+    );
+    const totalPages = (ordersPayload as any)?.meta?.pagination?.totalPages || 1;
 
     useEffect(() => {
-        fetchOrders();
-    }, [fetchOrders]);
+        const parsed = ordersError as any;
+        if (!parsed) return;
+        const message =
+            parsed?.data?.error?.message ||
+            parsed?.data?.message ||
+            parsed?.error ||
+            "Failed to load orders";
+        setError(message);
+    }, [ordersError]);
 
     const handleRowClick = useCallback(
         (row: Order) => {
@@ -92,12 +96,16 @@ const OrderPage = () => {
 
     const handleDelete = useCallback(async (row: Order) => {
         try {
-            await apiRequest(`/orders/${row.id}`, { method: "PATCH", body: { isDeleted: true } });
-            fetchOrders();
+            await patchItem({
+                path: `orders/${row.id}`,
+                body: { isDeleted: true },
+                invalidate: ["orders"],
+            }).unwrap();
+            refetch();
         } catch (err: any) {
             setError(err.message || "Failed to delete order");
         }
-    }, [fetchOrders]);
+    }, [patchItem, refetch]);
 
     const handleSearchSubmit = useCallback(() => {
         setDebouncedSearch(search);

@@ -6,7 +6,7 @@ import { Container, PrimaryHeading, PrimaryText, SectionGap } from "@/components
 import { Buyer, BuyerFormData } from "./types"
 import { BuyerDetail } from "./BuyerDetail"
 import { BuyerForm } from "./BuyerForm"
-import { apiRequest, extractItem } from "@/lib/api"
+import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi"
 
 const emptyBuyer: BuyerFormData = {
   name: "",
@@ -26,21 +26,26 @@ export function BuyerDetailPage() {
   const [formOpen, setFormOpen] = React.useState(false)
   const [formData, setFormData] = React.useState<BuyerFormData>(emptyBuyer)
   const [error, setError] = React.useState("")
-
-  const fetchBuyer = React.useCallback(async () => {
-    setError("")
-    try {
-      const payload = await apiRequest(`/buyers/${id}`)
-      const item = extractItem<Buyer>(payload)
-      setBuyer(item)
-    } catch (err: any) {
-      setError(err.message || "Failed to load buyer")
-    }
-  }, [id])
+  const [patchItem] = usePatchMutation()
+  const { data: buyerPayload, error: buyerError, refetch } = useGetByIdQuery(
+    { path: "buyers", id: id || "" },
+    { skip: !id }
+  )
 
   React.useEffect(() => {
-    fetchBuyer()
-  }, [fetchBuyer])
+    const item = (buyerPayload as any)?.data as Buyer | undefined
+    if (!item) return
+    setBuyer(item)
+    setError("")
+  }, [buyerPayload])
+
+  React.useEffect(() => {
+    const parsed = buyerError as any
+    if (!parsed) return
+    const message =
+      parsed?.data?.error?.message || parsed?.data?.message || parsed?.error || "Failed to load buyer"
+    setError(message)
+  }, [buyerError])
 
   if (!buyer) {
     return (
@@ -79,11 +84,16 @@ export function BuyerDetailPage() {
         address: formData.address,
         location: formData.location,
       }
-      await apiRequest(`/buyers/${buyer.id}`, { method: "PATCH", body: payload })
+      await patchItem({
+        path: `buyers/${buyer.id}`,
+        body: payload,
+        invalidate: ["buyers"],
+      }).unwrap()
       setFormOpen(false)
-      fetchBuyer()
+      refetch()
     } catch (err: any) {
-      setError(err.message || "Failed to update buyer")
+      const message = err?.data?.error?.message || err?.data?.message || err?.error || err?.message || "Failed to update buyer"
+      setError(message)
     }
   }
 
