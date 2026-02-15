@@ -73,3 +73,4 @@ export async function PUT(request: NextRequest, context: any) {
 export async function DELETE(request: NextRequest, context: any) {
   return proxyRequest(request, getPath(context))
 }
+
