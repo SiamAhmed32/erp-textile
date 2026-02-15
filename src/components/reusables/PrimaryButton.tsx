@@ -1,22 +1,21 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { Button } from '../ui/button';
 
 interface PrimaryButtonProps {
-  href: string;
   children: React.ReactNode;
-  className?: string;
+  handleClick?: () => void;
 }
 
-const PrimaryButton = ({ href, children, className = '' }: PrimaryButtonProps) => {
+const PrimaryButton = ({ children, handleClick }: PrimaryButtonProps) => {
   return (
-    <Link
-      href={href}
-      className={`px-4 py-2 border border-button bg-button text-primaryBg hover:text-button hover:bg-primaryBg transition ${className}`}
+    <Button
+      onClick={handleClick}
+      className={`bg-secondary cursor-pointer text-white hover:bg-black/90`}
     >
       {children}
-    </Link>
+    </Button>
   );
 };
 

@@ -17,7 +17,6 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-
 interface Column<T> {
     header: string;
     accessor: keyof T | ((row: T) => React.ReactNode);
@@ -37,7 +36,6 @@ interface CustomTableProps<T> {
     title?: string;
     description?: string;
     onRowClick?: (row: T) => void;
-    rowClassName?: string;
     pagination?: PaginationProps;
     scrollAreaHeight?: string;
     isLoading?: boolean;
@@ -51,7 +49,6 @@ function CustomTable<T extends Record<string, any>>({
     title,
     description,
     onRowClick,
-    rowClassName,
     pagination,
     scrollAreaHeight = "h-[calc(100vh-250px)]",
     isLoading = false,
@@ -145,11 +142,14 @@ function CustomTable<T extends Record<string, any>>({
                 </div>
             )}
             <div className={`overflow-auto border rounded-md ${scrollAreaHeight}`}>
-                <Table>
-                    <TableHeader className="sticky top-0 bg-secondary z-10">
-                        <TableRow>
+                <Table overflowWrapper={false} className="border-separate border-spacing-0">
+                    <TableHeader className="sticky top-0 z-10">
+                        <TableRow className="hover:bg-transparent border-none">
                             {columns.map((column, index) => (
-                                <TableHead key={index} className={column.className}>
+                                <TableHead
+                                    key={index}
+                                    className={`sticky top-0 z-20 bg-secondary text-white font-semibold h-12 border-b-2 border-secondary ${column.className || ""}`}
+                                >
                                     {column.header}
                                 </TableHead>
                             ))}
@@ -158,7 +158,7 @@ function CustomTable<T extends Record<string, any>>({
                     <TableBody>
                         {isLoading ? (
                             Array.from({ length: skeletonRows }).map((_, rowIndex) => (
-                                <TableRow key={`skeleton-${rowIndex}`} className={rowClassName}>
+                                <TableRow key={`skeleton-${rowIndex}`} className="border-none odd:bg-white even:bg-secondary/10">
                                     {columns.map((column, colIndex) => (
                                         <TableCell key={colIndex} className={column.className}>
                                             <Skeleton className="h-6 w-full" />
@@ -208,7 +208,7 @@ function CustomTable<T extends Record<string, any>>({
                                 <TableRow
                                     key={rowIndex}
                                     onClick={() => onRowClick?.(row)}
-                                    className={rowClassName}
+                                    className="border-none bg-white even:bg-secondary/5 hover:bg-secondary/10  transition-colors cursor-pointer"
                                 >
                                     {columns.map((column, colIndex) => (
                                         <TableCell key={colIndex} className={column.className}>

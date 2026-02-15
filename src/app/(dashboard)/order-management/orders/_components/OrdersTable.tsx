@@ -16,6 +16,7 @@ import { PrimaryText } from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
+import PrimaryButton from "@/components/reusables/PrimaryButton";
 
 type Props = {
     data: Order[];
@@ -129,7 +130,7 @@ const OrdersTable = ({
         () => [
             {
                 header: "Order",
-                className: " border-r",
+                className: "",
                 accessor: (row: Order) => (
                     <div className="">
                         <div className="font-semibold text-foreground text-nowrap underline">{row.orderNumber}</div>
@@ -140,7 +141,7 @@ const OrdersTable = ({
 
             {
                 header: "Client",
-                className: " border-r",
+                className: " ",
                 accessor: (row: Order) => (
                     <div className="">
                         <div className="text-xs text-foreground whitespace-nowrap">
@@ -151,7 +152,7 @@ const OrdersTable = ({
             },
             {
                 header: "Date",
-                className: "px-4  border-r",
+                className: "px-4 ",
                 accessor: (row: Order) => (
                     <div className="whitespace-nowrap">{formatDate(row.orderDate)}</div>
                 ),
@@ -159,12 +160,12 @@ const OrdersTable = ({
 
             {
                 header: "Type",
-                className: " border-r",
+                className: "",
                 accessor: (row: Order) => <div className="">{row.productType}</div>,
             },
             {
                 header: "PI",
-                className: " border-r ",
+                className: " ",
                 accessor: (row: Order) => (
                     <div className="flex justify-center">
                         {row.isInvoice ? (
@@ -177,7 +178,7 @@ const OrdersTable = ({
             },
             {
                 header: "LC",
-                className: " border-r ",
+                className: " ",
                 accessor: (row: Order) => (
                     <div className="flex justify-center">
                         {row.isLc ? (
@@ -190,7 +191,7 @@ const OrdersTable = ({
             },
             {
                 header: "Delivery",
-                className: " border-r ",
+                className: "",
                 accessor: (row: Order) => (
                     <div className="">
                         <span
@@ -229,7 +230,7 @@ const OrdersTable = ({
             */
             {
                 header: "Amount",
-                className: " border-r",
+                className: "",
                 accessor: (row: Order) => {
                     const orderItem = Array.isArray(row.orderItems)
                         ? row.orderItems[0]
@@ -293,7 +294,7 @@ const OrdersTable = ({
 
             {
                 header: "Actions",
-                className: "p-0",
+                className: "",
                 accessor: (row: Order) => (
                     <div className="px-4 py-2 h-full flex items-start justify-end">
                         <OrderActions
@@ -369,14 +370,12 @@ const OrdersTable = ({
                         <Input type="date" value={dateFrom} onChange={(e) => onDateFromChange(e.target.value)} />
                         <Input type="date" value={dateTo} onChange={(e) => onDateToChange(e.target.value)} />
                     </div>
-                    <Button className="bg-black text-white hover:bg-black/90" onClick={onAddOrder}>
+
+                    <PrimaryButton handleClick={onAddOrder}>
                         Create Order
-                    </Button>
+                    </PrimaryButton>
                 </div>
             </div>
-
-            {error && <PrimaryText className="text-sm text-destructive">{error}</PrimaryText>}
-
             <CustomTable
                 data={data}
                 columns={columns}
@@ -388,7 +387,6 @@ const OrdersTable = ({
                     onPageChange,
                 }}
                 onRowClick={onRowClick}
-                rowClassName="cursor-pointer border-b-2 border-black/20 hover:bg-muted/50 transition-colors align-top"
                 scrollAreaHeight="h-[calc(100vh-250px)]"
             />
         </div>
