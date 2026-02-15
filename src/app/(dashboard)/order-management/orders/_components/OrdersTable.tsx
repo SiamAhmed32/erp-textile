@@ -376,13 +376,12 @@ const OrdersTable = ({
             </div>
 
             {error && <PrimaryText className="text-sm text-destructive">{error}</PrimaryText>}
-            {loading && (
-                <PrimaryText className="text-sm text-muted-foreground">Loading orders...</PrimaryText>
-            )}
 
             <CustomTable
                 data={data}
                 columns={columns}
+                isLoading={loading}
+                skeletonRows={10}
                 pagination={{
                     currentPage: page,
                     totalPages,
@@ -390,7 +389,7 @@ const OrdersTable = ({
                 }}
                 onRowClick={onRowClick}
                 rowClassName="cursor-pointer border-b-2 border-black/20 hover:bg-muted/50 transition-colors align-top"
-                scrollAreaHeight="h-[calc(100vh-300px)]"
+                scrollAreaHeight="h-[calc(100vh-250px)]"
             />
         </div>
     );

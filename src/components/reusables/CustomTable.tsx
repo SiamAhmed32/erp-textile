@@ -16,6 +16,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Column<T> {
     header: string;
@@ -39,6 +40,8 @@ interface CustomTableProps<T> {
     rowClassName?: string;
     pagination?: PaginationProps;
     scrollAreaHeight?: string;
+    isLoading?: boolean;
+    skeletonRows?: number;
 }
 
 function CustomTable<T extends Record<string, any>>({
@@ -51,6 +54,8 @@ function CustomTable<T extends Record<string, any>>({
     rowClassName,
     pagination,
     scrollAreaHeight = "h-[calc(100vh-250px)]",
+    isLoading = false,
+    skeletonRows = 5,
 }: CustomTableProps<T>) {
     const renderPaginationItems = () => {
         if (!pagination) return null;
@@ -151,13 +156,51 @@ function CustomTable<T extends Record<string, any>>({
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {data.length === 0 ? (
+                        {isLoading ? (
+                            Array.from({ length: skeletonRows }).map((_, rowIndex) => (
+                                <TableRow key={`skeleton-${rowIndex}`} className={rowClassName}>
+                                    {columns.map((column, colIndex) => (
+                                        <TableCell key={colIndex} className={column.className}>
+                                            <Skeleton className="h-6 w-full" />
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))
+                        ) : data.length === 0 ? (
                             <TableRow>
                                 <TableCell
                                     colSpan={columns.length}
-                                    className="h-24 text-center"
+                                    className="h-[60vh] text-center bg-white"
                                 >
-                                    No results.
+                                    <div className="flex flex-col items-center justify-center space-y-3 opacity-60">
+                                        <div className="p-4 bg-muted rounded-full">
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="48"
+                                                height="48"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="lucide lucide-package-open"
+                                            >
+                                                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                                                <path d="m2 17 10 5 10-5" />
+                                                <path d="m2 12 10 5 10-5" />
+                                            </svg>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xl font-semibold tracking-tight">
+                                                No Data Found
+                                            </p>
+                                            <p className="text-sm text-muted-foreground max-w-[250px] mx-auto">
+                                                We couldn't find what you're looking for. Try
+                                                refining your search or filters.
+                                            </p>
+                                        </div>
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ) : (
