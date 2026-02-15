@@ -1,6 +1,6 @@
 const DEFAULT_BASE_URL = "/api/proxy"
 
-export const getApiBaseUrl = () => DEFAULT_BASE_URL
+export const getApiBaseUrl = () => "http://192.168.0.114:3030/api"
 
 export type ApiRequestOptions = {
   method?: string
