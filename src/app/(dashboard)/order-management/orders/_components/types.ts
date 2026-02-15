@@ -78,6 +78,7 @@ export type CartonItem = {
     totalNetWeight?: number | string;
     totalGrossWeight?: number | string;
     totalUnitPrice?: number | string;
+    totalAmount?: number | string;
     cartonItemData?: CartonItemData[];
 };
 
@@ -104,7 +105,9 @@ export type Order = {
     buyer?: Buyer | null;
     user?: User | null;
     companyProfile?: CompanyProfile | null;
-    orderItems?: OrderItem[];
+    orderItems?: OrderItem | OrderItem[];
+    isInvoice?: boolean;
+    isLc?: boolean;
 };
 
 export type OrderApiItem = Partial<Order>;
