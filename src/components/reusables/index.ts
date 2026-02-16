@@ -25,3 +25,4 @@ export { default as Border } from './Border'
 export { default as PriceText } from './PriceText';
 export { default as PrimaryText } from './PrimaryText';
 export { default as SectionTitle } from './SectionTitle';
+export { default as CustomModal } from './CustomModal';

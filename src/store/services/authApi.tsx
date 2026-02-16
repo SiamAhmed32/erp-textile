@@ -36,11 +36,29 @@ export const authApi = createApi({
     // ✅ register matches old file (auth/register)
     register: builder.mutation<any, any>({
       query: (body) => ({
-        url: `user-api/auth/register`,
+        url: `/auth/register`,
         method: "POST",
         body,
+        formData: true,
       }),
-      invalidatesTags: ["self"],
+      invalidatesTags: ["self", "users" as any],
+    }),
+
+    getUsers: builder.query<any, { search?: string }>({
+      query: ({ search } = {}) => ({
+        url: `/users`,
+        params: search ? { search } : undefined,
+      }),
+      providesTags: ["users" as any],
+    }),
+
+    updateUser: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["users" as any],
     }),
 
     updatePassword: builder.mutation<any, any>({
@@ -130,6 +148,8 @@ export const {
   usePlaceOrderMutation,
   useGetMyOrdersQuery,
   useGetSingleOrderQuery,
+  useGetUsersQuery,
+  useUpdateUserMutation,
 } = authApi;
 
 export default authApi;

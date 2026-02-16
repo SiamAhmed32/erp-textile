@@ -4,7 +4,7 @@ const PrimaryHeading = ({ className, children }: any) => {
 	// text shadow : 0 0 0.625rem rgba(0, 0, 0, 0.45);
 	return (
 		<h1
-			className={`text-white text-[2rem] sm:text-[2.5rem] lg:text-[3rem] font-semibold leading-[54px] ${className}`}
+			className={`text-secondary text-[1.5rem] sm:text-[2rem] lg:text-[2.5rem] font-semibold  ${className}`}
 		>
 			{children}
 		</h1>

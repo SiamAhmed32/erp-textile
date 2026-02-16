@@ -54,6 +54,11 @@ const data = {
       icon: Building2,
     },
     {
+      title: "Users",
+      url: "/users",
+      icon: Users,
+    },
+    {
       title: "Buyers",
       url: "/buyers",
       icon: Users,
