@@ -27,6 +27,7 @@ export type BuyerSummary = {
     name: string;
     email?: string | null;
     address?: string | null;
+    location?: string | null;
     phone?: string | null;
     merchandiser?: string | null;
 };

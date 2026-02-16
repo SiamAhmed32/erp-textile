@@ -120,7 +120,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
 
         // Table Implementation
         let tableHead: string[][] = [];
-        let tableBody: any[][] = [];
+        const tableBody: any[][] = [];
         let totalAmount = 0;
 
         if (order?.productType === "FABRIC" && item?.fabricItem) {

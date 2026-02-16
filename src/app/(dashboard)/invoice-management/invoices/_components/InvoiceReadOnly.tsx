@@ -152,6 +152,36 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
                     </div>
                 </CardContent>
             </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>Buyer Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div>
+                        <p className="text-xs text-muted-foreground">Buyer Name</p>
+                        <p className="font-medium">{order?.buyer?.name || "-"}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Email</p>
+                        <p className="font-medium">{order?.buyer?.email || "-"}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Phone</p>
+                        <p className="font-medium">{order?.buyer?.phone || "-"}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs text-muted-foreground">Merchandiser</p>
+                        <p className="font-medium">{order?.buyer?.merchandiser || "-"}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                        <p className="text-xs text-muted-foreground">Address & Location</p>
+                        <p className="font-medium">
+                            {order?.buyer?.address || "-"}
+                            {order?.buyer?.location ? `, ${order.buyer.location}` : ""}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
 
             <Card>
                 <CardHeader>
