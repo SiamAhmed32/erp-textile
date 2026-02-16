@@ -30,13 +30,11 @@ import {
   toOrderUpdatePayload,
 } from "./helpers";
 import OrderForm from "./OrderForm";
-import { orderSchema, toFieldErrors } from "./validation";
+import { OrderValidation, toFieldErrors } from "./validation";
 
 type Props = {
   id: string;
 };
-
-type FormErrors = Partial<Record<keyof OrderFormData, string>>;
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -66,7 +64,7 @@ const OrderEdit = ({ id }: Props) => {
   const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
   const [activeStep, setActiveStep] = React.useState(0);
   const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<FormErrors>({});
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [originalStatus, setOriginalStatus] =
     React.useState<OrderFormData["status"]>("DRAFT");
   const [patchItem] = usePatchMutation();
@@ -115,7 +113,11 @@ const OrderEdit = ({ id }: Props) => {
 
   const handleChange = (field: keyof OrderFormData, value: any) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const handleNestedChange = (path: string, value: any) => {
@@ -124,15 +126,78 @@ const OrderEdit = ({ id }: Props) => {
       setNestedValue(next, path, value);
       return next;
     });
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[path];
+      return next;
+    });
+  };
+
+  const handleValidateStep = (stepIndex: number) => {
+    // We use .create for step validation to ensure completeness even during edits
+    const schemaResult = OrderValidation.create.safeParse(draft);
+    if (schemaResult.success) {
+      setErrors({});
+      return true;
+    }
+
+    const allErrors = toFieldErrors(schemaResult.error.issues);
+    const stepErrors: Record<string, string> = {};
+
+    if (stepIndex === 0) {
+      const fields = [
+        "orderNumber",
+        "orderDate",
+        "buyerId",
+        "companyProfileId",
+        "productType",
+      ];
+      fields.forEach((f) => {
+        if (allErrors[f]) stepErrors[f] = allErrors[f];
+      });
+    } else if (stepIndex === 1) {
+      Object.keys(allErrors).forEach((key) => {
+        if (key.startsWith("orderItems")) stepErrors[key] = allErrors[key];
+      });
+    } else if (stepIndex === 2) {
+      if (allErrors["deliveryDate"])
+        stepErrors["deliveryDate"] = allErrors["deliveryDate"];
+    }
+
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...stepErrors }));
+      return false;
+    }
+    return true;
   };
 
   const handleSave = async () => {
-    const schemaResult = orderSchema.safeParse(draft);
-    const nextErrors: FormErrors = schemaResult.success
-      ? {}
-      : (toFieldErrors(schemaResult.error.issues) as FormErrors);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    const schemaResult = OrderValidation.update.safeParse(draft);
+    if (!schemaResult.success) {
+      const nextErrors = toFieldErrors(schemaResult.error.issues);
+      setErrors(nextErrors);
+
+      // --- Teleport to Error Logic ---
+      const firstErrorKey = Object.keys(nextErrors)[0];
+      const basicFields = [
+        "orderNumber",
+        "orderDate",
+        "buyerId",
+        "companyProfileId",
+        "productType",
+      ];
+
+      if (basicFields.some((f) => firstErrorKey.startsWith(f))) {
+        setActiveStep(0);
+      } else if (firstErrorKey.startsWith("orderItems")) {
+        setActiveStep(1);
+      } else if (firstErrorKey.startsWith("deliveryDate")) {
+        setActiveStep(2);
+      }
+
+      return;
+    }
+    setErrors({});
 
     setSaving(true);
     try {
@@ -202,6 +267,7 @@ const OrderEdit = ({ id }: Props) => {
         onStepChange={setActiveStep}
         onChange={handleChange}
         onNestedChange={handleNestedChange}
+        onValidateStep={handleValidateStep}
         errors={errors}
         disableProductType
       />

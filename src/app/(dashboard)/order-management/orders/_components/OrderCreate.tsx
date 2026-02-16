@@ -25,9 +25,7 @@ import {
 } from "./types";
 import { normalizeOrder, toOrderFormData, toOrderPayload } from "./helpers";
 import OrderForm from "./OrderForm";
-import { orderSchema, toFieldErrors } from "./validation";
-
-type FormErrors = Partial<Record<keyof OrderFormData, string>>;
+import { OrderValidation, toFieldErrors } from "./validation";
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -62,8 +60,35 @@ const OrderCreate = ({ duplicateId }: Props) => {
   const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
   const [activeStep, setActiveStep] = React.useState(0);
   const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<FormErrors>({});
+  const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [postItem] = usePostMutation();
+
+  // --- Persistence Logic: Restore from LocalStorage ---
+  React.useEffect(() => {
+    if (duplicateId) return; // Don't restore if we are duplicating
+    const saved = localStorage.getItem("erp_order_draft");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setDraft(parsed.data || emptyOrder);
+        setActiveStep(parsed.step || 0);
+      } catch (err) {
+        console.error("Failed to restore draft:", err);
+      }
+    }
+  }, [duplicateId]);
+
+  // --- Persistence Logic: Save to LocalStorage ---
+  React.useEffect(() => {
+    if (duplicateId) return;
+    const timeout = setTimeout(() => {
+      localStorage.setItem(
+        "erp_order_draft",
+        JSON.stringify({ data: draft, step: activeStep }),
+      );
+    }, 1000); // 1s debounce to keep it efficient
+    return () => clearTimeout(timeout);
+  }, [draft, activeStep, duplicateId]);
 
   const { data: buyersPayload, error: buyersError } = useGetAllQuery({
     path: "buyers",
@@ -110,7 +135,11 @@ const OrderCreate = ({ duplicateId }: Props) => {
 
   const handleChange = (field: keyof OrderFormData, value: any) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: undefined }));
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
   };
 
   const handleNestedChange = (path: string, value: any) => {
@@ -119,15 +148,81 @@ const OrderCreate = ({ duplicateId }: Props) => {
       setNestedValue(next, path, value);
       return next;
     });
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next[path];
+      return next;
+    });
+  };
+
+  const handleValidateStep = (stepIndex: number) => {
+    const schemaResult = OrderValidation.create.safeParse(draft);
+    if (schemaResult.success) {
+      setErrors({});
+      return true;
+    }
+
+    const allErrors = toFieldErrors(schemaResult.error.issues);
+    const stepErrors: Record<string, string> = {};
+
+    if (stepIndex === 0) {
+      const fields = [
+        "orderNumber",
+        "orderDate",
+        "buyerId",
+        "companyProfileId",
+        "productType",
+      ];
+      fields.forEach((f) => {
+        if (allErrors[f]) stepErrors[f] = allErrors[f];
+      });
+    } else if (stepIndex === 1) {
+      Object.keys(allErrors).forEach((key) => {
+        if (key.startsWith("orderItems")) stepErrors[key] = allErrors[key];
+      });
+    } else if (stepIndex === 2) {
+      if (allErrors["deliveryDate"])
+        stepErrors["deliveryDate"] = allErrors["deliveryDate"];
+    }
+
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...stepErrors }));
+      return false;
+    }
+    return true;
   };
 
   const handleSave = async () => {
-    const schemaResult = orderSchema.safeParse(draft);
-    const nextErrors: FormErrors = schemaResult.success
-      ? {}
-      : (toFieldErrors(schemaResult.error.issues) as FormErrors);
-    setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    const isUpdate = !!draft.id;
+    const schema = isUpdate ? OrderValidation.update : OrderValidation.create;
+    const schemaResult = schema.safeParse(draft);
+
+    if (!schemaResult.success) {
+      const nextErrors = toFieldErrors(schemaResult.error.issues);
+      setErrors(nextErrors);
+
+      // --- Teleport to Error Logic ---
+      const firstErrorKey = Object.keys(nextErrors)[0];
+      const basicFields = [
+        "orderNumber",
+        "orderDate",
+        "buyerId",
+        "companyProfileId",
+        "productType",
+      ];
+
+      if (basicFields.some((f) => firstErrorKey.startsWith(f))) {
+        setActiveStep(0);
+      } else if (firstErrorKey.startsWith("orderItems")) {
+        setActiveStep(1);
+      } else if (firstErrorKey.startsWith("deliveryDate")) {
+        setActiveStep(2);
+      }
+
+      console.log("Validation errors:", nextErrors);
+      return;
+    }
+    setErrors({});
 
     setSaving(true);
     try {
@@ -139,8 +234,10 @@ const OrderCreate = ({ duplicateId }: Props) => {
       const item = (payload?.data || payload) as OrderApiItem;
       const normalized = item ? normalizeOrder(item) : null;
       if (normalized?.id) {
+        localStorage.removeItem("erp_order_draft");
         router.push(`/order-management/orders/${normalized.id}`);
       } else {
+        localStorage.removeItem("erp_order_draft");
         router.push(`/order-management/orders`);
       }
     } catch (err: any) {
@@ -189,6 +286,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
         onStepChange={setActiveStep}
         onChange={handleChange}
         onNestedChange={handleNestedChange}
+        onValidateStep={handleValidateStep}
         errors={errors}
       />
     </Container>
