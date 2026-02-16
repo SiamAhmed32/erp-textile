@@ -18,7 +18,8 @@ const tags = [
 	'invoice-terms',
 	'orders',
 	'company-profiles',
-	'buyers'
+	'buyers',
+	'invoices'
 ];
 
 export const mainApi = createApi({
@@ -30,9 +31,7 @@ export const mainApi = createApi({
 			const token = state.auth?.token || process.env.NEXT_PUBLIC_TOKEN;
 
 			if (token) {
-				// headers.set('Authorization', `Bearer ${token}`);
-				// TODO: Remove this
-				headers.set('Authorization', `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQ1YTNlZDFjLWRlYWMtNGUzZi1iZTE0LWQzMWNmZTBjZTBiYiIsImVtYWlsIjoiYWx0YWoxMDE5MTFAZ21haWwuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NzEyMzM5MDV9.UybvBr5PL-T45MsTOukyZsjKN0P4ujENOekmAl9J5BU`);
+				headers.set('Authorization', `Bearer ${token}`);
 			}
 		},
 	}),

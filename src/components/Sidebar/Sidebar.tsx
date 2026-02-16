@@ -88,11 +88,11 @@ const data = {
           url: "/invoice-management/invoices",
           icon: FileText,
         },
-        {
-          title: "Create Invoice",
-          url: "/invoice-management/invoices/add-new-invoice",
-          icon: FileText,
-        },
+        // {
+        //   title: "Create Invoice",
+        //   url: "/invoice-management/invoices/add-new-invoice",
+        //   icon: FileText,
+        // },
       ],
     },
   ],
