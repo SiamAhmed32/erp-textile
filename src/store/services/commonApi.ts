@@ -53,20 +53,20 @@ export const userApi = mainApi.injectEndpoints({
       providesTags: (_result, _error, { path }) => [path],
     }),
 
-		getById: builder.query({
-			query: ({ path, id }) => `${path}/${id}`,
-			providesTags: (_result, _error, { path, invalidate = [] }) => [
-				path,
-				...invalidate,
-			],
-		}),
+    getById: builder.query({
+      query: ({ path, id }) => `${path}/${id}`,
+      providesTags: (_result, _error, { path, invalidate = [] }) => [
+        path,
+        ...invalidate,
+      ],
+    }),
 
-		getByParentCategory: builder.query({
-			query: ({ path, parentCategoryId }) =>
-				`${path}?parentCategory=${parentCategoryId}`,
-			providesTags: (_result, _error, { path }) => [path],
-		}),
-   
+    getByParentCategory: builder.query({
+      query: ({ path, parentCategoryId }) =>
+        `${path}?parentCategory=${parentCategoryId}`,
+      providesTags: (_result, _error, { path }) => [path],
+    }),
+
     post: builder.mutation({
       query: ({ path, body }) => ({
         url: path,

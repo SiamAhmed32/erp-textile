@@ -15,6 +15,7 @@ const tags = [
 	'organization',
 	'filters',
 	'resource',
+	'invoice-terms'
 ];
 
 export const mainApi = createApi({
