@@ -88,6 +88,53 @@ export const toOrderFormData = (order: Order): OrderFormData => {
     };
 };
 
+const sanitizeOrderItems = (items: any) => {
+    if (!items) return undefined;
+    const sanitized = { ...items };
+
+    if (sanitized.fabricItem) {
+        sanitized.fabricItem = {
+            ...sanitized.fabricItem,
+            fabricItemData: sanitized.fabricItem.fabricItemData?.map((d: any) => ({
+                ...d,
+                netWeight: d.netWeight ? Number(d.netWeight) : undefined,
+                grossWeight: d.grossWeight ? Number(d.grossWeight) : undefined,
+                quantityYds: d.quantityYds ? Number(d.quantityYds) : undefined,
+                unitPrice: d.unitPrice ? Number(d.unitPrice) : undefined,
+            })),
+        };
+    }
+
+    if (sanitized.labelItem) {
+        sanitized.labelItem = {
+            ...sanitized.labelItem,
+            labelItemData: sanitized.labelItem.labelItemData?.map((d: any) => ({
+                ...d,
+                netWeight: d.netWeight ? Number(d.netWeight) : undefined,
+                grossWeight: d.grossWeight ? Number(d.grossWeight) : undefined,
+                quantityDzn: d.quantityDzn ? Number(d.quantityDzn) : undefined,
+                quantityPcs: d.quantityPcs ? Number(d.quantityPcs) : undefined,
+                unitPrice: d.unitPrice ? Number(d.unitPrice) : undefined,
+            })),
+        };
+    }
+
+    if (sanitized.cartonItem) {
+        sanitized.cartonItem = {
+            ...sanitized.cartonItem,
+            cartonItemData: sanitized.cartonItem.cartonItemData?.map((d: any) => ({
+                ...d,
+                cartonQty: d.cartonQty ? Number(d.cartonQty) : undefined,
+                netWeight: d.netWeight ? Number(d.netWeight) : undefined,
+                grossWeight: d.grossWeight ? Number(d.grossWeight) : undefined,
+                unitPrice: d.unitPrice ? Number(d.unitPrice) : undefined,
+            })),
+        };
+    }
+
+    return sanitized;
+};
+
 export const toOrderPayload = (data: OrderFormData) => ({
     orderNumber: data.orderNumber,
     orderDate: data.orderDate ? new Date(data.orderDate).toISOString() : undefined,
@@ -97,7 +144,7 @@ export const toOrderPayload = (data: OrderFormData) => ({
     companyProfileId: data.companyProfileId,
     status: coerceStatus(data.status),
     deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString() : undefined,
-    orderItems: data.orderItems,
+    orderItems: sanitizeOrderItems(data.orderItems),
 });
 
 export const toOrderUpdatePayload = (data: OrderFormData) => ({
@@ -107,5 +154,5 @@ export const toOrderUpdatePayload = (data: OrderFormData) => ({
     buyerId: data.buyerId,
     companyProfileId: data.companyProfileId,
     deliveryDate: data.deliveryDate ? new Date(data.deliveryDate).toISOString() : undefined,
-    orderItems: data.orderItems,
+    orderItems: sanitizeOrderItems(data.orderItems),
 });

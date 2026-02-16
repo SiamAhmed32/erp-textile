@@ -26,6 +26,7 @@ import {
 import { normalizeOrder, toOrderFormData, toOrderPayload } from "./helpers";
 import OrderForm from "./OrderForm";
 import { OrderValidation, toFieldErrors } from "./validation";
+import { toast } from "react-toastify";
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -62,33 +63,6 @@ const OrderCreate = ({ duplicateId }: Props) => {
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<Record<string, string>>({});
   const [postItem] = usePostMutation();
-
-  // --- Persistence Logic: Restore from LocalStorage ---
-  React.useEffect(() => {
-    if (duplicateId) return; // Don't restore if we are duplicating
-    const saved = localStorage.getItem("erp_order_draft");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setDraft(parsed.data || emptyOrder);
-        setActiveStep(parsed.step || 0);
-      } catch (err) {
-        console.error("Failed to restore draft:", err);
-      }
-    }
-  }, [duplicateId]);
-
-  // --- Persistence Logic: Save to LocalStorage ---
-  React.useEffect(() => {
-    if (duplicateId) return;
-    const timeout = setTimeout(() => {
-      localStorage.setItem(
-        "erp_order_draft",
-        JSON.stringify({ data: draft, step: activeStep }),
-      );
-    }, 1000); // 1s debounce to keep it efficient
-    return () => clearTimeout(timeout);
-  }, [draft, activeStep, duplicateId]);
 
   const { data: buyersPayload, error: buyersError } = useGetAllQuery({
     path: "buyers",
@@ -187,6 +161,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
 
     if (Object.keys(stepErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...stepErrors }));
+      toast.error("Please fill in the required fills");
       return false;
     }
     return true;
@@ -220,6 +195,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
       }
 
       console.log("Validation errors:", nextErrors);
+      toast.error("Please fill in the required fills");
       return;
     }
     setErrors({});
@@ -228,16 +204,14 @@ const OrderCreate = ({ duplicateId }: Props) => {
     try {
       const payload = (await postItem({
         path: "orders",
-        body: toOrderPayload(draft),
+        body: toOrderPayload(schemaResult.data as any),
         invalidate: ["orders"],
       }).unwrap()) as any;
       const item = (payload?.data || payload) as OrderApiItem;
       const normalized = item ? normalizeOrder(item) : null;
       if (normalized?.id) {
-        localStorage.removeItem("erp_order_draft");
         router.push(`/order-management/orders/${normalized.id}`);
       } else {
-        localStorage.removeItem("erp_order_draft");
         router.push(`/order-management/orders`);
       }
     } catch (err: any) {
@@ -248,6 +222,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
         err?.message ||
         "Failed to create order";
       console.error("Create Order Error:", message);
+      toast.error(message);
     } finally {
       setSaving(false);
     }

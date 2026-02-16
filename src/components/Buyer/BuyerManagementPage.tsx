@@ -163,14 +163,14 @@ export function BuyerManagementPage() {
 
   return (
     <Container className="py-8">
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <PrimaryHeading>Buyer Management</PrimaryHeading>
         <PrimaryText className="text-muted-foreground">
           Manage buyer profiles, contact details, and merchandiser assignments.
         </PrimaryText>
       </div>
 
-      <SectionGap />
+      <SectionGap /> */}
 
       <BuyerList
         buyers={buyers}

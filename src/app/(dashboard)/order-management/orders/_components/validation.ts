@@ -53,11 +53,6 @@ export const OrderValidation = {
               styleNo: z.string().min(1, "Style No is required"),
               discription: z.string().optional(),
               width: z.string().min(1, "Width is required"),
-              totalNetWeight: z.coerce.number().optional(),
-              totalGrossWeight: z.coerce.number().optional(),
-              totalQuantityYds: z.coerce.number().optional(),
-              totalUnitPrice: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(),
               fabricItemData: z
                 .array(
                   z.object({
@@ -66,7 +61,6 @@ export const OrderValidation = {
                     grossWeight: z.coerce.number().optional(),
                     quantityYds: z.coerce.number().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
@@ -76,12 +70,6 @@ export const OrderValidation = {
           labelItem: z
             .object({
               styleNo: z.string().min(1, "Style No is required"),
-              netWeightTotal: z.coerce.number().optional(),
-              grossWeightTotal: z.coerce.number().optional(),
-              quantityDznTotal: z.coerce.number().optional(),
-              quantityPcsTotal: z.coerce.number().optional(),
-              unitPriceTotal: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(),
               labelItemData: z
                 .array(
                   z.object({
@@ -92,7 +80,6 @@ export const OrderValidation = {
                     quantityDzn: z.coerce.number().optional(),
                     quantityPcs: z.coerce.number().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
@@ -102,11 +89,6 @@ export const OrderValidation = {
           cartonItem: z
             .object({
               orderNo: z.string().min(1, "Order No is required"),
-              totalcartonQty: z.coerce.number().optional(),
-              totalNetWeight: z.coerce.number().optional(),
-              totalGrossWeight: z.coerce.number().optional(),
-              totalUnitPrice: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(), // Re-added for safety as it was in previous backend schema
               cartonItemData: z
                 .array(
                   z.object({
@@ -117,7 +99,6 @@ export const OrderValidation = {
                     grossWeight: z.coerce.number().optional(),
                     unit: z.string().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
