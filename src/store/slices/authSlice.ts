@@ -40,6 +40,7 @@ export const authSlice = createSlice({
 		logout: (state): void => {
 			localStorage.setItem(TOKEN_NAME, 'null');
 			localStorage.setItem(REFRESH_TOKEN, 'null');
+			localStorage.removeItem('user');
 			state.token = null;
 			state.loggedIn = false;
 			// window.location.reload();

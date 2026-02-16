@@ -1,11 +1,11 @@
 import React from "react";
 import { Container } from "@/components/reusables";
-import InvoicePage from "./_components/InvoicePage";
+import UsersPage from "./_components/UsersPage";
 
 export default function Page() {
     return (
         <Container className="pb-10">
-            <InvoicePage />
+            <UsersPage />
         </Container>
     );
 }

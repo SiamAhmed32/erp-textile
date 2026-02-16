@@ -6,6 +6,7 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
+import { PrimaryHeading } from "@/components/reusables";
 
 const OrderPage = () => {
   const router = useRouter();

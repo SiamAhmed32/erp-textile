@@ -3,7 +3,7 @@ import { LoginBodyType, LoginPayloadType, RootState } from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND;
 const tags = ["self"];
-
+import Cookies from 'js-cookie';
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
@@ -12,10 +12,10 @@ export const authApi = createApi({
       const state = getState() as RootState;
       const token =
         state?.auth?.token ||
+        Cookies.get("token") || // ✅ js-cookie দিয়ে সহজে পাবেন
         (typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_NAME)
           : null);
-
       if (token) {
         headers.set("Authorization", `${token}`);
       }
@@ -26,7 +26,7 @@ export const authApi = createApi({
     // ✅ login matches old file (auth/login)
     login: builder.mutation<LoginPayloadType, LoginBodyType>({
       query: ({ email, password }) => ({
-        url: `user-api/auth/login`,
+        url: `auth/login`,
         method: "POST",
         body: { email, password },
       }),
@@ -36,11 +36,29 @@ export const authApi = createApi({
     // ✅ register matches old file (auth/register)
     register: builder.mutation<any, any>({
       query: (body) => ({
-        url: `user-api/auth/register`,
+        url: `/auth/register`,
         method: "POST",
         body,
+        formData: true,
       }),
-      invalidatesTags: ["self"],
+      invalidatesTags: ["self", "users" as any],
+    }),
+
+    getUsers: builder.query<any, { search?: string }>({
+      query: ({ search } = {}) => ({
+        url: `/users`,
+        params: search ? { search } : undefined,
+      }),
+      providesTags: ["users" as any],
+    }),
+
+    updateUser: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["users" as any],
     }),
 
     updatePassword: builder.mutation<any, any>({
@@ -101,6 +119,15 @@ export const authApi = createApi({
         body: { email },
       }),
     }),
+    patchUpdateSelf: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `/users/update-profile`,
+        method: "PATCH",
+        body,
+        formData: true,
+      }),
+      invalidatesTags: ["self"],
+    }),
     verifyToken: builder.query({
       query: ({ token }) => ({
         url: `auth/verify-reset-token/${token}`, // ✅ unchanged
@@ -130,6 +157,9 @@ export const {
   usePlaceOrderMutation,
   useGetMyOrdersQuery,
   useGetSingleOrderQuery,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  usePatchUpdateSelfMutation,
 } = authApi;
 
 export default authApi;

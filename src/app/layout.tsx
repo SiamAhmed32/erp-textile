@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ReduxProvider from "@/store/provider/ReduxProvider";
+import { Toaster } from "sonner";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -23,7 +24,8 @@ export default function RootLayout({
       <body className={`${inter.className} bg-primaryBg text-primaryText antialiased`}>
         <ReduxProvider>
           {children}
-          <ToastContainer position="top-right" autoClose={3000} />
+          <ToastContainer position="top-right" autoClose={1000} />
+          <Toaster richColors position="top-right" />
         </ReduxProvider>
       </body>
     </html>

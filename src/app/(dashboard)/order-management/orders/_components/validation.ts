@@ -107,7 +107,70 @@ export const OrderValidation = {
         })
         .optional(),
     })
-    .strict(),
+    .strict()
+    .superRefine((data, ctx) => {
+      // Conditional validation based on productType
+      if (data.productType === "FABRIC") {
+        if (!data.orderItems?.fabricItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "fabricItem"],
+            message: "Fabric details are required",
+          });
+        } else {
+          if (!data.orderItems.fabricItem.styleNo || data.orderItems.fabricItem.styleNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "fabricItem", "styleNo"],
+              message: "Style No is required",
+            });
+          }
+          if (!data.orderItems.fabricItem.width || data.orderItems.fabricItem.width.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "fabricItem", "width"],
+              message: "Width is required",
+            });
+          }
+        }
+      }
+
+      if (data.productType === "LABEL_TAG") {
+        if (!data.orderItems?.labelItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "labelItem"],
+            message: "Label details are required",
+          });
+        } else {
+          if (!data.orderItems.labelItem.styleNo || data.orderItems.labelItem.styleNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "labelItem", "styleNo"],
+              message: "Style No is required",
+            });
+          }
+        }
+      }
+
+      if (data.productType === "CARTON") {
+        if (!data.orderItems?.cartonItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "cartonItem"],
+            message: "Carton details are required",
+          });
+        } else {
+          if (!data.orderItems.cartonItem.orderNo || data.orderItems.cartonItem.orderNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "cartonItem", "orderNo"],
+              message: "Order No is required",
+            });
+          }
+        }
+      }
+    }),
 
   // ================= UPDATE ORDER =================
   update: z

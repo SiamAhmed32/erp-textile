@@ -352,13 +352,13 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-amber-200",
-                      getError("orderItems.orderItems.fabricItem.styleNo") &&
+                      getError("orderItems.fabricItem.styleNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.fabricItem.styleNo") && (
+                  {getError("orderItems.fabricItem.styleNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.fabricItem.styleNo")}
+                      {getError("orderItems.fabricItem.styleNo")}
                     </p>
                   )}
                 </div>
@@ -387,8 +387,17 @@ const OrderForm = ({
                         e.target.value,
                       )
                     }
-                    className="bg-white border-amber-200"
+                    className={cn(
+                      "bg-white border-amber-200",
+                      getError("orderItems.fabricItem.width") &&
+                        "border-destructive",
+                    )}
                   />
+                  {getError("orderItems.fabricItem.width") && (
+                    <p className="text-xs text-destructive">
+                      {getError("orderItems.fabricItem.width")}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -595,13 +604,13 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-blue-200",
-                      getError("orderItems.orderItems.labelItem.styleNo") &&
+                      getError("orderItems.labelItem.styleNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.labelItem.styleNo") && (
+                  {getError("orderItems.labelItem.styleNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.labelItem.styleNo")}
+                      {getError("orderItems.labelItem.styleNo")}
                     </p>
                   )}
                 </div>
@@ -844,13 +853,13 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-emerald-200",
-                      getError("orderItems.orderItems.cartonItem.orderNo") &&
+                      getError("orderItems.cartonItem.orderNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.cartonItem.orderNo") && (
+                  {getError("orderItems.cartonItem.orderNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.cartonItem.orderNo")}
+                      {getError("orderItems.cartonItem.orderNo")}
                     </p>
                   )}
                 </div>
@@ -1069,7 +1078,7 @@ const OrderForm = ({
 
   const renderDelivery = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="overflow-hidden border-none shadow-premium bg-white">
+      <Card className="overflow-hidden border-none shadow-premium bg-slate-50 ">
         <CardHeader className="bg-slate-50 border-b">
           <CardTitle className="flex items-center space-x-2 text-xl">
             <Truck className="h-5 w-5 text-emerald-500" />
@@ -1086,7 +1095,10 @@ const OrderForm = ({
               type="date"
               value={data.deliveryDate}
               onChange={(e) => onChange("deliveryDate", e.target.value)}
-              className="h-11 border-slate-200"
+              className={cn(
+                "h-11 border-slate-200",
+                getError("deliveryDate") && "border-destructive",
+              )}
             />
             {getError("deliveryDate") && (
               <p className="text-xs font-medium text-destructive">

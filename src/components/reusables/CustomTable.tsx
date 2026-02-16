@@ -51,7 +51,7 @@ function CustomTable<T extends Record<string, any>>({
   description,
   onRowClick,
   pagination,
-  scrollAreaHeight = "h-[calc(100vh-250px)]",
+  scrollAreaHeight = "h-[calc(100vh-350px)]",
   isLoading = false,
   skeletonRows = 5,
   rowClassName = "",
