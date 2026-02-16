@@ -113,6 +113,7 @@ export type Order = {
 export type OrderApiItem = Partial<Order>;
 
 export type OrderFormData = {
+    id?: string;
     orderNumber: string;
     orderDate: string;
     remarks: string;

@@ -17,17 +17,39 @@ export const userApi = mainApi.injectEndpoints({
 
     getAll: builder.query({
       query: ({
-        sort = "-createdAt",
+        sort,
         page = 1,
         limit = BASE_LIMIT,
         search = "",
         isActive,
         filters = {},
         path,
-      }) => ({
-        url: path,
-        params: { sort, page, limit, search, isActive, ...filters },
-      }),
+      }) => {
+        const params: any = {
+          page,
+          limit,
+          search,
+          ...filters,
+        };
+
+        // If sort is explicitly null, don't include it.
+        // If sort is undefined, use the default '-createdAt'.
+        // If sort has a value, use that value.
+        if (sort === null) {
+          // Do nothing, don't include sort
+        } else if (sort === undefined) {
+          params.sort = "-createdAt";
+        } else {
+          params.sort = sort;
+        }
+
+        if (isActive !== undefined) params.isActive = isActive;
+
+        return {
+          url: path,
+          params,
+        };
+      },
       providesTags: (_result, _error, { path }) => [path],
     }),
 

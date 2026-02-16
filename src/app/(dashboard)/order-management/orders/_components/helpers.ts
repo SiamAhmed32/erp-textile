@@ -66,21 +66,27 @@ export const statusBadgeClass = (status: OrderStatus) => {
     }
 };
 
-export const toOrderFormData = (order: Order): OrderFormData => ({
-    orderNumber: order.orderNumber || "",
-    orderDate: order.orderDate ? order.orderDate.slice(0, 10) : "",
-    remarks: order.remarks || "",
-    productType: coerceProductType(order.productType),
-    buyerId: order.buyerId || "",
-    companyProfileId: order.companyProfileId || "",
-    status: coerceStatus(order.status),
-    deliveryDate: order.deliveryDate ? order.deliveryDate.slice(0, 10) : "",
-    orderItems: {
-        fabricItem: order.orderItems?.[0]?.fabricItem || undefined,
-        labelItem: order.orderItems?.[0]?.labelItem || undefined,
-        cartonItem: order.orderItems?.[0]?.cartonItem || undefined,
-    },
-});
+export const toOrderFormData = (order: Order): OrderFormData => {
+    const firstItem = Array.isArray(order.orderItems)
+        ? order.orderItems[0]
+        : order.orderItems;
+
+    return {
+        orderNumber: order.orderNumber || "",
+        orderDate: order.orderDate ? order.orderDate.slice(0, 10) : "",
+        remarks: order.remarks || "",
+        productType: coerceProductType(order.productType),
+        buyerId: order.buyerId || "",
+        companyProfileId: order.companyProfileId || "",
+        status: coerceStatus(order.status),
+        deliveryDate: order.deliveryDate ? order.deliveryDate.slice(0, 10) : "",
+        orderItems: {
+            fabricItem: firstItem?.fabricItem || undefined,
+            labelItem: firstItem?.labelItem || undefined,
+            cartonItem: firstItem?.cartonItem || undefined,
+        },
+    };
+};
 
 export const toOrderPayload = (data: OrderFormData) => ({
     orderNumber: data.orderNumber,
