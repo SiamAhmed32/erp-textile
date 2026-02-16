@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "react-toastify";
 import {
   Container,
   Flex,
@@ -166,6 +167,7 @@ const OrderEdit = ({ id }: Props) => {
 
     if (Object.keys(stepErrors).length > 0) {
       setErrors((prev) => ({ ...prev, ...stepErrors }));
+      toast.error("Please fill in the required fills");
       return false;
     }
     return true;
@@ -203,7 +205,7 @@ const OrderEdit = ({ id }: Props) => {
     try {
       await patchItem({
         path: `orders/${id}`,
-        body: toOrderUpdatePayload(draft),
+        body: toOrderUpdatePayload(schemaResult.data as any),
         invalidate: ["orders"],
       }).unwrap();
 

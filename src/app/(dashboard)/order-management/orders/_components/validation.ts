@@ -53,11 +53,6 @@ export const OrderValidation = {
               styleNo: z.string().min(1, "Style No is required"),
               discription: z.string().optional(),
               width: z.string().min(1, "Width is required"),
-              totalNetWeight: z.coerce.number().optional(),
-              totalGrossWeight: z.coerce.number().optional(),
-              totalQuantityYds: z.coerce.number().optional(),
-              totalUnitPrice: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(),
               fabricItemData: z
                 .array(
                   z.object({
@@ -66,7 +61,6 @@ export const OrderValidation = {
                     grossWeight: z.coerce.number().optional(),
                     quantityYds: z.coerce.number().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
@@ -76,12 +70,6 @@ export const OrderValidation = {
           labelItem: z
             .object({
               styleNo: z.string().min(1, "Style No is required"),
-              netWeightTotal: z.coerce.number().optional(),
-              grossWeightTotal: z.coerce.number().optional(),
-              quantityDznTotal: z.coerce.number().optional(),
-              quantityPcsTotal: z.coerce.number().optional(),
-              unitPriceTotal: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(),
               labelItemData: z
                 .array(
                   z.object({
@@ -92,7 +80,6 @@ export const OrderValidation = {
                     quantityDzn: z.coerce.number().optional(),
                     quantityPcs: z.coerce.number().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
@@ -102,11 +89,6 @@ export const OrderValidation = {
           cartonItem: z
             .object({
               orderNo: z.string().min(1, "Order No is required"),
-              totalcartonQty: z.coerce.number().optional(),
-              totalNetWeight: z.coerce.number().optional(),
-              totalGrossWeight: z.coerce.number().optional(),
-              totalUnitPrice: z.coerce.number().optional(),
-              totalAmount: z.coerce.number().optional(), // Re-added for safety as it was in previous backend schema
               cartonItemData: z
                 .array(
                   z.object({
@@ -117,7 +99,6 @@ export const OrderValidation = {
                     grossWeight: z.coerce.number().optional(),
                     unit: z.string().optional(),
                     unitPrice: z.coerce.number().optional(),
-                    totalAmount: z.coerce.number().optional(),
                   }),
                 )
                 .optional(),
@@ -126,7 +107,70 @@ export const OrderValidation = {
         })
         .optional(),
     })
-    .strict(),
+    .strict()
+    .superRefine((data, ctx) => {
+      // Conditional validation based on productType
+      if (data.productType === "FABRIC") {
+        if (!data.orderItems?.fabricItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "fabricItem"],
+            message: "Fabric details are required",
+          });
+        } else {
+          if (!data.orderItems.fabricItem.styleNo || data.orderItems.fabricItem.styleNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "fabricItem", "styleNo"],
+              message: "Style No is required",
+            });
+          }
+          if (!data.orderItems.fabricItem.width || data.orderItems.fabricItem.width.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "fabricItem", "width"],
+              message: "Width is required",
+            });
+          }
+        }
+      }
+
+      if (data.productType === "LABEL_TAG") {
+        if (!data.orderItems?.labelItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "labelItem"],
+            message: "Label details are required",
+          });
+        } else {
+          if (!data.orderItems.labelItem.styleNo || data.orderItems.labelItem.styleNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "labelItem", "styleNo"],
+              message: "Style No is required",
+            });
+          }
+        }
+      }
+
+      if (data.productType === "CARTON") {
+        if (!data.orderItems?.cartonItem) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["orderItems", "cartonItem"],
+            message: "Carton details are required",
+          });
+        } else {
+          if (!data.orderItems.cartonItem.orderNo || data.orderItems.cartonItem.orderNo.trim() === "") {
+            ctx.addIssue({
+              code: "custom",
+              path: ["orderItems", "cartonItem", "orderNo"],
+              message: "Order No is required",
+            });
+          }
+        }
+      }
+    }),
 
   // ================= UPDATE ORDER =================
   update: z

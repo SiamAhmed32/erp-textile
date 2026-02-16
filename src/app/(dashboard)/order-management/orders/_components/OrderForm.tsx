@@ -154,8 +154,16 @@ const OrderForm = ({
               type="date"
               value={data.orderDate}
               onChange={(e) => onChange("orderDate", e.target.value)}
-              className="h-11 border-slate-200"
+              className={cn(
+                "h-11 border-slate-200",
+                getError("orderDate") && "border-destructive",
+              )}
             />
+            {getError("orderDate") && (
+              <p className="text-xs font-medium text-destructive">
+                {getError("orderDate")}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label
@@ -222,6 +230,11 @@ const OrderForm = ({
                 </SelectItem>
               </SelectContent>
             </Select>
+            {getError("productType") && (
+              <p className="text-xs font-medium text-destructive">
+                {getError("productType")}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label
@@ -339,13 +352,13 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-amber-200",
-                      getError("orderItems.orderItems.fabricItem.styleNo") &&
+                      getError("orderItems.fabricItem.styleNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.fabricItem.styleNo") && (
+                  {getError("orderItems.fabricItem.styleNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.fabricItem.styleNo")}
+                      {getError("orderItems.fabricItem.styleNo")}
                     </p>
                   )}
                 </div>
@@ -374,88 +387,17 @@ const OrderForm = ({
                         e.target.value,
                       )
                     }
-                    className="bg-white border-amber-200"
+                    className={cn(
+                      "bg-white border-amber-200",
+                      getError("orderItems.fabricItem.width") &&
+                        "border-destructive",
+                    )}
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Net Weight
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalNetWeight || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalNetWeight",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2 text-foreground">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Gross Weight
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalGrossWeight || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalGrossWeight",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Quantity (Yds)
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalQuantityYds || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalQuantityYds",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Unit Price
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalUnitPrice || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalUnitPrice",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200 font-bold text-amber-700"
-                  />
+                  {getError("orderItems.fabricItem.width") && (
+                    <p className="text-xs text-destructive">
+                      {getError("orderItems.fabricItem.width")}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -480,7 +422,6 @@ const OrderForm = ({
                           grossWeight: "",
                           quantityYds: "",
                           unitPrice: "",
-                          totalAmount: "",
                         },
                       ];
                       onNestedChange(
@@ -504,7 +445,7 @@ const OrderForm = ({
                     rows.map((row, index) => (
                       <div
                         key={index}
-                        className="group relative grid gap-4 rounded-xl border border-amber-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-6 items-end"
+                        className="group relative grid gap-4 rounded-xl border border-amber-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-5 items-end"
                       >
                         <div className="space-y-2">
                           <Label className="text-xs font-bold text-slate-500 uppercase">
@@ -587,37 +528,23 @@ const OrderForm = ({
                         </div>
                         <div className="space-y-2">
                           <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Total
+                            Action
                           </Label>
-                          <div className="flex space-x-2">
-                            <Input
-                              placeholder="Total"
-                              type="number"
-                              value={row.totalAmount || ""}
-                              onChange={(e) =>
-                                onNestedChange(
-                                  `orderItems.fabricItem.fabricItemData.${index}.totalAmount`,
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-50 font-semibold"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-red-50"
-                              onClick={() => {
-                                const next = rows.filter((_, i) => i !== index);
-                                onNestedChange(
-                                  "orderItems.fabricItem.fabricItemData",
-                                  next,
-                                );
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:bg-red-50 w-full"
+                            onClick={() => {
+                              const next = rows.filter((_, i) => i !== index);
+                              onNestedChange(
+                                "orderItems.fabricItem.fabricItemData",
+                                next,
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))
@@ -626,6 +553,28 @@ const OrderForm = ({
               </div>
             </CardContent>
           </Card>
+          <div className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => onStepChange(0)}
+              className="px-8"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Basic Info
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => {
+                const isValid = onValidateStep?.(1);
+                if (isValid) onStepChange(2);
+              }}
+              className="px-8 shadow-md text-white"
+            >
+              Next: Delivery Details
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       );
     }
@@ -635,7 +584,7 @@ const OrderForm = ({
       return (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <Card className="overflow-hidden border-none shadow-premium bg-blue-50/30">
-            <CardHeader className="bg-blue-100/50 border-b border-blue-200/50">
+            <CardHeader className="border-b border-blue-200/50">
               <CardTitle className="flex items-center space-x-2 text-xl text-blue-900">
                 <Tag className="h-5 w-5" />
                 <span>Label & Tag Details</span>
@@ -655,33 +604,17 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-blue-200",
-                      getError("orderItems.orderItems.labelItem.styleNo") &&
+                      getError("orderItems.labelItem.styleNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.labelItem.styleNo") && (
+                  {getError("orderItems.labelItem.styleNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.labelItem.styleNo")}
+                      {getError("orderItems.labelItem.styleNo")}
                     </p>
                   )}
                 </div>
                 {/* Add other summary fields here... abbreviated for length but following same pattern */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.labelItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.labelItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-blue-200 font-bold text-blue-700"
-                  />
-                </div>
               </div>
 
               <div className="space-y-4">
@@ -707,7 +640,6 @@ const OrderForm = ({
                           quantityDzn: "",
                           quantityPcs: "",
                           unitPrice: "",
-                          totalAmount: "",
                         },
                       ];
                       onNestedChange(
@@ -731,7 +663,7 @@ const OrderForm = ({
                     rows.map((row, index) => (
                       <div
                         key={index}
-                        className="group relative grid gap-4 rounded-xl border border-blue-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-8 items-end"
+                        className="group relative grid gap-4 rounded-xl border border-blue-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-10 items-end"
                       >
                         <div className="lg:col-span-2 space-y-2">
                           <Label className="text-xs font-bold text-slate-500 uppercase">
@@ -763,14 +695,94 @@ const OrderForm = ({
                             }
                           />
                         </div>
-                        {/* ... other fields ... */}
-                        <div className="space-y-2 lg:col-start-8">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Net Wt
+                          </Label>
+                          <Input
+                            placeholder="Net"
+                            type="number"
+                            value={row.netWeight || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.labelItem.labelItemData.${index}.netWeight`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Gross Wt
+                          </Label>
+                          <Input
+                            placeholder="Gross"
+                            type="number"
+                            value={row.grossWeight || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.labelItem.labelItemData.${index}.grossWeight`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Qty (Dzn)
+                          </Label>
+                          <Input
+                            placeholder="Dzn"
+                            type="number"
+                            value={row.quantityDzn || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.labelItem.labelItemData.${index}.quantityDzn`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Qty (Pcs)
+                          </Label>
+                          <Input
+                            placeholder="Pcs"
+                            type="number"
+                            value={row.quantityPcs || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.labelItem.labelItemData.${index}.quantityPcs`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Unit Price
+                          </Label>
+                          <Input
+                            placeholder="Price"
+                            type="number"
+                            value={row.unitPrice || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.labelItem.labelItemData.${index}.unitPrice`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2 lg:col-start-10">
                           <Label className="text-xs font-bold text-slate-500 uppercase">
                             Action
                           </Label>
                           <Button
                             type="button"
                             variant="ghost"
+                            size="icon"
                             className="w-full text-destructive hover:bg-red-50"
                             onClick={() => {
                               const next = rows.filter((_, i) => i !== index);
@@ -780,8 +792,7 @@ const OrderForm = ({
                               );
                             }}
                           >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -791,6 +802,28 @@ const OrderForm = ({
               </div>
             </CardContent>
           </Card>
+          <div className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => onStepChange(0)}
+              className="px-8"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Basic Info
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => {
+                const isValid = onValidateStep?.(1);
+                if (isValid) onStepChange(2);
+              }}
+              className="px-8 shadow-md text-white"
+            >
+              Next: Delivery Details
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       );
     }
@@ -820,47 +853,15 @@ const OrderForm = ({
                     }
                     className={cn(
                       "bg-white border-emerald-200",
-                      getError("orderItems.orderItems.cartonItem.orderNo") &&
+                      getError("orderItems.cartonItem.orderNo") &&
                         "border-destructive",
                     )}
                   />
-                  {getError("orderItems.orderItems.cartonItem.orderNo") && (
+                  {getError("orderItems.cartonItem.orderNo") && (
                     <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.cartonItem.orderNo")}
+                      {getError("orderItems.cartonItem.orderNo")}
                     </p>
                   )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Carton Qty
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.cartonItem?.totalcartonQty || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.cartonItem.totalcartonQty",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-emerald-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.cartonItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.cartonItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-emerald-200 font-bold text-emerald-700"
-                  />
                 </div>
               </div>
 
@@ -887,7 +888,6 @@ const OrderForm = ({
                           grossWeight: "",
                           unit: "",
                           unitPrice: "",
-                          totalAmount: "",
                         },
                       ];
                       onNestedChange(
@@ -911,7 +911,7 @@ const OrderForm = ({
                     rows.map((row, index) => (
                       <div
                         key={index}
-                        className="group relative grid gap-4 rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-8 items-end"
+                        className="group relative grid gap-4 rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-9 items-end"
                       >
                         <div className="lg:col-span-2 space-y-2">
                           <Label className="text-xs font-bold text-slate-500 uppercase">
@@ -990,29 +990,47 @@ const OrderForm = ({
                             }
                           />
                         </div>
-                        <div className="lg:col-span-2 flex space-x-2 items-end">
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500 uppercase">
-                              Total Amount
-                            </Label>
-                            <Input
-                              placeholder="Total"
-                              type="number"
-                              value={row.totalAmount || ""}
-                              onChange={(e) =>
-                                onNestedChange(
-                                  `orderItems.cartonItem.cartonItemData.${index}.totalAmount`,
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-50"
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Net Wt
+                          </Label>
+                          <Input
+                            placeholder="Net"
+                            type="number"
+                            value={row.netWeight || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.cartonItem.cartonItemData.${index}.netWeight`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Gross Wt
+                          </Label>
+                          <Input
+                            placeholder="Gross"
+                            type="number"
+                            value={row.grossWeight || ""}
+                            onChange={(e) =>
+                              onNestedChange(
+                                `orderItems.cartonItem.cartonItemData.${index}.grossWeight`,
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2 lg:col-start-9">
+                          <Label className="text-xs font-bold text-slate-500 uppercase">
+                            Action
+                          </Label>
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="text-destructive hover:bg-red-50 mb-0.5"
+                            className="text-destructive hover:bg-red-50 mb-0.5 w-full"
                             onClick={() => {
                               const next = rows.filter((_, i) => i !== index);
                               onNestedChange(
@@ -1031,6 +1049,28 @@ const OrderForm = ({
               </div>
             </CardContent>
           </Card>
+          <div className="flex justify-between pt-6">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => onStepChange(0)}
+              className="px-8"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Back to Basic Info
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => {
+                const isValid = onValidateStep?.(1);
+                if (isValid) onStepChange(2);
+              }}
+              className="px-8 shadow-md text-white"
+            >
+              Next: Delivery Details
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
         </div>
       );
     }
@@ -1038,7 +1078,7 @@ const OrderForm = ({
 
   const renderDelivery = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="overflow-hidden border-none shadow-premium bg-white">
+      <Card className="overflow-hidden border-none shadow-premium bg-slate-50 ">
         <CardHeader className="bg-slate-50 border-b">
           <CardTitle className="flex items-center space-x-2 text-xl">
             <Truck className="h-5 w-5 text-emerald-500" />
@@ -1055,7 +1095,10 @@ const OrderForm = ({
               type="date"
               value={data.deliveryDate}
               onChange={(e) => onChange("deliveryDate", e.target.value)}
-              className="h-11 border-slate-200"
+              className={cn(
+                "h-11 border-slate-200",
+                getError("deliveryDate") && "border-destructive",
+              )}
             />
             {getError("deliveryDate") && (
               <p className="text-xs font-medium text-destructive">
