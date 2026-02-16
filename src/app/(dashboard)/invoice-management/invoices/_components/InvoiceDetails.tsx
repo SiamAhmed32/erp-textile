@@ -81,7 +81,10 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         // Title
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        doc.text("Proforma Invoice", 105, 32, { align: "center" });
+        const title = "Proforma Invoice";
+        const titleWidth = doc.getTextWidth(title);
+        doc.text(title, 105, 32, { align: "center" });
+        doc.line(105 - titleWidth / 2, 33, 105 + titleWidth / 2, 33); // Underline
 
         // Info Grid
         doc.setFontSize(9);
@@ -93,22 +96,25 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.text(buyerName.toUpperCase(), 14, currentY);
         doc.setFont("helvetica", "normal");
         const buyerAddress = buyer?.address || "CUSTOMER ADDRESS";
-        const splitAddress = doc.splitTextToSize(buyerAddress, 80);
+        const buyerLocation = buyer?.location ? `, ${buyer.location}` : "";
+        const fullAddress = `${buyerAddress}${buyerLocation}`;
+        const splitAddress = doc.splitTextToSize(fullAddress, 85);
         doc.text(splitAddress, 14, currentY + 4);
 
-        // Right Column: PI Info
-        const rightColX = 140;
+        // Right Column: PI Info (Right Aligned)
+        const rightLabelX = 180; // Right edge for labels
+        const rightValueX = 196; // Right edge for values
         doc.setFont("helvetica", "bold");
-        doc.text("PI NO:", rightColX, currentY);
-        doc.text("Date:", rightColX, currentY + 5);
-        doc.text("Buyer:", rightColX, currentY + 10);
-        doc.text("Merchandiser:", rightColX, currentY + 15);
+        doc.text("PI NO:", rightLabelX, currentY, { align: "right" });
+        doc.text("Date:", rightLabelX, currentY + 5, { align: "right" });
+        doc.text("Buyer:", rightLabelX, currentY + 10, { align: "right" });
+        doc.text("Merchandiser:", rightLabelX, currentY + 15, { align: "right" });
 
         doc.setFont("helvetica", "normal");
-        doc.text(invoice.piNumber || "-", rightColX + 25, currentY);
-        doc.text(formatDate(invoice.date), rightColX + 25, currentY + 5);
-        doc.text(buyer?.name || "-", rightColX + 25, currentY + 10);
-        doc.text(buyer?.merchandiser || "Mr. Shahin", rightColX + 25, currentY + 15);
+        doc.text(invoice.piNumber || "-", rightValueX, currentY, { align: "right" });
+        doc.text(formatDate(invoice.date), rightValueX, currentY + 5, { align: "right" });
+        doc.text(buyer?.name || "-", rightValueX, currentY + 10, { align: "right" });
+        doc.text(buyer?.merchandiser || "Mr. Shahin", rightValueX, currentY + 15, { align: "right" });
 
         currentY = 65;
 
@@ -118,32 +124,47 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         let totalAmount = 0;
 
         if (order?.productType === "FABRIC" && item?.fabricItem) {
-            tableHead = [["Style No", "Description", "GSM", "Width", "Colour", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty (Yds)", "Unit Price", "Total Amount"]];
+            tableHead = [["Colour", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty (Yds)", "Unit Price", "Total Amount"]];
+
+            // Add Item Header Row
+            tableBody.push([
+                {
+                    content: `Style No: ${item.fabricItem.styleNo || "-"} | Description: ${item.fabricItem.discription || "-"} | Width: ${item.fabricItem.width || "-"}`,
+                    colSpan: 6,
+                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
+                }
+            ]);
+
             const rows = item.fabricItem.fabricItemData || [];
-            tableBody = rows.map((row: any) => {
+            rows.forEach((row: any) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
-                return [
-                    item.fabricItem.styleNo || "-",
-                    item.fabricItem.discription || "-",
-                    row.gsm || "-",
-                    item.fabricItem.width || "-",
+                tableBody.push([
                     row.color || "-",
                     row.netWeight || "-",
                     row.grossWeight || "-",
                     row.quantityYds || "-",
                     row.unitPrice || "-",
                     amount.toFixed(2),
-                ];
+                ]);
             });
         } else if (order?.productType === "CARTON" && item?.cartonItem) {
-            tableHead = [["Order No", "Measurement", "Ply", "Unit", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty", "Unit Price", "Total Amount"]];
+            tableHead = [["Measurement", "Ply", "Unit", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty", "Unit Price", "Total Amount"]];
+
+            // Add Item Header Row
+            tableBody.push([
+                {
+                    content: `Order No: ${item.cartonItem.orderNo || "-"}`,
+                    colSpan: 8,
+                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
+                }
+            ]);
+
             const rows = item.cartonItem.cartonItemData || [];
-            tableBody = rows.map((row: any) => {
+            rows.forEach((row: any) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
-                return [
-                    item.cartonItem.orderNo || "-",
+                tableBody.push([
                     row.cartonMeasurement || "-",
                     row.cartonPly || "-",
                     row.unit || "-",
@@ -152,17 +173,25 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                     row.cartonQty || "-",
                     row.unitPrice || "-",
                     amount.toFixed(2),
-                ];
+                ]);
             });
         } else if (order?.productType === "LABEL_TAG" && item?.labelItem) {
-            tableHead = [["Style No", "Description", "Color", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty Dzn", "Qty Pcs", "Unit Price", "Total Amount"]];
+            tableHead = [["Color", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty Dzn", "Qty Pcs", "Unit Price", "Total Amount"]];
+
+            // Add Item Header Row
+            tableBody.push([
+                {
+                    content: `Style No: ${item.labelItem.styleNo || "-"}`,
+                    colSpan: 7,
+                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
+                }
+            ]);
+
             const rows = item.labelItem.labelItemData || [];
-            tableBody = rows.map((row: any) => {
+            rows.forEach((row: any) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
-                return [
-                    item.labelItem.styleNo || "-",
-                    row.desscription || "-",
+                tableBody.push([
                     row.color || "-",
                     row.netWeight || "-",
                     row.grossWeight || "-",
@@ -170,7 +199,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                     row.quantityPcs || "-",
                     row.unitPrice || "-",
                     amount.toFixed(2),
-                ];
+                ]);
             });
         }
 
@@ -187,16 +216,16 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                 body: tableBody,
                 theme: "grid",
                 styles: { fontSize: 7, cellPadding: 1.5, halign: "center" },
-                headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], lineWidth: 0.1, fontStyle: "bold" },
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], lineWidth: 0.1, fontStyle: "bold" },
                 columnStyles: {
                     0: { halign: "left" },
                     1: { halign: "left" },
                 },
             });
 
-            currentY = (doc as any).lastAutoTable.finalY + 10;
+            currentY = (doc as any).lastAutoTable.finalY + 6; // Narrow space
         } else {
-            currentY += 10;
+            currentY += 6;
         }
 
         // Footer Section
@@ -204,66 +233,83 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.setFont("helvetica", "bold");
         doc.text("In Word:", 14, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(amountInWords(totalAmount), 30, currentY);
+        doc.text(amountInWords(totalAmount), 27, currentY); // Narrow space
 
-        currentY += 10;
+        currentY += 6; // Narrow space
 
         // Payment & Terms
         doc.setFont("helvetica", "bold");
         doc.text(`Payment:`, 14, currentY);
         doc.setFont("helvetica", "normal");
         const paymentText = terms?.payment || "As per regular terms.";
-        const splitPayment = doc.splitTextToSize(paymentText, 90);
-        doc.text(splitPayment, 30, currentY);
+        const splitPayment = doc.splitTextToSize(paymentText, 100);
+        doc.text(splitPayment, 27, currentY);
 
         doc.setFont("helvetica", "bold");
         doc.text(`Origin:`, 110, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(terms?.origin || "Bangladesh", 125, currentY);
+        doc.text(terms?.origin || "Bangladesh", 120, currentY);
 
-        currentY += 8;
+        currentY += splitPayment.length * 4; // Add height of payment text
+        // Removed extra increment between payment and delivery
+
         doc.setFont("helvetica", "bold");
         doc.text(`Delivery:`, 14, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(terms?.delivery || "-", 30, currentY);
+        doc.text(terms?.delivery || "-", 27, currentY);
 
         doc.setFont("helvetica", "bold");
         doc.text(`SWIFT Code:`, 110, currentY);
         doc.setFont("helvetica", "normal");
         doc.text(terms?.swiftCode || "-", 130, currentY);
 
-        currentY += 5;
+        currentY += 4;
         doc.setFont("helvetica", "bold");
         doc.text(`Advising Bank:`, 14, currentY);
         doc.setFont("helvetica", "normal");
         const bankText = terms?.advisingBank || "-";
-        const splitBank = doc.splitTextToSize(bankText, 90);
+        const splitBank = doc.splitTextToSize(bankText, 70);
         doc.text(splitBank, 35, currentY);
 
         doc.setFont("helvetica", "bold");
         doc.text(`VAT No:`, 110, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(terms?.binNo || "-", 125, currentY);
+        doc.text(terms?.binNo || "-", 122, currentY);
 
-        currentY += 5;
+        currentY += 4;
         doc.setFont("helvetica", "bold");
         doc.text(`HS Code:`, 110, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(terms?.hsCode || "-", 125, currentY);
+        doc.text(terms?.hsCode || "-", 124, currentY);
 
         currentY += 15;
 
         // Banking Details for MOON TEXTILE
         doc.setFont("helvetica", "bold");
-        doc.text(`Bank Name: ${company?.bankName || "National Bank Limited"}`, 14, currentY);
-        doc.text(`${company?.branchName || "Pragati Sarani Branch, Dhaka"}`, 14, currentY + 4);
-        doc.text(`A/C Name: ${company?.name || "Moon Textile"}`, 14, currentY + 8);
-        doc.text(`A/C No: ${company?.bankAccountNumber || "0116-3112001201"}`, 14, currentY + 12);
+        doc.text(`Bank Name:`, 14, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${company?.bankName || "National Bank Limited"}`, 32, currentY);
 
-        // Authorized Signature
+        currentY += 4;
+        doc.text(`${company?.branchName || "Pragati Sarani Branch, Dhaka"}`, 14, currentY);
+        currentY += 4;
+        doc.text(`A/C Name: ${company?.name || "Moon Textile"}`, 14, currentY);
+        currentY += 4;
+        doc.text(`A/C No: ${company?.bankAccountNumber || "0116-3112001201"}`, 14, currentY);
+
+        // Authorized Signature & Buyer Acceptance
+        currentY += 32; // Big space before signature
+
+        // Buyer Acceptance (Left)
+        doc.setFont("helvetica", "normal");
+        doc.line(14, currentY, 60, currentY); // Add line for Buyer Acceptance
+        doc.text("Buyer Acceptance", 14, currentY + 4);
+
+        // Authorized Signature (Right)
         doc.setFont("helvetica", "bold");
-        doc.text(`For ${company?.name || "Moon Textile."}`, 180, currentY + 25, { align: "right" });
-        doc.text("Authorized Signature", 180, currentY + 29, { align: "right" });
+        doc.text(`For ${company?.name || "Moon Textile."}`, 196, currentY, { align: "right" });
+        doc.setFont("helvetica", "normal");
+        doc.text("Authorized Signature", 196, currentY + 4, { align: "right" });
 
         const filename = `${invoice.piNumber || invoice.id}.pdf`;
         doc.save(filename);

@@ -87,18 +87,18 @@ const data = {
     {
       title: "Proforma Invoice",
       icon: FileText,
-      items: [
-        {
-          title: "All Invoices",
-          url: "/invoice-management/invoices",
-          icon: FileText,
-        },
-        // {
-        //   title: "Create Invoice",
-        //   url: "/invoice-management/invoices/add-new-invoice",
-        //   icon: FileText,
-        // },
-      ],
+      url: "/invoice-management/invoices",
+      // items: [
+      //   {
+      //     title: "All Invoices",
+      //     icon: FileText,
+      //   },
+      //   // {
+      //   //   title: "Create Invoice",
+      //   //   url: "/invoice-management/invoices/add-new-invoice",
+      //   //   icon: FileText,
+      //   // },
+      // ],
     },
   ],
 };
