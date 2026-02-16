@@ -37,6 +37,7 @@ const InvoiceCreate = () => {
     path: "invoice-terms",
     page: 1,
     limit: 100,
+
   });
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];

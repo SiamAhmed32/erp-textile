@@ -15,6 +15,10 @@ const tags = [
 	'organization',
 	'filters',
 	'resource',
+	'invoice-terms',
+	'orders',
+	'company-profiles',
+	'buyers'
 ];
 
 export const mainApi = createApi({
@@ -26,7 +30,6 @@ export const mainApi = createApi({
 			const token = state.auth?.token || process.env.NEXT_PUBLIC_TOKEN;
 
 			if (token) {
-				// headers.set('Authorization', `Bearer ${token}`);
 				headers.set('Authorization', `Bearer ${token}`);
 			}
 		},
