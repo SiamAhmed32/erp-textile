@@ -1,30 +1,23 @@
-import React from "react"
-import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { InvoiceTerms } from "./types"
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import CustomTable from "@/components/reusables/CustomTable";
+import { InvoiceTerms } from "./types";
 
 type Props = {
-  terms: InvoiceTerms[]
-  search: string
-  onSearchChange: (value: string) => void
-  onCreate: () => void
-  onEdit: (terms: InvoiceTerms) => void
-  onDelete: (terms: InvoiceTerms) => void
-  page: number
-  totalPages: number
-  onPrev: () => void
-  onNext: () => void
-}
+  terms: InvoiceTerms[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  onCreate: () => void;
+  onEdit: (terms: InvoiceTerms) => void;
+  onDelete: (terms: InvoiceTerms) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  loading?: boolean;
+};
 
 export function InvoiceTermsList({
   terms,
@@ -35,89 +28,99 @@ export function InvoiceTermsList({
   onDelete,
   page,
   totalPages,
-  onPrev,
-  onNext,
+  onPageChange,
+  loading = false,
 }: Props) {
-  return (
-    <Card>
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <CardTitle>Invoice Terms</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Manage reusable terms templates for invoices and export documents.
-          </p>
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search terms"
-            className="sm:w-[220px]"
-          />
-          <Button onClick={onCreate}>Add Terms</Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Payment</TableHead>
-              <TableHead>Delivery</TableHead>
-              <TableHead>Origin</TableHead>
-              <TableHead>SWIFT</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {terms.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  No invoice terms found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              terms.map((term) => (
-                <TableRow key={term.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`/invoice-terms/${term.id}`} className="hover:underline">
-                      {term.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{term.payment}</TableCell>
-                  <TableCell>{term.delivery}</TableCell>
-                  <TableCell>{term.origin}</TableCell>
-                  <TableCell>{term.swiftCode}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={() => onEdit(term)}>
-                        Edit
-                      </Button>
-                      <Button size="sm" variant="destructive" onClick={() => onDelete(term)}>
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onPrev} disabled={page === 1}>
-              Previous
+  const columns = useMemo(
+    () => [
+      {
+        header: "Name",
+        accessor: (row: InvoiceTerms) => (
+          <Link
+            href={`/invoice-terms/${row.id}`}
+            className="font-semibold text-foreground underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {row.name}
+          </Link>
+        ),
+      },
+      {
+        header: "Payment",
+        accessor: "payment" as keyof InvoiceTerms,
+      },
+      {
+        header: "Delivery",
+        accessor: "delivery" as keyof InvoiceTerms,
+      },
+      {
+        header: "Origin",
+        accessor: "origin" as keyof InvoiceTerms,
+      },
+      {
+        header: "SWIFT",
+        accessor: "swiftCode" as keyof InvoiceTerms,
+      },
+      {
+        header: "Actions",
+        className: "text-right",
+        accessor: (row: InvoiceTerms) => (
+          <div
+            className="flex justify-end gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
+              Edit
             </Button>
-            <Button variant="outline" size="sm" onClick={onNext} disabled={page === totalPages}>
-              Next
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onDelete(row)}
+            >
+              Delete
             </Button>
           </div>
+        ),
+      },
+    ],
+    [onEdit, onDelete],
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+          <Input
+            placeholder="Search by name, payment, or delivery terms"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+          <Button variant="outline" className="shrink-0">
+            <Search className="mr-2 h-4 w-4" />
+            Search
+          </Button>
         </div>
-      </CardContent>
-    </Card>
-  )
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+          <Button
+            className="bg-black text-white hover:bg-black/90"
+            onClick={onCreate}
+          >
+            Add Terms
+          </Button>
+        </div>
+      </div>
+
+      <CustomTable
+        data={terms}
+        columns={columns}
+        isLoading={loading}
+        pagination={{
+          currentPage: page,
+          totalPages,
+          onPageChange,
+        }}
+        scrollAreaHeight="h-[calc(100vh-320px)]"
+      />
+    </div>
+  );
 }

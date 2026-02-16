@@ -1,101 +1,396 @@
-
 "use client";
-import CustomTable from "@/components/reusables/CustomTable";
-import React, { useState } from "react";
 
-type Order = {
-    id: string;
-    customer: string;
-    product: string;
-    quantity: number;
-    status: string;
-    date: string;
+import React, { useMemo } from "react";
+import { Check, X } from "lucide-react";
+import CustomTable from "@/components/reusables/CustomTable";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { PrimaryText } from "@/components/reusables";
+import { Order } from "./types";
+import { formatDate, statusBadgeClass } from "./helpers";
+import OrderActions from "./OrderActions";
+import PrimaryButton from "@/components/reusables/PrimaryButton";
+
+type Props = {
+    data: Order[];
+    loading: boolean;
+    error: string;
+    page: number;
+    totalPages: number;
+    search: string;
+    statusFilter: string;
+    typeFilter: string;
+    dateFrom: string;
+    dateTo: string;
+    onSearchChange: (value: string) => void;
+    onSearchSubmit: () => void;
+    onStatusFilterChange: (value: string) => void;
+    onTypeFilterChange: (value: string) => void;
+    onDateFromChange: (value: string) => void;
+    onDateToChange: (value: string) => void;
+    onPageChange: (page: number) => void;
+    onAddOrder: () => void;
+    onRowClick: (row: Order) => void;
+    onView: (row: Order) => void;
+    onEdit: (row: Order) => void;
+    onDuplicate: (row: Order) => void;
+    onExport: (row: Order) => void;
+    onDelete: (row: Order) => void;
 };
 
-const OrdersTable = () => {
-    const [currentPage, setCurrentPage] = useState(1);
+const OrdersTable = ({
+    data,
+    loading,
+    error,
+    page,
+    totalPages,
+    search,
+    statusFilter,
+    typeFilter,
+    dateFrom,
+    dateTo,
+    onSearchChange,
+    onSearchSubmit,
+    onStatusFilterChange,
+    onTypeFilterChange,
+    onDateFromChange,
+    onDateToChange,
+    onPageChange,
+    onAddOrder,
+    onRowClick,
+    onView,
+    onEdit,
+    onDuplicate,
+    onExport,
+    onDelete,
+}: Props) => {
+    // Helper to extract sub-items from an order
+    const extractItems = (order: Order) => {
+        const orderItems = Array.isArray(order.orderItems)
+            ? order.orderItems
+            : order.orderItems
+                ? [order.orderItems]
+                : [];
 
-    // Sample data
-    const orders: Order[] = [
-        {
-            id: "ORD-001",
-            customer: "John Doe",
-            product: "Cotton Fabric",
-            quantity: 500,
-            status: "Pending",
-            date: "2024-02-07",
-        },
-        {
-            id: "ORD-002",
-            customer: "Jane Smith",
-            product: "Polyester Labels",
-            quantity: 1000,
-            status: "Processing",
-            date: "2024-02-06",
-        },
-        {
-            id: "ORD-003",
-            customer: "Bob Johnson",
-            product: "Carton Boxes",
-            quantity: 200,
-            status: "Delivered",
-            date: "2024-02-05",
-        },
-    ];
+        const items: any[] = [];
+        orderItems.forEach((orderItem: any) => {
+            const productType = order.productType;
+            let subItems: any[] = [];
+            let prefix = "";
 
-    const columns = [
-        {
-            header: "Order ID",
-            accessor: "id" as keyof Order,
-        },
-        {
-            header: "Customer",
-            accessor: "customer" as keyof Order,
-        },
-        {
-            header: "Product",
-            accessor: "product" as keyof Order,
-        },
-        {
-            header: "Quantity",
-            accessor: "quantity" as keyof Order,
-        },
-        {
-            header: "Status",
-            accessor: ((row: Order) => (
-                <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${row.status === "Delivered"
-                        ? "bg-green-100 text-green-800"
-                        : row.status === "Processing"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                >
-                    {row.status}
-                </span>
-            )) as any,
-        },
-        {
-            header: "Date",
-            accessor: "date" as keyof Order,
-        },
-    ];
+            if (productType === "FABRIC" && orderItem.fabricItem) {
+                subItems = orderItem.fabricItem.fabricItemData || [];
+                prefix = orderItem.fabricItem.styleNo ? `[${orderItem.fabricItem.styleNo}] ` : "";
+            } else if (productType === "LABEL_TAG" && orderItem.labelItem) {
+                subItems = orderItem.labelItem.labelItemData || [];
+                prefix = orderItem.labelItem.styleNo ? `[${orderItem.labelItem.styleNo}] ` : "";
+            } else if (productType === "CARTON" && orderItem.cartonItem) {
+                subItems = orderItem.cartonItem.cartonItemData || [];
+                prefix = orderItem.cartonItem.orderNo ? `[${orderItem.cartonItem.orderNo}] ` : "";
+            }
+
+            subItems.forEach((item) => {
+                let detail = "";
+                let qty: string | number = "";
+                let price: string | number = "";
+                let amount: string | number = "";
+
+                if (productType === "FABRIC") {
+                    detail = `${prefix}${item.color || "Standard"}`;
+                    qty = item.quantityYds || "0";
+                    price = item.unitPrice || "0";
+                    amount = item.totalAmount || "0";
+                } else if (productType === "LABEL_TAG") {
+                    detail = `${prefix}${item.desscription}${item.color ? ` (${item.color})` : ""}`;
+                    qty = item.quantityPcs || "0";
+                    price = item.unitPrice || "0";
+                    amount = item.totalAmount || "0";
+                } else if (productType === "CARTON") {
+                    detail = `${prefix}${item.cartonMeasurement} - ${item.cartonPly}`;
+                    qty = item.cartonQty || "0";
+                    price = item.unitPrice || "0";
+                    amount = item.totalAmount || "0";
+                }
+
+                items.push({ detail, qty, price, amount });
+            });
+        });
+
+        return items.length > 0 ? items : [{ detail: "-", qty: "-", price: "-", amount: "-" }];
+    };
+
+    const columns = useMemo(
+        () => [
+            {
+                header: "Order",
+                className: "",
+                accessor: (row: Order) => (
+                    <div className="">
+                        <div className="font-semibold text-foreground text-nowrap underline">{row.orderNumber}</div>
+
+                    </div>
+                ),
+            },
+
+            {
+                header: "Client",
+                className: " ",
+                accessor: (row: Order) => (
+                    <div className="">
+                        <div className="text-xs text-foreground whitespace-nowrap">
+                            {row.buyer?.name}
+                        </div>
+                    </div>
+                ),
+            },
+            {
+                header: "Date",
+                className: "px-4 ",
+                accessor: (row: Order) => (
+                    <div className="whitespace-nowrap">{formatDate(row.orderDate)}</div>
+                ),
+            },
+
+            {
+                header: "Type",
+                className: "",
+                accessor: (row: Order) => <div className="">{row.productType}</div>,
+            },
+            {
+                header: "PI",
+                className: " ",
+                accessor: (row: Order) => (
+                    <div className="flex justify-center">
+                        {row.isInvoice ? (
+                            <Check className="h-5 w-5 text-green-600" />
+                        ) : (
+                            <X className="h-5 w-5 text-red-600" />
+                        )}
+                    </div>
+                ),
+            },
+            {
+                header: "LC",
+                className: " ",
+                accessor: (row: Order) => (
+                    <div className="flex justify-center">
+                        {row.isLc ? (
+                            <Check className="h-5 w-5 text-green-600" />
+                        ) : (
+                            <X className="h-5 w-5 text-red-600" />
+                        )}
+                    </div>
+                ),
+            },
+            {
+                header: "Delivery",
+                className: "",
+                accessor: (row: Order) => (
+                    <div className="">
+                        <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(
+                                row.status
+                            )}`}
+                        >
+                            {row.status}
+                        </span>
+                    </div>
+                ),
+            },
+
+            /*
+                        {
+                            header: "Order Details",
+                            className: "p-0 border-r ",
+                            accessor: (row: Order) => {
+                                const items = extractItems(row);
+                                return (
+                                    <div className="divide-y w-full divide-border">
+                                        {items.map((item, i) => (
+                                            <div
+                                                key={i}
+                                                className=" px-4 py-2 truncate"
+                                                title={item.detail}
+                                            >
+                                                {item.detail.slice(0, 30)}
+                                                {item.detail.length > 30 ? "..." : ""}
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            },
+                        },
+            */
+            {
+                header: "Amount",
+                className: "",
+                accessor: (row: Order) => {
+                    const orderItem = Array.isArray(row.orderItems)
+                        ? row.orderItems[0]
+                        : row.orderItems;
+                    const amount =
+                        orderItem?.fabricItem?.totalAmount ||
+                        orderItem?.labelItem?.totalAmount ||
+                        orderItem?.cartonItem?.totalAmount ||
+                        "-";
+                    return <div className="px-4 py-2 font-semibold">{amount}</div>;
+                },
+            },
+            // {
+            //     header: "Qty",
+            //     className: "p-0 text-center border-r",
+            //     accessor: (row: Order) => {
+            //         const items = extractItems(row);
+            //         return (
+            //             <div className="divide-y divide-border text-center">
+            //                 {items.map((item, i) => (
+            //                     <div key={i} className="px-4 py-2">
+            //                         {item.qty}
+            //                     </div>
+            //                 ))}
+            //             </div>
+            //         );
+            //     },
+            // },
+            // {
+            //     header: "Price",
+            //     className: "p-0 text-center border-r",
+            //     accessor: (row: Order) => {
+            //         const items = extractItems(row);
+            //         return (
+            //             <div className="divide-y divide-border text-center">
+            //                 {items.map((item, i) => (
+            //                     <div key={i} className="px-4 py-2">
+            //                         {item.price}
+            //                     </div>
+            //                 ))}
+            //             </div>
+            //         );
+            //     },
+            // },
+            // {
+            //     header: "Amount",
+            //     className: "p-0 text-center border-r",
+            //     accessor: (row: Order) => {
+            //         const items = extractItems(row);
+            //         return (
+            //             <div className="divide-y divide-border text-center font-medium">
+            //                 {items.map((item, i) => (
+            //                     <div key={i} className="px-4 py-2">
+            //                         {item.amount}
+            //                     </div>
+            //                 ))}
+            //             </div>
+            //         );
+            //     },
+            // },
+
+            {
+                header: "Actions",
+                className: "",
+                accessor: (row: Order) => (
+                    <div className="px-4 py-2 h-full flex items-start justify-end">
+                        <OrderActions
+                            onView={() => onView(row)}
+                            onEdit={() => onEdit(row)}
+                            onDuplicate={() => onDuplicate(row)}
+                            onExport={() => onExport(row)}
+                            onDelete={() => onDelete(row)}
+                        />
+                    </div>
+                ),
+            },
+        ],
+        [onDelete, onDuplicate, onEdit, onExport, onView]
+    );
 
     return (
-        <div className="w-full">
+        <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                    <Input
+                        placeholder="Search order number, buyer, company"
+                        value={search}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                    />
+                    <Button variant="outline" onClick={onSearchSubmit}>
+                        Search
+                    </Button>
+                </div>
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                    <div className="w-full sm:max-w-[180px]">
+                        <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                {[
+                                    "DRAFT",
+                                    "PENDING",
+                                    "PROCESSING",
+                                    "APPROVED",
+                                    "DELIVERED",
+                                    "CANCELLED",
+                                ].map((status) => (
+                                    <SelectItem key={status} value={status}>
+                                        {status}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="w-full sm:max-w-[180px]">
+                        <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Product Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Types</SelectItem>
+                                {[
+                                    "FABRIC",
+                                    "LABEL_TAG",
+                                    "CARTON",
+                                ].map((type) => (
+                                    <SelectItem key={type} value={type}>
+                                        {type}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex w-full gap-2 sm:max-w-[280px]">
+                        <Input type="date" value={dateFrom} onChange={(e) => onDateFromChange(e.target.value)} />
+                        <Input type="date" value={dateTo} onChange={(e) => onDateToChange(e.target.value)} />
+                    </div>
+
+                    <PrimaryButton handleClick={onAddOrder}>
+                        Create Order
+                    </PrimaryButton>
+                </div>
+            </div>
             <CustomTable
-                title="Orders"
-                description="Manage and track all your orders"
-                data={orders}
+                data={data}
                 columns={columns}
+                isLoading={loading}
+                skeletonRows={10}
                 pagination={{
-                    currentPage,
-                    totalPages: 2, // Example total pages
-                    onPageChange: (page) => setCurrentPage(page),
+                    currentPage: page,
+                    totalPages,
+                    onPageChange,
                 }}
+                onRowClick={onRowClick}
+                scrollAreaHeight="h-[calc(100vh-250px)]"
             />
         </div>
     );
 };
 
-export default OrdersTable;
+export default React.memo(OrdersTable);

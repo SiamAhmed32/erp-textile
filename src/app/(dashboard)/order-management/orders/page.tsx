@@ -1,12 +1,11 @@
 import React from "react";
-import OrdersTable from "./_components/OrdersTable";
+import { Container, PrimaryHeading } from "@/components/reusables";
+import OrderPage from "./_components/OrderPage";
 
-const OrdersPage = () => {
+export default function Page() {
     return (
-        <div className="w-full">
-            <OrdersTable />
-        </div>
+        <Container className="pb-10 pt-6">
+            <OrderPage />
+        </Container>
     );
-};
-
-export default OrdersPage;
+}
