@@ -113,17 +113,64 @@ export default function ProfilePage() {
     if (isLoading) {
         return (
             <div className="container mx-auto py-10">
-                <Card className="max-w-2xl mx-auto">
-                    <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-                        <Skeleton className="h-20 w-20 rounded-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-6 w-40" />
-                            <Skeleton className="h-4 w-60" />
+                <Card className="max-w-3xl mx-auto">
+                    <CardHeader className="relative pb-10">
+                        {/* Decorative header background */}
+                        <div className="absolute left-0 -top-6 w-full h-36 bg-secondary to-secondary rounded-t-xl" />
+
+                        <div className="relative pt-16 flex flex-col items-center">
+                            {/* Avatar skeleton */}
+                            <Skeleton className="h-32 w-32 rounded-full border-4 border-background" />
+
+                            {/* Name skeleton */}
+                            <div className="mt-4 flex flex-col items-center gap-2">
+                                <Skeleton className="h-9 w-64" />
+                            </div>
+
+                            {/* Role and status badges skeleton */}
+                            <div className="flex gap-2 mt-3">
+                                <Skeleton className="h-7 w-20 rounded-full" />
+                                <Skeleton className="h-7 w-20 rounded-full" />
+                            </div>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-full" />
+
+                    <CardContent className="grid gap-6 md:grid-cols-2 mt-6">
+                        {/* Full Name */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-40" />
+                        </div>
+
+                        {/* Username */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-32" />
+                        </div>
+
+                        {/* Email */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-6 w-48" />
+                        </div>
+
+                        {/* User ID */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+
+                        {/* Last Login */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-5 w-44" />
+                        </div>
+
+                        {/* Joined */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-5 w-44" />
+                        </div>
                     </CardContent>
                 </Card>
             </div>
