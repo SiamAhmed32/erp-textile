@@ -393,7 +393,28 @@ export const exportOrderToPdf = (order: Order) => {
         }
     }
 
+
     yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 10;
+
+    // --- TOTAL AMOUNT IN WORDS ---
+    if (orderItem) {
+        const totalAmount = 
+            orderItem.fabricItem?.totalAmount ||
+            orderItem.labelItem?.totalAmount ||
+            orderItem.cartonItem?.totalAmount ||
+            0;
+
+        // Convert number to words (simple implementation)
+        const amountInWords = typeof totalAmount === 'number' 
+            ? `US Dollar ${totalAmount.toFixed(2)}`
+            : `US Dollar ${totalAmount}`;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(0);
+        doc.text(`Total Amount (in Words): ${amountInWords}`, margin, yPos);
+        yPos += 10;
+    }
 
     // --- REMARKS ---
     if (order.remarks && order.remarks.trim() !== "") {
@@ -406,13 +427,26 @@ export const exportOrderToPdf = (order: Order) => {
         doc.setFontSize(9);
         const splitRemarks = doc.splitTextToSize(order.remarks, pageWidth - 2 * margin);
         doc.text(splitRemarks, margin, yPos);
+        yPos += splitRemarks.length * 5 + 10;
     }
 
-    // --- FOOTER ---
-    doc.setFontSize(7);
-    doc.setTextColor(120);
-    doc.text(`Generated on ${new Date().toLocaleString()}`, margin, pageHeight - 10);
-    doc.text("Page 1", pageWidth - margin, pageHeight - 10, { align: "right" });
+    // --- SIGNATURE SECTION ---
+    // Add some space before signature section
+    const signatureY = Math.max(yPos + 5, pageHeight - 50);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0);
+
+    // Left side - Buyer Acceptance (far left)
+    doc.text("Buyer Acceptance", margin, signatureY + 10);
+
+    // Right side - Authorised Signature (far right)
+    doc.text("Authorised Signature", pageWidth - margin, signatureY + 10, { align: "right" });
+    doc.setFont("helvetica", "bold");
+    doc.text(`For ${order.companyProfile?.name || "Company"}`, pageWidth - margin, signatureY + 16, { align: "right" });
+
+
 
     const filename = `Order_${order.orderNumber}_${new Date().getTime()}.pdf`;
     doc.save(filename);
