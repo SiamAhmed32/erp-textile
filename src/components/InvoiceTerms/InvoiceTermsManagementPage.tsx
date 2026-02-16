@@ -202,7 +202,7 @@ export function InvoiceTermsManagementPage() {
 
   return (
     <Container className="py-8">
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <PrimaryHeading>Invoice Terms</PrimaryHeading>
         <PrimaryText className="text-muted-foreground">
           Create and manage reusable invoice terms for consistent commercial
@@ -210,7 +210,7 @@ export function InvoiceTermsManagementPage() {
         </PrimaryText>
       </div>
 
-      <SectionGap />
+      <SectionGap /> */}
 
       <InvoiceTermsList
         terms={terms}

@@ -126,6 +126,9 @@ const OrderPage = () => {
     <OrdersTable
       data={orders}
       loading={loading}
+      error={
+        (ordersError as any)?.data?.message || (ordersError as any)?.error || ""
+      }
       page={page}
       totalPages={totalPages}
       search={search}

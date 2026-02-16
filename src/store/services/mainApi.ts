@@ -26,6 +26,7 @@ export const mainApi = createApi({
 			const token = state.auth?.token || process.env.NEXT_PUBLIC_TOKEN;
 
 			if (token) {
+				// headers.set('Authorization', `Bearer ${token}`);
 				headers.set('Authorization', `Bearer ${token}`);
 			}
 		},
