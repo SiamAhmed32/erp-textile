@@ -387,7 +387,7 @@ const OrdersTable = ({
                     onPageChange,
                 }}
                 onRowClick={onRowClick}
-                scrollAreaHeight="h-[calc(100vh-250px)]"
+                scrollAreaHeight="h-[67vh]"
             />
         </div>
     );

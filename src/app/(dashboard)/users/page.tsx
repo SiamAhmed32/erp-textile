@@ -4,7 +4,7 @@ import UsersPage from "./_components/UsersPage";
 
 export default function Page() {
     return (
-        <Container className="pb-10 pt-6">
+        <Container className="pb-10">
             <UsersPage />
         </Container>
     );

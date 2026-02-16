@@ -6,6 +6,7 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
+import { PrimaryHeading } from "@/components/reusables";
 
 const OrderPage = () => {
   const router = useRouter();
@@ -123,31 +124,37 @@ const OrderPage = () => {
   }, [search]);
 
   return (
-    <OrdersTable
-      data={orders}
-      loading={loading}
-      page={page}
-      totalPages={totalPages}
-      search={search}
-      statusFilter={statusFilter}
-      typeFilter={typeFilter}
-      dateFrom={dateFrom}
-      dateTo={dateTo}
-      onSearchChange={setSearch}
-      onSearchSubmit={handleSearchSubmit}
-      onStatusFilterChange={setStatusFilter}
-      onTypeFilterChange={setTypeFilter}
-      onDateFromChange={setDateFrom}
-      onDateToChange={setDateTo}
-      onPageChange={setPage}
-      onAddOrder={() => router.push("/order-management/orders/add-new-order")}
-      onRowClick={handleRowClick}
-      onView={handleView}
-      onEdit={handleEdit}
-      onDuplicate={handleDuplicate}
-      onExport={handleExport}
-      onDelete={handleDelete}
-    />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <PrimaryHeading>Orders</PrimaryHeading>
+      </div>
+      <OrdersTable
+        data={orders}
+        loading={loading}
+        error={(ordersError as any)?.data?.message || (ordersError as any)?.error || ""}
+        page={page}
+        totalPages={totalPages}
+        search={search}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
+        onStatusFilterChange={setStatusFilter}
+        onTypeFilterChange={setTypeFilter}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        onPageChange={setPage}
+        onAddOrder={() => router.push("/order-management/orders/add-new-order")}
+        onRowClick={handleRowClick}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDuplicate={handleDuplicate}
+        onExport={handleExport}
+        onDelete={handleDelete}
+      />
+    </div>
   );
 };
 

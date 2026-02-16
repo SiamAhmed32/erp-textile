@@ -4,7 +4,7 @@ import InvoicePage from "./_components/InvoicePage";
 
 export default function Page() {
     return (
-        <Container className="pb-10 pt-6">
+        <Container className="pb-10">
             <InvoicePage />
         </Container>
     );

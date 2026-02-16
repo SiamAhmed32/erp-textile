@@ -4,7 +4,7 @@ import CompanyProfilePage from "./_components/CompanyProfilePage";
 
 export default function Page() {
     return (
-        <Container className="pb-10 pt-6">
+        <Container className="pb-10">
             <div className="space-y-2">
                 <PrimaryHeading>Company Profiles</PrimaryHeading>
             </div>
