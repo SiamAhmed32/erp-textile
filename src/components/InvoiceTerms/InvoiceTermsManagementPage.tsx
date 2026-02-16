@@ -221,13 +221,9 @@ export function InvoiceTermsManagementPage() {
         onDelete={handleDelete}
         page={page}
         totalPages={totalPages}
-        onPrev={() => setPage((prev) => Math.max(1, prev - 1))}
-        onNext={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+        onPageChange={setPage}
+        loading={loading}
       />
-
-      {loading && (
-        <p className="mt-4 text-sm text-muted-foreground">Loading terms...</p>
-      )}
 
       <InvoiceTermsForm
         open={formOpen}
