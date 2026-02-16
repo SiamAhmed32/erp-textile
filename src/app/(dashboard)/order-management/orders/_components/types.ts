@@ -10,6 +10,8 @@ export type Buyer = {
 export type CompanyProfile = {
     id: string;
     name: string;
+    address?: string;
+    phone?: string;
 };
 
 export type User = {
