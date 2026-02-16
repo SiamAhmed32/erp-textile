@@ -204,7 +204,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
     try {
       const payload = (await postItem({
         path: "orders",
-        body: toOrderPayload(draft),
+        body: toOrderPayload(schemaResult.data as any),
         invalidate: ["orders"],
       }).unwrap()) as any;
       const item = (payload?.data || payload) as OrderApiItem;

@@ -203,7 +203,7 @@ const OrderEdit = ({ id }: Props) => {
     try {
       await patchItem({
         path: `orders/${id}`,
-        body: toOrderUpdatePayload(draft),
+        body: toOrderUpdatePayload(schemaResult.data as any),
         invalidate: ["orders"],
       }).unwrap();
 
