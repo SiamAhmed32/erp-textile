@@ -7,6 +7,7 @@ import {
   useGetAllQuery,
 } from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
+import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
 import { countByType, normalizeInvoice } from "./helpers";
 
@@ -19,6 +20,8 @@ const InvoicePage = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null);
   const [deleteOne] = useDeleteOneMutation();
 
   useEffect(() => {
@@ -80,9 +83,9 @@ const InvoicePage = () => {
 
   const handleEdit = useCallback(
     (row: Invoice) => {
-      router.push(`/invoice-management/invoices/${row.id}/edit`);
+      setEditInvoiceId(row.id);
     },
-    [router],
+    [],
   );
 
   const handleExport = useCallback(
@@ -117,34 +120,55 @@ const InvoicePage = () => {
 
   const counts = useMemo(() => countByType(invoices), [invoices]);
 
+  const handleCreateSuccess = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
+  const handleEditSuccess = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   return (
-    <InvoicesTable
-      data={invoices}
-      loading={loading}
-      page={page}
-      totalPages={totalPages}
-      search={search}
-      statusFilter={statusFilter}
-      typeFilter={typeFilter}
-      dateFrom={dateFrom}
-      dateTo={dateTo}
-      counts={counts}
-      onSearchChange={setSearch}
-      onSearchSubmit={handleSearchSubmit}
-      onStatusFilterChange={setStatusFilter}
-      onTypeFilterChange={setTypeFilter}
-      onDateFromChange={setDateFrom}
-      onDateToChange={setDateTo}
-      onPageChange={setPage}
-      onAddInvoice={() =>
-        router.push("/invoice-management/invoices/add-new-invoice")
-      }
-      onRowClick={handleRowClick}
-      onView={handleView}
-      onEdit={handleEdit}
-      onExport={handleExport}
-      onDelete={handleDelete}
-    />
+    <>
+      <InvoicesTable
+        data={invoices}
+        loading={loading}
+        page={page}
+        totalPages={totalPages}
+        search={search}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        counts={counts}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
+        onStatusFilterChange={setStatusFilter}
+        onTypeFilterChange={setTypeFilter}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        onPageChange={setPage}
+        onAddInvoice={() => setIsCreateModalOpen(true)}
+        onRowClick={handleRowClick}
+        onView={handleView}
+        onEdit={handleEdit}
+        onExport={handleExport}
+        onDelete={handleDelete}
+      />
+      <InvoiceFormModal
+        open={isCreateModalOpen}
+        mode="create"
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleCreateSuccess}
+      />
+      <InvoiceFormModal
+        open={!!editInvoiceId}
+        mode="edit"
+        invoiceId={editInvoiceId || undefined}
+        onClose={() => setEditInvoiceId(null)}
+        onSuccess={handleEditSuccess}
+      />
+    </>
   );
 };
 

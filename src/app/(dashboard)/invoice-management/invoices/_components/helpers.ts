@@ -20,10 +20,12 @@ export const normalizeInvoice = (item: InvoiceApiItem): Invoice => ({
     updatedAt: item.updatedAt ?? "",
     order: item.order
         ? {
-              ...item.order,
-              productType: coerceType(item.order.productType),
-              orderItems: item.order.orderItems ?? [],
-          }
+            ...item.order,
+            productType: coerceType(item.order.productType),
+            orderItems: item.order.orderItems ?? [],
+            buyer: item.order.buyer ?? null,
+            companyProfile: item.order.companyProfile ?? null,
+        }
         : null,
     invoiceTerms: item.invoiceTerms ?? null,
     user: item.user ?? null,
@@ -80,4 +82,67 @@ export const countByType = (items: Invoice[]) => {
         }
     });
     return counts;
+};
+
+export const numberToWords = (num: number): string => {
+    if (num === 0) return "Zero";
+
+    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    const teens = [
+        "Ten",
+        "Eleven",
+        "Twelve",
+        "Thirteen",
+        "Fourteen",
+        "Fifteen",
+        "Sixteen",
+        "Seventeen",
+        "Eighteen",
+        "Nineteen",
+    ];
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const thousands = ["", "Thousand", "Million", "Billion"];
+
+    const convertChunk = (n: number): string => {
+        let chunk = "";
+        if (n >= 100) {
+            chunk += ones[Math.floor(n / 100)] + " Hundred ";
+            n %= 100;
+        }
+        if (n >= 10 && n < 20) {
+            chunk += teens[n - 10] + " ";
+        } else {
+            if (n >= 20) {
+                chunk += tens[Math.floor(n / 10)] + " ";
+                n %= 10;
+            }
+            if (n > 0) {
+                chunk += ones[n] + " ";
+            }
+        }
+        return chunk.trim();
+    };
+
+    let result = "";
+    let i = 0;
+
+    const integerPart = Math.floor(num);
+    const decimalPart = Math.round((num - integerPart) * 100);
+
+    let temp = integerPart;
+    while (temp > 0) {
+        if (temp % 1000 !== 0) {
+            result = convertChunk(temp % 1000) + " " + thousands[i] + " " + result;
+        }
+        temp = Math.floor(temp / 1000);
+        i++;
+    }
+
+    result = result.trim();
+
+    if (decimalPart > 0) {
+        result += " and Cents " + convertChunk(decimalPart);
+    }
+
+    return result + " Only.";
 };

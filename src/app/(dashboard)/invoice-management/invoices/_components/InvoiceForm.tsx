@@ -23,11 +23,12 @@ type Props = {
 const InvoiceForm = ({ data, orders, terms, onChange, errors, disableOrder }: Props) => {
     return (
         <div className="space-y-6">
-            <Card>
-                <CardHeader>
+            <Card className="p-0 border-0 shadow-none">
+                {/* <CardHeader>
                     <CardTitle>Invoice Information</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                </CardHeader> */}
+                {/* <CardContent className="p-0 grid gap-4 md:grid-cols-2 lg:grid-cols-3"> */}
+                <CardContent className="p-0 grid gap-4 md:grid-cols-2 lg:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="piNumber">PI Number *</Label>
                         <Input
