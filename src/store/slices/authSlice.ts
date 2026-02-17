@@ -75,9 +75,16 @@ export const authSlice = createSlice({
 			state.token = action.payload;
 			state.loggedIn = true;
 		},
+		updateUser: (state, action: PayloadAction<any>): void => {
+			state.user = action.payload;
+			const encryptedUser = encryptData(action.payload);
+			if (encryptedUser) {
+				localStorage.setItem("user", encryptedUser);
+			}
+		},
 	},
 });
 
-export const { login, logout, refresh: refreshAuth } = authSlice.actions;
+export const { login, logout, refresh: refreshAuth, updateUser } = authSlice.actions;
 
 export default authSlice.reducer;

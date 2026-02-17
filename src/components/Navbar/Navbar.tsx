@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/store/slices/authSlice";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -27,26 +27,10 @@ interface User {
 }
 
 const Navbar = () => {
-	const [user, setUser] = useState<User | null>(null);
+	// @ts-ignore
+	const user = useSelector((state: any) => state.auth.user);
 	const dispatch = useDispatch();
 	const router = useRouter();
-
-	useEffect(() => {
-		// Check if window is defined (client-side)
-		if (typeof window !== "undefined") {
-			const storedUser = localStorage.getItem("user");
-			if (storedUser) {
-				try {
-					const decryptedUser = decryptData(storedUser);
-					if (decryptedUser) {
-						setUser(decryptedUser);
-					}
-				} catch (error) {
-					console.error("Failed to parse user data", error);
-				}
-			}
-		}
-	}, []);
 
 	const handleLogout = () => {
 		dispatch(logout());

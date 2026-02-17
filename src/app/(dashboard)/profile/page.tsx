@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { usePatchUpdateSelfMutation } from "@/store/services/authApi";
+import { useDispatch } from "react-redux";
+import { updateUser } from "@/store/slices/authSlice";
 
 interface UserData {
     id: string;
@@ -35,6 +37,7 @@ export default function ProfilePage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [updateProfile, { isLoading: isUpdating }] = usePatchUpdateSelfMutation();
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -71,18 +74,16 @@ export default function ProfilePage() {
             const result = await updateProfile(formDataToSend).unwrap();
 
             // Assuming result.data holds the complete updated user object
-            // If API returns just success message, careful here, but usually it returns updated resource
             const updatedUser = result.data || {
                 ...userData,
                 firstName: formData.firstName,
                 lastName: formData.lastName,
                 displayName: `${formData.firstName} ${formData.lastName}`,
-                // If the API returns the new avatar URL, use it, otherwise keep old or preview (risky if not updated)
                 avatarUrl: result.data?.avatarUrl || previewUrl
             };
 
             setUserData(updatedUser);
-            localStorage.setItem("user", JSON.stringify(updatedUser));
+            dispatch(updateUser(updatedUser)); // Update Redux store for instant UI sync
 
             toast.success("Profile updated successfully");
             setIsEditing(false);
