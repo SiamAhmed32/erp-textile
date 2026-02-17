@@ -1,17 +1,18 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Download, Pencil } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
-import { Invoice, InvoiceApiItem } from "./types";
-import { formatDate, normalizeInvoice, statusBadgeClass, numberToWords } from "./helpers";
-import InvoiceReadOnly from "./InvoiceReadOnly";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ArrowLeft, Download, Pencil, Printer } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { formatDate, normalizeInvoice, numberToWords, statusBadgeClass } from "./helpers";
+import { InvoiceFormModal } from "./InvoiceFormModal";
+import InvoiceReadOnly from "./InvoiceReadOnly";
+import { Invoice, InvoiceApiItem } from "./types";
 
 type Props = {
     id: string;
@@ -23,6 +24,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
 
     const [invoice, setInvoice] = React.useState<Invoice | null>(null);
     const [error, setError] = React.useState("");
+    const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const exportTriggered = React.useRef(false);
     const { data: invoicePayload, isFetching: loading, error: invoiceError } = useGetByIdQuery({
         path: "invoices",
@@ -348,40 +350,53 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
 
     return (
         <Container className="pb-10 pt-6">
-            <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href="/invoice-management/invoices">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Invoices
-                        </Link>
-                    </Button>
-                    {invoice && (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(invoice.status)}`}>
-                            {invoice.status}
-                        </span>
-                    )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={handleExportPdf} disabled={!invoice}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export PDF
-                    </Button>
-                    <Button variant="outline" asChild disabled={!invoice}>
-                        <Link href={`/invoice-management/invoices/${id}/edit`}>
+            <div className="print:hidden">
+                <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/invoice-management/invoices">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Invoices
+                            </Link>
+                        </Button>
+                        {invoice && (
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(invoice.status)}`}>
+                                {invoice.status}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={handleExportPdf} disabled={!invoice}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Export PDF
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsEditModalOpen(true)} disabled={!invoice}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
-                        </Link>
-                    </Button>
-                </div>
-            </Flex>
+                        </Button>
+                    </div>
+                </Flex>
 
-            {error && <PrimaryText className="mt-4 text-sm text-destructive">{error}</PrimaryText>}
-            {loading && <PrimaryText className="mt-2 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
+                {error && <PrimaryText className="mt-4 text-sm text-destructive">{error}</PrimaryText>}
+                {loading && <PrimaryText className="mt-2 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
 
-            <div className="mt-4" />
+                <div className="mt-4" />
 
-            {invoice && <InvoiceReadOnly invoice={invoice} />}
+                {invoice && <InvoiceReadOnly invoice={invoice} />}
+            </div>
+
+            {invoice && (
+                <InvoiceFormModal
+                    open={isEditModalOpen}
+                    mode="edit"
+                    invoiceId={invoice.id}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSuccess={() => {
+                        setIsEditModalOpen(false);
+                        // The details will be refreshed by the query hook as it invalidates "invoices"
+                    }}
+                />
+            )}
         </Container>
     );
 };
