@@ -6,12 +6,7 @@ import { InvoiceFormData, InvoiceTerms, OrderSummary } from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
 import { toInvoicePayload } from "./helpers";
 import InvoiceForm from "./InvoiceForm";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 
@@ -92,34 +87,34 @@ const InvoiceCreateModal = ({ open, onOpenChange, onSuccess }: Props) => {
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Create Proforma Invoice</DialogTitle>
-                </DialogHeader>
+        <CustomModal
+            open={open}
+            onOpenChange={onOpenChange}
+            title="Create Invoice"
+            maxWidth="900px"
+            width="90vw"
+        >
+            <InvoiceForm
+                data={draft}
+                orders={orders}
+                terms={terms}
+                onChange={handleChange}
+                errors={errors}
+            />
 
-                <InvoiceForm
-                    data={draft}
-                    orders={orders}
-                    terms={terms}
-                    onChange={handleChange}
-                    errors={errors}
-                />
-
-                <div className="mt-6 flex justify-end gap-3">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button
-                        className="bg-black text-white hover:bg-black/90"
-                        onClick={handleSave}
-                        disabled={saving}
-                    >
-                        {saving ? "Saving..." : "Save Invoice"}
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
+            <div className="mt-6 flex justify-end gap-3">
+                <Button variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                </Button>
+                <Button
+                    className="bg-black text-white hover:bg-black/90"
+                    onClick={handleSave}
+                    disabled={saving}
+                >
+                    {saving ? "Saving..." : "Save Invoice"}
+                </Button>
+            </div>
+        </CustomModal>
     );
 };
 

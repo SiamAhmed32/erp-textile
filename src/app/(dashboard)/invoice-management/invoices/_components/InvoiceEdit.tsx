@@ -105,38 +105,48 @@ const InvoiceEdit = ({ id }: Props) => {
 
     return (
         <Container className="pb-10 pt-6">
-            <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                    <Button variant="outline" asChild>
-                        <Link href={`/invoice-management/invoices/${id}`}>
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Invoice Details
-                        </Link>
-                    </Button>
+            <div className="mb-6">
+                <Button variant="outline" asChild>
+                    <Link href={`/invoice-management/invoices/${id}`}>
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Invoice Details
+                    </Link>
+                </Button>
+            </div>
+
+            <div className="max-w-4xl mx-auto">
+                <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+                    <div className="p-6 border-b">
+                        <h2 className="text-xl font-semibold leading-none tracking-tight">Edit Invoice</h2>
+                    </div>
+                    <div className="p-6">
+                        {error && <PrimaryText className="mb-4 text-sm text-destructive">{error}</PrimaryText>}
+                        {loading && <PrimaryText className="mb-4 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
+
+                        <InvoiceForm
+                            data={draft}
+                            orders={orders}
+                            terms={terms}
+                            onChange={handleChange}
+                            errors={errors}
+                            disableOrder
+                        />
+
+                        <div className="mt-8 flex justify-end gap-3 border-t pt-6">
+                            <Button variant="outline" asChild>
+                                <Link href={`/invoice-management/invoices/${id}`}>Cancel</Link>
+                            </Button>
+                            <Button
+                                className="bg-black text-white hover:bg-black/90"
+                                onClick={handleSave}
+                                disabled={saving}
+                            >
+                                {saving ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href={`/invoice-management/invoices/${id}`}>Cancel</Link>
-                    </Button>
-                    <Button className="bg-black text-white hover:bg-black/90" onClick={handleSave} disabled={saving}>
-                        {saving ? "Saving..." : "Save Changes"}
-                    </Button>
-                </div>
-            </Flex>
-
-            {error && <PrimaryText className="mt-4 text-sm text-destructive">{error}</PrimaryText>}
-            {loading && <PrimaryText className="mt-2 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
-
-            <div className="mt-4" />
-
-            <InvoiceForm
-                data={draft}
-                orders={orders}
-                terms={terms}
-                onChange={handleChange}
-                errors={errors}
-                disableOrder
-            />
+            </div>
         </Container>
     );
 };

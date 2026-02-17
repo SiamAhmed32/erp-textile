@@ -1,13 +1,7 @@
 "use client";
 
 import React from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetAllQuery, useGetByIdQuery, usePostMutation, usePatchMutation } from "@/store/services/commonApi";
 import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
@@ -150,51 +144,54 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
         }
     };
 
-    const title = isDuplicate ? "Duplicate Proforma Invoice" : isCreate ? "Create Proforma Invoice" : "Edit Proforma Invoice";
+    const title = isDuplicate ? "Duplicate Invoice" : isCreate ? "Create Invoice" : "Edit Invoice";
     const description = isDuplicate
-        ? "Create a new proforma invoice based on an existing one."
+        ? "Create a new Invoice based on an existing one."
         : isCreate
-            ? "Create a new proforma invoice for an order with terms and conditions."
+            ? "Create a new Invoice for an order with terms and conditions."
             : "Update invoice information to keep records accurate and consistent.";
 
     return (
-        <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-            <DialogContent className="max-w-2xl overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
-                </DialogHeader>
+        <CustomModal
+            open={open}
+            onOpenChange={(value) => !value && onClose()}
+            title={title}
+            maxWidth="800px"
+            width="90vw"
+        >
+            <p className="text-sm text-muted-foreground mb-6 -mt-2">
+                {description}
+            </p>
 
-                {loadingInvoice && !isCreate ? (
-                    <div className="py-8 text-center text-sm text-muted-foreground">
-                        Loading invoice...
+            {loadingInvoice && !isCreate ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                    Loading invoice...
+                </div>
+            ) : (
+                <>
+                    <InvoiceForm
+                        data={draft}
+                        orders={orders}
+                        terms={terms}
+                        onChange={handleChange}
+                        errors={errors}
+                        disableOrder={!isCreate}
+                    />
+
+                    <div className="flex items-center justify-end gap-2 pt-4">
+                        <Button variant="outline" onClick={onClose}>
+                            Cancel
+                        </Button>
+                        <Button
+                            className="bg-black text-white hover:bg-black/90"
+                            onClick={handleSubmit}
+                            disabled={saving}
+                        >
+                            {saving ? "Saving..." : isCreate ? "Create Invoice" : "Save Changes"}
+                        </Button>
                     </div>
-                ) : (
-                    <>
-                        <InvoiceForm
-                            data={draft}
-                            orders={orders}
-                            terms={terms}
-                            onChange={handleChange}
-                            errors={errors}
-                            disableOrder={!isCreate}
-                        />
-
-                        <div className="flex items-center justify-end gap-2 pt-4">
-                            <Button variant="outline" onClick={onClose}>
-                                Cancel
-                            </Button>
-                            <Button
-                                className="bg-black text-white hover:bg-black/90"
-                                onClick={handleSubmit}
-                                disabled={saving}
-                            >
-                                {saving ? "Saving..." : isCreate ? "Create Invoice" : "Save Changes"}
-                            </Button>
-                        </div>
-                    </>
-                )}
-            </DialogContent>
-        </Dialog>
+                </>
+            )}
+        </CustomModal>
     );
 }

@@ -6,7 +6,7 @@ export const AVAILABLE_MODULES = [
     { key: "buyers", label: "Buyers" },
     { key: "invoice-terms", label: "Invoice Terms" },
     { key: "order-management", label: "Order Management" },
-    { key: "proforma-invoice", label: "Proforma Invoice" },
+    { key: "proforma-invoice", label: "Invoice" },
     { key: "settings", label: "Settings" },
 ] as const;
 

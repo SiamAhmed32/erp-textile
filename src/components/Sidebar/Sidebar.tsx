@@ -98,8 +98,8 @@ const data = {
       ],
     },
     {
-      title: "Proforma Invoice",
-      module: 'proforma-invoice',
+      title: "All Invoices",
+      module: 'all-invoices',
       icon: FileText,
       url: "/invoice-management/invoices",
       // items: [

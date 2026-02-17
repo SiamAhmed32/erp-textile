@@ -117,38 +117,44 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <Button variant="outline" asChild>
-            <Link href="/invoice-management/invoices">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Invoices
-            </Link>
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/invoice-management/invoices">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Invoice"}
-          </Button>
-        </div>
-      </Flex>
+      <div className="mb-6">
+        <Button variant="outline" asChild>
+          <Link href="/invoice-management/invoices">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Invoices
+          </Link>
+        </Button>
+      </div>
 
-      <div className="mt-4" />
+      <div className="max-w-4xl mx-auto">
+        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-semibold leading-none tracking-tight">Create Invoice</h2>
+          </div>
+          <div className="p-6">
+            <InvoiceForm
+              data={draft}
+              orders={orders}
+              terms={terms}
+              onChange={handleChange}
+              errors={errors}
+            />
 
-      <InvoiceForm
-        data={draft}
-        orders={orders}
-        terms={terms}
-        onChange={handleChange}
-        errors={errors}
-      />
+            <div className="mt-8 flex justify-end gap-3 border-t pt-6">
+              <Button variant="outline" asChild>
+                <Link href="/invoice-management/invoices">Cancel</Link>
+              </Button>
+              <Button
+                className="bg-black text-white hover:bg-black/90"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Invoice"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </Container>
   );
 };

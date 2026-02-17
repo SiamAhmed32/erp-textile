@@ -84,7 +84,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         // Title
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        const title = "Proforma Invoice";
+        const title = "Invoice";
         const titleWidth = doc.getTextWidth(title);
         doc.text(title, 105, 32, { align: "center" });
         doc.line(105 - titleWidth / 2, 33, 105 + titleWidth / 2, 33); // Underline
