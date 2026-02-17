@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Edit, Eye, FileDown, MoreHorizontal, Trash2 } from "lucide-react";
+import { SquarePen, Eye, FileDown, Trash2 } from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -106,33 +106,57 @@ const LCsTable = ({
       },
       {
         header: "Actions",
-        className: "text-right",
+        className: "text-left w-40 pr-4",
         accessor: (row: LCManagement) => (
-          <div className="flex justify-end pr-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => onView(row)}>
-                  <Eye className="mr-2 h-4 w-4" /> View Detail
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onEdit(row)}>
-                  <Edit className="mr-2 h-4 w-4" /> Edit LC
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onExport(row)}>
-                  <FileDown className="mr-2 h-4 w-4" /> Export PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="text-destructive font-medium"
-                  onClick={() => onDelete(row)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div className="flex justify-end gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Edit LC"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <SquarePen className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Export PDF"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onExport(row);
+              }}
+            >
+              <FileDown className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Delete"
+              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
         ),
       },

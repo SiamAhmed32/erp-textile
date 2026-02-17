@@ -112,10 +112,10 @@ const CompanyProfilesTable = ({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: CompanyProfile) => (
           <CompanyActions id={row.id} onDelete={() => onDelete(row)} />
         ),
-        className: "text-right",
       },
     ],
     [onDelete],

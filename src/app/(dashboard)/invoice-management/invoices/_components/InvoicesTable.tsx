@@ -41,6 +41,7 @@ type Props = {
   onRowClick: (row: Invoice) => void;
   onView: (row: Invoice) => void;
   onEdit: (row: Invoice) => void;
+  onDuplicate: (row: Invoice) => void;
   onExport: (row: Invoice) => void;
   onDelete: (row: Invoice) => void;
 };
@@ -67,6 +68,7 @@ const InvoicesTable = ({
   onRowClick,
   onView,
   onEdit,
+  onDuplicate,
   onExport,
   onDelete,
 }: Props) => {
@@ -113,18 +115,21 @@ const InvoicesTable = ({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: Invoice) => (
-          <InvoiceActions
-            onView={() => onView(row)}
-            onEdit={() => onEdit(row)}
-            onExport={() => onExport(row)}
-            onDelete={() => onDelete(row)}
-          />
+          <div className="flex items-center justify-end">
+            <InvoiceActions
+              onView={() => onView(row)}
+              onEdit={() => onEdit(row)}
+              onDuplicate={() => onDuplicate(row)}
+              onExport={() => onExport(row)}
+              onDelete={() => onDelete(row)}
+            />
+          </div>
         ),
-        className: "text-right",
       },
     ],
-    [onDelete, onEdit, onExport, onView],
+    [onDelete, onEdit, onDuplicate, onExport, onView],
   );
 
   return (

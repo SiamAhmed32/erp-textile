@@ -1,13 +1,9 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal } from "lucide-react";
+import { Eye, SquarePen, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type Props = {
   id: string;
@@ -18,44 +14,44 @@ const CompanyActions = ({ id, onDelete }: Props) => {
   const router = useRouter();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={(event) => {
-            event.stopPropagation();
-            router.push(`/company-profile/${id}`);
-          }}
-        >
-          View Details
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={(event) => {
-            event.stopPropagation();
-            router.push(`/company-profile/${id}/edit`);
-          }}
-        >
-          Edit Company
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={(event) => {
-            event.stopPropagation();
-            onDelete();
-          }}
-        >
-          Delete Company
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center justify-end gap-1">
+      <Button
+        size="icon"
+        variant="ghost"
+        title="View Detail"
+        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/company-profile/${id}`);
+        }}
+      >
+        <Eye className="h-4 w-4" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        title="Edit Company"
+        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          router.push(`/company-profile/${id}/edit`);
+        }}
+      >
+        <SquarePen className="h-4 w-4" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        title="Delete"
+        className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
   );
 };
 

@@ -303,9 +303,9 @@ const OrdersTable = ({
 
       {
         header: "Actions",
-        className: "",
+        className: "text-left w-40 pr-4",
         accessor: (row: Order) => (
-          <div className="px-4 py-2 h-full flex items-start justify-end">
+          <div className="flex items-center justify-end px-4 py-2">
             <OrderActions
               onView={() => onView(row)}
               onEdit={() => onEdit(row)}

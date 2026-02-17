@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, SquarePen, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import CustomTable from "@/components/reusables/CustomTable";
@@ -58,29 +58,44 @@ export function InvoiceTermsList({
       },
       {
         header: "Actions",
-        className: "text-right",
+        className: "text-left w-40 pr-4",
         accessor: (row: InvoiceTerms) => (
-          <div
-            className="flex justify-end gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="flex justify-end gap-1">
             <Button
-              size="sm"
-              variant="outline"
-              className="px-2"
-              onClick={() => onView(row)}
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
             >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-              Edit
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Edit Terms"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <SquarePen className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete(row)}
+              size="icon"
+              variant="ghost"
+              title="Delete"
+              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
             >
-              Delete
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ),
