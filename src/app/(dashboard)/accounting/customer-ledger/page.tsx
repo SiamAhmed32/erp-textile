@@ -1,12 +1,11 @@
 import React from 'react';
+import CustomerLedgerPage from "./_components/CustomerLedgerPage";
+import { Container } from "@/components/reusables";
 
-const CustomerLedgerPage = () => {
+export default function Page() {
     return (
-        <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-bold">Customer Ledger</h1>
-            <p className="text-muted-foreground">Manage and view customer ledger records.</p>
-        </div>
+        <Container className="pb-10">
+            <CustomerLedgerPage />
+        </Container>
     );
-};
-
-export default CustomerLedgerPage;
+}
