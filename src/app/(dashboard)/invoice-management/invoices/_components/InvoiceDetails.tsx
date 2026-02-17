@@ -1,17 +1,18 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Download, Pencil } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
-import { Invoice, InvoiceApiItem } from "./types";
-import { formatDate, normalizeInvoice, statusBadgeClass, numberToWords } from "./helpers";
-import InvoiceReadOnly from "./InvoiceReadOnly";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ArrowLeft, Download, Pencil, Copy } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React from "react";
+import { formatDate, normalizeInvoice, numberToWords, statusBadgeClass } from "./helpers";
+import { InvoiceFormModal } from "./InvoiceFormModal";
+import InvoiceReadOnly from "./InvoiceReadOnly";
+import { Invoice, InvoiceApiItem } from "./types";
 
 type Props = {
     id: string;
@@ -23,6 +24,8 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
 
     const [invoice, setInvoice] = React.useState<Invoice | null>(null);
     const [error, setError] = React.useState("");
+    const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+    const [isDuplicateModalOpen, setIsDuplicateModalOpen] = React.useState(false);
     const exportTriggered = React.useRef(false);
     const { data: invoicePayload, isFetching: loading, error: invoiceError } = useGetByIdQuery({
         path: "invoices",
@@ -81,7 +84,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         // Title
         doc.setFont("helvetica", "bold");
         doc.setFontSize(12);
-        const title = "Proforma Invoice";
+        const title = "Invoice";
         const titleWidth = doc.getTextWidth(title);
         doc.text(title, 105, 32, { align: "center" });
         doc.line(105 - titleWidth / 2, 33, 105 + titleWidth / 2, 33); // Underline
@@ -109,8 +112,10 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.setFont("helvetica", "bold");
         doc.text("PI NO:", infoX, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(invoice.piNumber || "-", valueX, currentY);
-        currentY += 5;
+        const piNoText = invoice.piNumber || "-";
+        const splitPi = doc.splitTextToSize(piNoText, valueWidth);
+        doc.text(splitPi, valueX, currentY);
+        currentY += splitPi.length * 4.5;
 
         doc.setFont("helvetica", "bold");
         doc.text("Date:", infoX, currentY);
@@ -136,7 +141,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.text(splitMerch, valueX, currentY);
         currentY += splitMerch.length * 4.5;
 
-        currentY = 65;
+        currentY = Math.max(currentY + 5, 65); // Dynamic Y with minimum offset
 
         // Table Implementation
         let tableHead: string[][] = [];
@@ -246,9 +251,10 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.setFont("helvetica", "bold");
         doc.text("In Word:", 14, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(amountInWords(totalAmount), 27, currentY); // Narrow space
-
-        currentY += 6; // Narrow space
+        const words = amountInWords(totalAmount);
+        const splitWords = doc.splitTextToSize(words, 160); // Wrap to almost full width
+        doc.text(splitWords, 27, currentY);
+        currentY += splitWords.length * 4;
 
         // Payment & Terms
         doc.setFont("helvetica", "bold");
@@ -310,19 +316,28 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         currentY += 4;
         doc.text(`A/C No: ${company?.bankAccountNumber || "0116-3112001201"}`, 14, currentY);
 
-        // Authorized Signature & Buyer Acceptance
-        currentY += 32; // Big space before signature
+        // Authorized Signature & Buyer Acceptance (Positioned at bottom)
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const footerY = pageHeight - 20; // Position from bottom
 
         // Buyer Acceptance (Left)
+        const leftStartX = 14;
+        const leftEndX = 70;
+        const leftCenterX = (leftStartX + leftEndX) / 2;
         doc.setFont("helvetica", "normal");
-        doc.line(14, currentY, 60, currentY); // Add line for Buyer Acceptance
-        doc.text("Buyer Acceptance", 14, currentY + 4);
+        doc.line(leftStartX, footerY, leftEndX, footerY);
+        doc.text("Buyer Acceptance", leftCenterX, footerY + 5, { align: "center" });
 
         // Authorized Signature (Right)
+        const rightStartX = 150;
+        const rightEndX = 196;
+        const rightCenterX = (rightStartX + rightEndX) / 2;
+
+        doc.line(rightStartX, footerY, rightEndX, footerY); // Upper border for section
         doc.setFont("helvetica", "bold");
-        doc.text(`For ${company?.name || "Moon Textile."}`, 196, currentY, { align: "right" });
+        doc.text(`For ${company?.name || "Moon Textile."}`, rightCenterX, footerY + 5, { align: "center" });
         doc.setFont("helvetica", "normal");
-        doc.text("Authorized Signature", 196, currentY + 4, { align: "right" });
+        doc.text("Authorized Signature", rightCenterX, footerY + 9, { align: "center" });
 
         const filename = `${invoice.piNumber || invoice.id}.pdf`;
         doc.save(filename);
@@ -336,40 +351,73 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
 
     return (
         <Container className="pb-10 pt-6">
-            <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" asChild>
-                        <Link href="/invoice-management/invoices">
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Invoices
-                        </Link>
-                    </Button>
-                    {invoice && (
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(invoice.status)}`}>
-                            {invoice.status}
-                        </span>
-                    )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" onClick={handleExportPdf} disabled={!invoice}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Export PDF
-                    </Button>
-                    <Button variant="outline" asChild disabled={!invoice}>
-                        <Link href={`/invoice-management/invoices/${id}/edit`}>
+            <div className="print:hidden">
+                <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href="/invoice-management/invoices">
+                                <ArrowLeft className="mr-2 h-4 w-4" />
+                                Back to Invoices
+                            </Link>
+                        </Button>
+                        {invoice && (
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(invoice.status)}`}>
+                                {invoice.status}
+                            </span>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" onClick={handleExportPdf} disabled={!invoice}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Export PDF
+                        </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDuplicateModalOpen(true)}
+                            disabled={!invoice}
+                        >
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
+                        </Button>
+                        <Button variant="outline" onClick={() => setIsEditModalOpen(true)} disabled={!invoice}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
-                        </Link>
-                    </Button>
-                </div>
-            </Flex>
+                        </Button>
+                    </div>
+                </Flex>
 
-            {error && <PrimaryText className="mt-4 text-sm text-destructive">{error}</PrimaryText>}
-            {loading && <PrimaryText className="mt-2 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
+                {error && <PrimaryText className="mt-4 text-sm text-destructive">{error}</PrimaryText>}
+                {loading && <PrimaryText className="mt-2 text-sm text-muted-foreground">Loading invoice...</PrimaryText>}
 
-            <div className="mt-4" />
+                <div className="mt-4" />
 
-            {invoice && <InvoiceReadOnly invoice={invoice} />}
+                {invoice && <InvoiceReadOnly invoice={invoice} />}
+            </div>
+
+            {invoice && (
+                <InvoiceFormModal
+                    open={isEditModalOpen}
+                    mode="edit"
+                    invoiceId={invoice.id}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSuccess={() => {
+                        setIsEditModalOpen(false);
+                        // The details will be refreshed by the query hook as it invalidates "invoices"
+                    }}
+                />
+            )}
+
+            {invoice && (
+                <InvoiceFormModal
+                    open={isDuplicateModalOpen}
+                    mode="create"
+                    duplicateId={invoice.id}
+                    onClose={() => setIsDuplicateModalOpen(false)}
+                    onSuccess={() => {
+                        setIsDuplicateModalOpen(false);
+                    }}
+                />
+            )}
         </Container>
     );
 };

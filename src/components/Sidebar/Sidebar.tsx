@@ -3,7 +3,6 @@ import * as React from "react";
 import {
   ChevronRight,
   Home,
-  Settings2,
   Building2,
   Users,
   Tag,

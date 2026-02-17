@@ -1,22 +1,23 @@
-import React, { useMemo } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import CustomTable from "@/components/reusables/CustomTable"
-import { Buyer } from "./types"
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Eye, SquarePen, Trash2 } from "lucide-react";
+import CustomTable from "@/components/reusables/CustomTable";
+import { Buyer } from "./types";
 
 type Props = {
-  buyers: Buyer[]
-  search: string
-  onSearchChange: (value: string) => void
-  onCreate: () => void
-  onEdit: (buyer: Buyer) => void
-  onDelete: (buyer: Buyer) => void
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
-}
+  buyers: Buyer[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  onCreate: () => void;
+  onEdit: (buyer: Buyer) => void;
+  onDelete: (buyer: Buyer) => void;
+  onView: (buyer: Buyer) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+};
 
 export function BuyerList({
   buyers,
@@ -25,6 +26,7 @@ export function BuyerList({
   onCreate,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
@@ -34,7 +36,10 @@ export function BuyerList({
       {
         header: "Name",
         accessor: (row: Buyer) => (
-          <Link href={`/buyers/${row.id}`} className="font-medium hover:underline">
+          <Link
+            href={`/buyers/${row.id}`}
+            className="font-medium hover:underline"
+          >
             {row.name}
           </Link>
         ),
@@ -57,21 +62,51 @@ export function BuyerList({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: Buyer) => (
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-              Edit
+          <div className="flex justify-end gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>
-              Delete
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Edit Buyer"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <SquarePen className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Delete"
+              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ),
-        className: "text-right",
       },
     ],
-    [onEdit, onDelete]
-  )
+    [onView, onEdit, onDelete],
+  );
 
   return (
     <div className="space-y-4">
@@ -88,7 +123,10 @@ export function BuyerList({
             Search
           </Button>
         </div>
-        <Button onClick={onCreate} className="bg-black text-white hover:bg-black/90">
+        <Button
+          onClick={onCreate}
+          className="bg-black text-white hover:bg-black/90"
+        >
           Add Buyer
         </Button>
       </div>
@@ -104,5 +142,5 @@ export function BuyerList({
         scrollAreaHeight="h-[calc(100vh-350px)]"
       />
     </div>
-  )
+  );
 }

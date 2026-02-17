@@ -8,10 +8,7 @@ import { UserCreateInput } from "./types";
 import { AVAILABLE_MODULES } from "./modules";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-    CustomModal,
-    InputField,
-} from "@/components/reusables";
+import { CustomModal, InputField } from "@/components/reusables";
 
 interface Props {
     open: boolean;
@@ -116,7 +113,10 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
             width="90vw"
             maxWidth="900px"
         >
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <form
+                onSubmit={handleSubmit}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
                 {/* Left Side: User Information */}
                 <div className="space-y-4">
                     <InputField
@@ -170,15 +170,31 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
                             <div className="h-32 w-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-2 border-dashed border-primary/30 group-hover:border-primary/60 transition-colors">
                                 {previewUrl ? (
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        className="h-full w-full object-cover"
+                                    />
                                 ) : (
                                     <div className="text-center p-4">
                                         <div className="mx-auto h-10 w-10 text-muted-foreground/60">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                fill="none"
+                                                viewBox="0 0 24 24"
+                                                strokeWidth={1.5}
+                                                stroke="currentColor"
+                                            >
+                                                <path
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    d="M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
+                                                />
                                             </svg>
                                         </div>
-                                        <p className="text-xs text-muted-foreground mt-2">Upload Avatar</p>
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            Upload Avatar
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -241,7 +257,11 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
                     >
                         Cancel
                     </Button>
-                    <Button type="submit" disabled={isLoading} className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                    <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="px-8 bg-secondary hover:bg-secondary/90 text-white"
+                    >
                         {isLoading ? "Creating..." : "Create User"}
                     </Button>
                 </div>

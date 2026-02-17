@@ -22,7 +22,12 @@ const InvoicePage = () => {
   const [dateTo, setDateTo] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null);
+  const [duplicateInvoiceId, setDuplicateInvoiceId] = useState<string | null>(
+    null,
+  );
   const [deleteOne] = useDeleteOneMutation();
+
+  //  console.log("edit invoice:", editInvoiceId);
 
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedSearch(search), 300);
@@ -81,12 +86,13 @@ const InvoicePage = () => {
     [router],
   );
 
-  const handleEdit = useCallback(
-    (row: Invoice) => {
-      setEditInvoiceId(row.id);
-    },
-    [],
-  );
+  const handleEdit = useCallback((row: Invoice) => {
+    setEditInvoiceId(row.id);
+  }, []);
+
+  const handleDuplicate = useCallback((row: Invoice) => {
+    setDuplicateInvoiceId(row.id);
+  }, []);
 
   const handleExport = useCallback(
     (row: Invoice) => {
@@ -128,6 +134,10 @@ const InvoicePage = () => {
     refetch();
   }, [refetch]);
 
+  const handleDuplicateSuccess = useCallback(() => {
+    refetch();
+  }, [refetch]);
+
   return (
     <>
       <InvoicesTable
@@ -152,6 +162,7 @@ const InvoicePage = () => {
         onRowClick={handleRowClick}
         onView={handleView}
         onEdit={handleEdit}
+        onDuplicate={handleDuplicate}
         onExport={handleExport}
         onDelete={handleDelete}
       />
@@ -167,6 +178,13 @@ const InvoicePage = () => {
         invoiceId={editInvoiceId || undefined}
         onClose={() => setEditInvoiceId(null)}
         onSuccess={handleEditSuccess}
+      />
+      <InvoiceFormModal
+        open={!!duplicateInvoiceId}
+        mode="create"
+        duplicateId={duplicateInvoiceId || undefined}
+        onClose={() => setDuplicateInvoiceId(null)}
+        onSuccess={handleDuplicateSuccess}
       />
     </>
   );

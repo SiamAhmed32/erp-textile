@@ -100,10 +100,11 @@ const CompanyProfilesTable = ({
         header: "Status",
         accessor: (row: CompanyProfile) => (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "active"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-slate-200 text-slate-700"
-              }`}
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              row.status === "active"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-200 text-slate-700"
+            }`}
           >
             {row.status === "active" ? "Active" : "Inactive"}
           </span>
@@ -111,10 +112,10 @@ const CompanyProfilesTable = ({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: CompanyProfile) => (
           <CompanyActions id={row.id} onDelete={() => onDelete(row)} />
         ),
-        className: "text-right",
       },
     ],
     [onDelete],
