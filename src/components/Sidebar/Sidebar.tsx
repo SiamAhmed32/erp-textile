@@ -45,31 +45,37 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
+      module: 'dashboard',
       url: "/",
       icon: Home,
     },
     {
       title: "Company Profile",
+      module: 'company-profile',
       url: "/company-profile",
       icon: Building2,
     },
     {
       title: "Users",
+      module: 'users',
       url: "/users",
       icon: Users,
     },
     {
       title: "Buyers",
+      module: 'buyers',
       url: "/buyers",
       icon: Users,
     },
     {
       title: "Invoice Terms",
+      module: 'invoice-terms',
       url: "/invoice-terms",
       icon: FileText,
     },
     {
       title: "Order Management",
+      module: 'order-management',
       icon: ShoppingCart,
       items: [
         {
@@ -86,6 +92,7 @@ const data = {
     },
     {
       title: "Proforma Invoice",
+      module: 'proforma-invoice',
       icon: FileText,
       url: "/invoice-management/invoices",
       // items: [
@@ -103,10 +110,31 @@ const data = {
   ],
 };
 
+import { useSelector } from "react-redux";
+
 const Sidebar = ({
   ...props
 }: React.ComponentProps<typeof SidebarComponent>) => {
   const pathname = usePathname();
+  // @ts-ignore
+  const user = useSelector((state: any) => state.auth.user); // Get user from Redux store
+
+  // const user = {
+  //   role: "user",
+  //   modules: ["dashboard", "company-profile", "users", "buyers"],
+  // };
+
+  const filteredNavMain = data.navMain.filter((item) => {
+    if (user?.role === "admin") return true;
+
+    // Check if item has a module and if it's in user's modules
+    if (item.module && user?.modules?.includes(item.module)) {
+      return true;
+    }
+
+    // logic for submenu items if needed, currently assuming top-level module control
+    return false;
+  });
 
   const isLinkActive = (url?: string) => {
     if (!url) return false;
@@ -136,7 +164,7 @@ const Sidebar = ({
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
-            {data.navMain.map((item) => {
+            {filteredNavMain.map((item) => {
               const isGroupActive = item.items?.some((subItem) =>
                 isLinkActive(subItem.url),
               );

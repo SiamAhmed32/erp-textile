@@ -1,4 +1,5 @@
 "use client";
+import { encryptData } from "@/lib/encryption";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,8 @@ import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
+import { useDispatch } from "react-redux";
+import { login as loginAction } from "@/store/slices/authSlice";
 
 export function LoginForm({
   className,
@@ -28,6 +31,7 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const [login, { isLoading, error }] = useLoginMutation();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -37,11 +41,18 @@ export function LoginForm({
     try {
       const result = await login({ email, password }).unwrap();
       const { token, user } = result?.data;
+
+      // Update Redux state immediately
+      dispatch(loginAction({ token, user }));
+
       // Store token in cookie
       Cookies.set("token", token, { expires: 1 }); // Expires in 1 day
 
       // Store user data in localStorage
-      localStorage.setItem("user", JSON.stringify(user));
+      const encryptedUser = encryptData(user);
+      if (encryptedUser) {
+        localStorage.setItem("user", encryptedUser);
+      }
 
       toast.success("Login successful");
       router.push("/");
@@ -53,7 +64,6 @@ export function LoginForm({
       toast.error(errorMessage);
     }
   };
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
