@@ -16,6 +16,10 @@ export type CompanyProfile = {
     name: string;
     address?: string;
     phone?: string;
+    email?: string | null;
+    bankName?: string | null;
+    branchName?: string | null;
+    bankAccountNumber?: string | null;
 };
 
 export type User = {

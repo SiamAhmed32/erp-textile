@@ -22,6 +22,7 @@ type Props = {
     open: boolean;
     mode: InvoiceFormMode;
     invoiceId?: string;
+    duplicateId?: string;
     onClose: () => void;
     onSuccess?: () => void;
 };
@@ -36,8 +37,9 @@ const emptyInvoice: InvoiceFormData = {
     status: "DRAFT",
 };
 
-export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: Props) {
+export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, onSuccess }: Props) {
     const isCreate = mode === "create";
+    const isDuplicate = !!duplicateId;
     const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
     const [saving, setSaving] = React.useState(false);
     const [errors, setErrors] = React.useState<FormErrors>({});
@@ -59,17 +61,17 @@ export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: 
     const { data: invoicePayload, isFetching: loadingInvoice } = useGetByIdQuery(
         {
             path: "invoices",
-            id: invoiceId || "",
+            id: invoiceId || duplicateId || "",
         },
-        { skip: isCreate || !invoiceId }
+        { skip: (!isCreate && !invoiceId) || (isCreate && !isDuplicate) }
     );
 
     const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
     const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
 
-    // Load invoice data for edit mode
+    // Load invoice data for edit mode or duplication
     React.useEffect(() => {
-        if (isCreate) {
+        if (isCreate && !isDuplicate) {
             setDraft(emptyInvoice);
             setErrors({});
             return;
@@ -77,9 +79,17 @@ export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: 
 
         const item = (invoicePayload as any)?.data as InvoiceApiItem | undefined;
         if (!item) return;
+
         const normalized = normalizeInvoice(item);
-        setDraft(toInvoiceFormData(normalized));
-    }, [invoicePayload, isCreate, open]);
+        const formData = toInvoiceFormData(normalized);
+
+        if (isCreate && isDuplicate) {
+            formData.piNumber = ""; // Clear PI Number for duplicate
+            formData.status = "DRAFT";
+        }
+
+        setDraft(formData);
+    }, [invoicePayload, isCreate, isDuplicate, open]);
 
     // Reset form when modal closes
     React.useEffect(() => {
@@ -140,10 +150,12 @@ export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: 
         }
     };
 
-    const title = isCreate ? "Create Proforma Invoice" : "Edit Proforma Invoice";
-    const description = isCreate
-        ? "Create a new proforma invoice for an order with terms and conditions."
-        : "Update invoice information to keep records accurate and consistent.";
+    const title = isDuplicate ? "Duplicate Proforma Invoice" : isCreate ? "Create Proforma Invoice" : "Edit Proforma Invoice";
+    const description = isDuplicate
+        ? "Create a new proforma invoice based on an existing one."
+        : isCreate
+            ? "Create a new proforma invoice for an order with terms and conditions."
+            : "Update invoice information to keep records accurate and consistent.";
 
     return (
         <Dialog open={open} onOpenChange={(value) => !value && onClose()}>

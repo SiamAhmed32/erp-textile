@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { ArrowLeft, Download, Pencil, Printer } from "lucide-react";
+import { ArrowLeft, Download, Pencil, Copy } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -25,6 +25,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
     const [invoice, setInvoice] = React.useState<Invoice | null>(null);
     const [error, setError] = React.useState("");
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+    const [isDuplicateModalOpen, setIsDuplicateModalOpen] = React.useState(false);
     const exportTriggered = React.useRef(false);
     const { data: invoicePayload, isFetching: loading, error: invoiceError } = useGetByIdQuery({
         path: "invoices",
@@ -370,6 +371,14 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                             <Download className="mr-2 h-4 w-4" />
                             Export PDF
                         </Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsDuplicateModalOpen(true)}
+                            disabled={!invoice}
+                        >
+                            <Copy className="mr-2 h-4 w-4" />
+                            Duplicate
+                        </Button>
                         <Button variant="outline" onClick={() => setIsEditModalOpen(true)} disabled={!invoice}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
@@ -394,6 +403,18 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                     onSuccess={() => {
                         setIsEditModalOpen(false);
                         // The details will be refreshed by the query hook as it invalidates "invoices"
+                    }}
+                />
+            )}
+
+            {invoice && (
+                <InvoiceFormModal
+                    open={isDuplicateModalOpen}
+                    mode="create"
+                    duplicateId={invoice.id}
+                    onClose={() => setIsDuplicateModalOpen(false)}
+                    onSuccess={() => {
+                        setIsDuplicateModalOpen(false);
                     }}
                 />
             )}
