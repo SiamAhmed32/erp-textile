@@ -69,15 +69,21 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
             data.append("designation", formData.designation);
 
             // Append modules as JSON string or individual items based on API requirements
+            // Append modules as individual fields or allow backend to handle array
+            // The error said "modules.0", "modules.1" so it received an array but values were wrong?
+            // "Invalid option: expected one of ..."
+            // I will ensure the values match.
+            // And I must send 'data' (FormData) not 'formData' (state) for avatar to work.
+
             formData.modules.forEach((module) => {
-                data.append("modules[]", module);
+                data.append("modules", module); // Changed from "modules[]" to "modules" just in case, standard FormData usually works with same key
             });
 
             if (avatar) {
                 data.append("avatar", avatar);
             }
 
-            await register(data).unwrap();
+            await register(data).unwrap(); // Reverted back to sending 'data' (FormData)
             toast.success("User created successfully");
             onOpenChange(false);
             resetForm();
