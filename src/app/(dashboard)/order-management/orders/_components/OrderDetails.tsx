@@ -67,7 +67,7 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
   return (
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2 mb-4 lg:mb-8">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
             <Link href="/order-management/orders">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -82,7 +82,7 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 mb-4 lg:mb-8">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={handleExportPdf} disabled={!order}>
             <Download className="mr-2 h-4 w-4" />
             Export PDF
@@ -110,10 +110,12 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
       </Flex>
 
       {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
+        <PrimaryText className="mt-2 text-sm text-muted-foreground">
           Loading order...
         </PrimaryText>
       )}
+
+      <div className="mt-4" />
 
       {order && <OrderReadOnly order={order} />}
     </Container>

@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import CustomTable from "@/components/reusables/CustomTable";
@@ -13,6 +12,7 @@ type Props = {
   onCreate: () => void;
   onEdit: (terms: InvoiceTerms) => void;
   onDelete: (terms: InvoiceTerms) => void;
+  onView: (terms: InvoiceTerms) => void;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -26,6 +26,7 @@ export function InvoiceTermsList({
   onCreate,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
@@ -36,13 +37,7 @@ export function InvoiceTermsList({
       {
         header: "Name",
         accessor: (row: InvoiceTerms) => (
-          <Link
-            href={`/invoice-terms/${row.id}`}
-            className="font-semibold text-foreground underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.name}
-          </Link>
+          <span className="font-semibold text-foreground">{row.name}</span>
         ),
       },
       {
@@ -69,6 +64,14 @@ export function InvoiceTermsList({
             className="flex justify-end gap-2"
             onClick={(e) => e.stopPropagation()}
           >
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-2"
+              onClick={() => onView(row)}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
               Edit
             </Button>
@@ -83,7 +86,7 @@ export function InvoiceTermsList({
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onView, onEdit, onDelete],
   );
 
   return (

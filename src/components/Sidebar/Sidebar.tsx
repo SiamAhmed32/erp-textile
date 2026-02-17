@@ -3,7 +3,6 @@ import * as React from "react";
 import {
   ChevronRight,
   Home,
-  Settings2,
   Building2,
   Users,
   Tag,
@@ -13,6 +12,13 @@ import {
   FileText,
   Truck,
   ClipboardList,
+  Calculator,
+  LayoutDashboard,
+  UserRound,
+  Building,
+  ReceiptText,
+  BookOpen,
+  Wallet,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -83,11 +89,11 @@ const data = {
           url: "/order-management/orders",
           icon: ClipboardList,
         },
-        {
-          title: "Order Delivered",
-          url: "/order-management/delivered",
-          icon: Truck,
-        },
+        // {
+        //   title: "Order Delivered",
+        //   url: "/order-management/delivered",
+        //   icon: Truck,
+        // },
       ],
     },
     {
@@ -112,6 +118,43 @@ const data = {
       module: "lcManagement",
       url: "/lc-management/lc-managements",
       icon: ClipboardList,
+    },
+    {
+      title: "Accounting",
+      module: "accounting",
+      icon: Calculator,
+      items: [
+        {
+          title: "Overview",
+          url: "/accounting/overview",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Customer Ledger",
+          url: "/accounting/customer-ledger",
+          icon: UserRound,
+        },
+        {
+          title: "Supplier Ledger",
+          url: "/accounting/supplier-ledger",
+          icon: Building,
+        },
+        {
+          title: "MOI (Cash Book)",
+          url: "/accounting/cash-book",
+          icon: ReceiptText,
+        },
+        {
+          title: "Daily Bookkeeping",
+          url: "/accounting/daily-bookkeeping",
+          icon: BookOpen,
+        },
+        {
+          title: "Loan Management",
+          url: "/accounting/loan-management",
+          icon: Wallet,
+        },
+      ],
     },
   ],
 };
@@ -241,10 +284,10 @@ const Sidebar = ({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/settings"}>
-              <Link href="/settings">
-                <Settings2 />
-                <span>Settings</span>
+            <SidebarMenuButton asChild isActive={pathname === "/profile"}>
+              <Link href="/profile">
+                <UserRound />
+                <span>Profile</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

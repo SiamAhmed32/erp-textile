@@ -33,11 +33,12 @@ import { toast } from "react-toastify";
 export type InvoiceFormMode = "create" | "edit";
 
 type Props = {
-  open: boolean;
-  mode: InvoiceFormMode;
-  invoiceId?: string;
-  onClose: () => void;
-  onSuccess?: () => void;
+    open: boolean;
+    mode: InvoiceFormMode;
+    invoiceId?: string;
+    duplicateId?: string;
+    onClose: () => void;
+    onSuccess?: () => void;
 };
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
@@ -50,56 +51,50 @@ const emptyInvoice: InvoiceFormData = {
   status: "DRAFT",
 };
 
-export function InvoiceFormModal({
-  open,
-  mode,
-  invoiceId,
-  onClose,
-  onSuccess,
-}: Props) {
-  const isCreate = mode === "create";
-  const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
-  const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<FormErrors>({});
-  const [postItem] = usePostMutation();
-  const [patchItem] = usePatchMutation();
+export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: Props) {
+    const isCreate = mode === "create";
+    const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
+    const [saving, setSaving] = React.useState(false);
+    const [errors, setErrors] = React.useState<FormErrors>({});
+    const [postItem] = usePostMutation();
+    const [patchItem] = usePatchMutation();
 
-  const { data: ordersPayload } = useGetAllQuery({
-    path: "orders",
-    page: 1,
-    limit: 100,
-  });
-  const { data: termsPayload } = useGetAllQuery({
-    path: "invoice-terms",
-    page: 1,
-    limit: 100,
-    search: "",
-    sort: null,
-  });
-  const { data: invoicePayload, isFetching: loadingInvoice } = useGetByIdQuery(
-    {
-      path: "invoices",
-      id: invoiceId || "",
-    },
-    { skip: isCreate || !invoiceId },
-  );
+    const { data: ordersPayload } = useGetAllQuery({
+        path: "orders",
+        page: 1,
+        limit: 100,
+    });
+    const { data: termsPayload } = useGetAllQuery({
+        path: "invoice-terms",
+        page: 1,
+        limit: 100,
+        search: "",
+        sort: null,
+    });
+    const { data: invoicePayload, isFetching: loadingInvoice } = useGetByIdQuery(
+        {
+            path: "invoices",
+            id: invoiceId || "",
+        },
+        { skip: isCreate || !invoiceId }
+    );
 
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
 
-  // Load invoice data for edit mode
-  React.useEffect(() => {
-    if (isCreate) {
-      setDraft(emptyInvoice);
-      setErrors({});
-      return;
-    }
+    // Load invoice data for edit mode
+    React.useEffect(() => {
+        if (isCreate) {
+            setDraft(emptyInvoice);
+            setErrors({});
+            return;
+        }
 
-    const item = (invoicePayload as any)?.data as InvoiceApiItem | undefined;
-    if (!item) return;
-    const normalized = normalizeInvoice(item);
-    setDraft(toInvoiceFormData(normalized));
-  }, [invoicePayload, isCreate, open]);
+        const item = (invoicePayload as any)?.data as InvoiceApiItem | undefined;
+        if (!item) return;
+        const normalized = normalizeInvoice(item);
+        setDraft(toInvoiceFormData(normalized));
+    }, [invoicePayload, isCreate, open]);
 
   // Reset form when modal closes
   React.useEffect(() => {
@@ -122,23 +117,23 @@ export function InvoiceFormModal({
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setSaving(true);
-    try {
-      if (isCreate) {
-        await postItem({
-          path: "invoices",
-          body: toInvoicePayload(draft),
-          invalidate: ["invoices"],
-        }).unwrap();
-        toast.success("Invoice created successfully");
-      } else {
-        await patchItem({
-          path: `invoices/${invoiceId}`,
-          body: toInvoicePayload(draft),
-          invalidate: ["invoices"],
-        }).unwrap();
-        toast.success("Invoice updated successfully");
-      }
+        setSaving(true);
+        try {
+            if (isCreate) {
+                await postItem({
+                    path: "invoices",
+                    body: toInvoicePayload(draft),
+                    invalidate: ["invoices"],
+                }).unwrap();
+                toast.success("Invoice created successfully");
+            } else {
+                await patchItem({
+                    path: `invoices/${invoiceId}`,
+                    body: toInvoicePayload(draft),
+                    invalidate: ["invoices"],
+                }).unwrap();
+                toast.success("Invoice updated successfully");
+            }
 
       setDraft(emptyInvoice);
       if (onSuccess) onSuccess();
@@ -156,10 +151,10 @@ export function InvoiceFormModal({
     }
   };
 
-  const title = isCreate ? "Create Proforma Invoice" : "Edit Proforma Invoice";
-  const description = isCreate
-    ? "Create a new proforma invoice for an order with terms and conditions."
-    : "Update invoice information to keep records accurate and consistent.";
+    const title = isCreate ? "Create Proforma Invoice" : "Edit Proforma Invoice";
+    const description = isCreate
+        ? "Create a new proforma invoice for an order with terms and conditions."
+        : "Update invoice information to keep records accurate and consistent.";
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>

@@ -10,6 +10,7 @@ import {
 import { Buyer, BuyerFormData } from "./types";
 import { BuyerList } from "./BuyerList";
 import { BuyerForm } from "./BuyerForm";
+import { BuyerViewModal } from "./BuyerViewModal";
 import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
 import {
   useGetAllQuery,
@@ -49,6 +50,7 @@ export function BuyerManagementPage() {
     Partial<Record<keyof BuyerFormData, string>>
   >({});
   const [deleteTarget, setDeleteTarget] = React.useState<Buyer | null>(null);
+  const [viewTarget, setViewTarget] = React.useState<Buyer | null>(null);
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
@@ -93,6 +95,10 @@ export function BuyerManagementPage() {
 
   const handleDelete = (buyer: Buyer) => {
     setDeleteTarget(buyer);
+  };
+
+  const handleView = (buyer: Buyer) => {
+    setViewTarget(buyer);
   };
 
   const confirmDelete = async () => {
@@ -179,6 +185,7 @@ export function BuyerManagementPage() {
         onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
@@ -195,6 +202,13 @@ export function BuyerManagementPage() {
         onClose={() => setFormOpen(false)}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
+      />
+
+      <BuyerViewModal
+        open={Boolean(viewTarget)}
+        buyer={viewTarget}
+        onClose={() => setViewTarget(null)}
+        onEdit={handleEdit}
       />
 
       <DeleteConfirmDialog

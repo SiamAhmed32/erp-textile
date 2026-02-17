@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
 import { LCManagement } from "./types";
 import LCReadOnly from "./LCReadOnly";
-// import { exportLCToPdf } from "./lcPdf"; // To be created
+import { exportLCToPdf } from "./lcPdf";
 
 type Props = {
   id: string;
@@ -43,8 +43,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
 
   const handleExportPdf = React.useCallback(() => {
     if (!lc) return;
-    // exportLCToPdf(lc); // Placeholder for now
-    alert("PDF Export coming soon!");
+    exportLCToPdf(lc);
   }, [lc]);
 
   React.useEffect(() => {

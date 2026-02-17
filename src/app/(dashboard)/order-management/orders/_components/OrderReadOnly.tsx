@@ -1,4 +1,6 @@
 import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -8,7 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Order } from "./types";
-import { formatDate } from "./helpers";
+import { formatDate, statusBadgeClass } from "./helpers";
+import { FileText, User, Package, List, ScrollText, Building2 } from "lucide-react";
 
 type Props = {
   order: Order;
@@ -25,469 +28,280 @@ const OrderReadOnly = ({ order }: Props) => {
   const labelItem = item?.labelItem;
   const cartonItem = item?.cartonItem;
 
-  // Calculate totals
-  const calculateTotals = () => {
-    if (order.productType === "FABRIC" && fabricItem?.fabricItemData) {
-      const rows = fabricItem.fabricItemData;
-      return {
-        totalNetWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.netWeight) || 0),
-          0,
-        ),
-        totalGrossWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.grossWeight) || 0),
-          0,
-        ),
-        totalQuantity: rows.reduce(
-          (sum, row) => sum + (Number(row.quantityYds) || 0),
-          0,
-        ),
-        totalAmount: rows.reduce(
-          (sum, row) => sum + (Number(row.totalAmount) || 0),
-          0,
-        ),
-      };
-    } else if (order.productType === "LABEL_TAG" && labelItem?.labelItemData) {
-      const rows = labelItem.labelItemData;
-      return {
-        totalNetWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.netWeight) || 0),
-          0,
-        ),
-        totalGrossWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.grossWeight) || 0),
-          0,
-        ),
-        totalQuantityDzn: rows.reduce(
-          (sum, row) => sum + (Number(row.quantityDzn) || 0),
-          0,
-        ),
-        totalQuantityPcs: rows.reduce(
-          (sum, row) => sum + (Number(row.quantityPcs) || 0),
-          0,
-        ),
-        totalAmount: rows.reduce(
-          (sum, row) => sum + (Number(row.totalAmount) || 0),
-          0,
-        ),
-      };
-    } else if (order.productType === "CARTON" && cartonItem?.cartonItemData) {
-      const rows = cartonItem.cartonItemData;
-      return {
-        totalCartonQty: rows.reduce(
-          (sum, row) => sum + (Number(row.cartonQty) || 0),
-          0,
-        ),
-        totalNetWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.netWeight) || 0),
-          0,
-        ),
-        totalGrossWeight: rows.reduce(
-          (sum, row) => sum + (Number(row.grossWeight) || 0),
-          0,
-        ),
-        totalAmount: rows.reduce(
-          (sum, row) => sum + (Number(row.totalAmount) || 0),
-          0,
-        ),
-      };
-    }
-    return {};
-  };
-
-  const totals = calculateTotals();
-
   const renderFabricTable = () => {
     const rows = fabricItem?.fabricItemData || [];
     if (!rows.length) return null;
+    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
     return (
-      <Table className="border">
-        <TableHeader>
-          <TableRow className="bg-slate-50">
-            <TableHead className="text-center border font-semibold text-foreground">
-              Style No/Po Number
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Description
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Width
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Colour
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Net Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Gross Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Qty (Yds)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Unit Price (US$)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Total (US$)
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row: any, index: number) => (
-            <TableRow key={index}>
-              {index === 0 && (
-                <>
-                  <TableCell
-                    rowSpan={rows.length}
-                    className="text-center align-middle font-medium border"
-                  >
-                    {fabricItem?.styleNo || "-"}
-                  </TableCell>
-                  <TableCell
-                    rowSpan={rows.length}
-                    className="text-center align-middle border"
-                  >
-                    {fabricItem?.discription || "-"}
-                  </TableCell>
-                  <TableCell
-                    rowSpan={rows.length}
-                    className="text-center align-middle border"
-                  >
-                    {fabricItem?.width || "-"}
-                  </TableCell>
-                </>
-              )}
-              <TableCell className="text-center border">
-                {row.color || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.netWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.grossWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.quantityYds ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.unitPrice ?? "0.00"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.totalAmount ?? "0.00"}
-              </TableCell>
+      <div className="rounded-md border border-slate-200 overflow-hidden">
+        <Table className="border-collapse">
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Style No</TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Description</TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Width</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Color</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Yds)</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
             </TableRow>
-          ))}
-          <TableRow className="bg-slate-50 font-semibold">
-            <TableCell colSpan={4} className="text-right border">
-              Total
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalNetWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalGrossWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalQuantity?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border"></TableCell>
-            <TableCell className="text-center border">
-              ${totals.totalAmount?.toFixed(2) || "0.00"}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row: any, index: number) => (
+              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+                {index === 0 && (
+                  <>
+                    <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{fabricItem?.styleNo || "-"}</TableCell>
+                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r border-slate-200 py-3">{fabricItem?.discription || "-"}</TableCell>
+                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r border-slate-200 py-3">{fabricItem?.width || "-"}</TableCell>
+                  </>
+                )}
+                <TableCell className="border-r border-slate-200 py-2">{row.color || "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.quantityYds ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <tfoot className="bg-slate-50 border-t-2 border-slate-200">
+            <TableRow className="hover:bg-slate-50">
+              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
+              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+            </TableRow>
+          </tfoot>
+        </Table>
+      </div>
     );
   };
 
   const renderLabelTable = () => {
     const rows = labelItem?.labelItemData || [];
     if (!rows.length) return null;
+    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
     return (
-      <Table className="border">
-        <TableHeader>
-          <TableRow className="bg-slate-50">
-            <TableHead className="text-center border font-semibold text-foreground">
-              Style No/Po Number
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Description
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Colour
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Net Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Gross Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Qty (Dzn)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Qty (Pcs)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Unit Price (US$)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Total (US$)
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row: any, index: number) => (
-            <TableRow key={index}>
-              {index === 0 && (
-                <TableCell
-                  rowSpan={rows.length}
-                  className="text-center align-middle font-medium border"
-                >
-                  {labelItem?.styleNo || "-"}
-                </TableCell>
-              )}
-              <TableCell className="text-center border">
-                {row.desscription || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.color || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.netWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.grossWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.quantityDzn ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.quantityPcs ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.unitPrice ?? "0.00"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.totalAmount ?? "0.00"}
-              </TableCell>
+      <div className="rounded-md border border-slate-200 overflow-hidden">
+        <Table className="border-collapse">
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Style No</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Color</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Dzn)</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Pcs)</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
             </TableRow>
-          ))}
-          <TableRow className="bg-slate-50 font-semibold">
-            <TableCell colSpan={3} className="text-right border">
-              Total
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalNetWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalGrossWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalQuantityDzn?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalQuantityPcs || "0"}
-            </TableCell>
-            <TableCell className="text-center border"></TableCell>
-            <TableCell className="text-center border">
-              ${totals.totalAmount?.toFixed(2) || "0.00"}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row: any, index: number) => (
+              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+                {index === 0 && (
+                  <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{labelItem?.styleNo || "-"}</TableCell>
+                )}
+                <TableCell className="border-r border-slate-200 py-2">{row.color || "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.quantityDzn ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.quantityPcs ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <tfoot className="bg-slate-50 border-t-2 border-slate-200">
+            <TableRow className="hover:bg-slate-50">
+              <TableCell colSpan={7} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
+              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+            </TableRow>
+          </tfoot>
+        </Table>
+      </div>
     );
   };
 
   const renderCartonTable = () => {
     const rows = cartonItem?.cartonItemData || [];
     if (!rows.length) return null;
+    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
     return (
-      <Table className="border">
-        <TableHeader>
-          <TableRow className="bg-slate-50">
-            <TableHead className="text-center border font-semibold text-foreground">
-              Order No
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Measurement
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Ply
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Qty
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Net Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Gross Weight
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Unit
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Unit Price (US$)
-            </TableHead>
-            <TableHead className="text-center border font-semibold text-foreground">
-              Total (US$)
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row: any, index: number) => (
-            <TableRow key={index}>
-              {index === 0 && (
-                <TableCell
-                  rowSpan={rows.length}
-                  className="text-center align-middle font-medium border"
-                >
-                  {cartonItem?.orderNo || "-"}
-                </TableCell>
-              )}
-              <TableCell className="text-center border">
-                {row.cartonMeasurement || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.cartonPly || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.cartonQty ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.netWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.grossWeight ?? "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                {row.unit || "-"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.unitPrice ?? "0.00"}
-              </TableCell>
-              <TableCell className="text-center border">
-                ${row.totalAmount ?? "0.00"}
-              </TableCell>
+      <div className="rounded-md border border-slate-200 overflow-hidden">
+        <Table className="border-collapse">
+          <TableHeader>
+            <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Order No</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Measurement</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Ply</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit</TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
             </TableRow>
-          ))}
-          <TableRow className="bg-slate-50 font-semibold">
-            <TableCell colSpan={3} className="text-right border">
-              Total
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalCartonQty || "0"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalNetWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border">
-              {totals.totalGrossWeight?.toFixed(2) || "0.00"}
-            </TableCell>
-            <TableCell className="text-center border"></TableCell>
-            <TableCell className="text-center border"></TableCell>
-            <TableCell className="text-center border">
-              ${totals.totalAmount?.toFixed(2) || "0.00"}
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row: any, index: number) => (
+              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+                {index === 0 && (
+                  <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{cartonItem?.orderNo || "-"}</TableCell>
+                )}
+                <TableCell className="border-r border-slate-200 py-2">{row.cartonMeasurement || "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.cartonPly || "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.cartonQty ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.unit || "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <tfoot className="bg-slate-50 border-t-2 border-slate-200">
+            <TableRow className="hover:bg-slate-50">
+              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
+              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+            </TableRow>
+          </tfoot>
+        </Table>
+      </div>
     );
   };
 
   return (
-    <div className="max-w-[210mm] mx-auto bg-white p-8 shadow-lg print:shadow-none">
-      {/* Header */}
-      <div className="text-center mb-6 border-b-2 border-slate-900 pb-4">
-        <h1 className="text-2xl font-bold text-slate-900">
-          {order.companyProfile?.name || "Moon Textile"}
-        </h1>
-        {order.companyProfile?.address && (
-          <p className="text-sm text-slate-600 mt-1">
-            {order.companyProfile.address}
-          </p>
-        )}
-        {order.companyProfile?.phone && (
-          <p className="text-sm text-slate-600">{order.companyProfile.phone}</p>
-        )}
-      </div>
-
-      {/* Document Title */}
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-slate-900 border-b border-slate-900 inline-block pb-1">
-          Order Invoice
-        </h2>
-      </div>
-
-      {/* Buyer and Order Information */}
-      <div className="grid grid-cols-2 gap-8 mb-6">
-        {/* Left: Buyer Information */}
-        <div>
-          <div className="space-y-1">
-            <p className="font-semibold text-slate-900">
-              {order.buyer?.name || "[Buyer Name]"}
-            </p>
-            {order.buyer?.email && (
-              <p className="text-sm text-slate-700">{order.buyer.email}</p>
-            )}
-            {order.buyer?.phone && (
-              <p className="text-sm text-slate-700">{order.buyer.phone}</p>
-            )}
-            {order.buyer?.address && (
-              <p className="text-sm text-slate-700">{order.buyer.address}</p>
-            )}
-            {order.buyer?.location && (
-              <p className="text-sm text-slate-700">{order.buyer.location}</p>
-            )}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Order Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <p className="text-xs text-muted-foreground">Order Number</p>
+            <p className="font-medium">{order.orderNumber}</p>
           </div>
-        </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Status</p>
+            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(order.status)}`}>
+              {order.status}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Order Date</p>
+            <p className="font-medium">{formatDate(order.orderDate)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Delivery Date</p>
+            <p className="font-medium">{formatDate(order.deliveryDate)}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Right: Order Details */}
-        <div className="text-right space-y-1">
-          <p className="text-sm">
-            <span className="font-semibold">Date:</span>{" "}
-            {formatDate(order.orderDate)}
-          </p>
-          <p className="text-sm">
-            <span className="font-semibold">Order No:</span> {order.orderNumber}{" "}
-            ({order.status})
-          </p>
-          {order.deliveryDate && (
-            <p className="text-sm">
-              <span className="font-semibold">Delivery:</span>{" "}
-              {formatDate(order.deliveryDate)}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Buyer Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Buyer Name</p>
+            <p className="font-medium">{order.buyer?.name || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Email</p>
+            <p className="font-medium">{order.buyer?.email || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Phone</p>
+            <p className="font-medium">{order.buyer?.phone || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Merchandiser</p>
+            <p className="font-medium">{order.buyer?.merchandiser || "-"}</p>
+          </div>
+          <div className="md:col-span-2">
+            <p className="text-xs text-muted-foreground">Address & Location</p>
+            <p className="font-medium">
+              {order.buyer?.address || "-"}
+              {order.buyer?.location ? `, ${order.buyer.location}` : ""}
             </p>
-          )}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Product Table */}
-      <div className="mb-6">
-        {order.productType === "FABRIC" && renderFabricTable()}
-        {order.productType === "LABEL_TAG" && renderLabelTable()}
-        {order.productType === "CARTON" && renderCartonTable()}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Company Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Company Name</p>
+            <p className="font-medium">{order.companyProfile?.name || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Email</p>
+            <p className="font-medium">{order.companyProfile?.email || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Phone</p>
+            <p className="font-medium">{order.companyProfile?.phone || "-"}</p>
+          </div>
+          <div className="md:col-span-2 lg:col-span-3">
+            <p className="text-xs text-muted-foreground">Address</p>
+            <p className="font-medium">{order.companyProfile?.address || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Bank Name</p>
+            <p className="font-medium">{order.companyProfile?.bankName || "-"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">A/C Number</p>
+            <p className="font-medium">{order.companyProfile?.bankAccountNumber || "-"}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Total Amount in Words */}
-      <div className="mb-6">
-        <p className="text-sm font-semibold">
-          Total Amount (in Words): US Dollar{" "}
-          {totals.totalAmount ? `${totals.totalAmount.toFixed(2)}` : "Zero"}
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <List className="h-5 w-5" />
+            Items
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {order.productType === "FABRIC" && renderFabricTable()}
+          {order.productType === "LABEL_TAG" && renderLabelTable()}
+          {order.productType === "CARTON" && renderCartonTable()}
+        </CardContent>
+      </Card>
 
-      {/* Remarks */}
       {order.remarks && (
-        <div className="mb-6">
-          <p className="text-sm">
-            <span className="font-semibold">Remarks:</span> {order.remarks}
-          </p>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ScrollText className="h-5 w-5" />
+              Remarks
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="font-medium">{order.remarks}</p>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
 };
 
 export default OrderReadOnly;
+

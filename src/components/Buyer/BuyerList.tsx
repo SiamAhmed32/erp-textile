@@ -1,22 +1,23 @@
-import React, { useMemo } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import CustomTable from "@/components/reusables/CustomTable"
-import { Buyer } from "./types"
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Eye } from "lucide-react";
+import CustomTable from "@/components/reusables/CustomTable";
+import { Buyer } from "./types";
 
 type Props = {
-  buyers: Buyer[]
-  search: string
-  onSearchChange: (value: string) => void
-  onCreate: () => void
-  onEdit: (buyer: Buyer) => void
-  onDelete: (buyer: Buyer) => void
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
-}
+  buyers: Buyer[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  onCreate: () => void;
+  onEdit: (buyer: Buyer) => void;
+  onDelete: (buyer: Buyer) => void;
+  onView: (buyer: Buyer) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+};
 
 export function BuyerList({
   buyers,
@@ -25,6 +26,7 @@ export function BuyerList({
   onCreate,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
@@ -34,7 +36,10 @@ export function BuyerList({
       {
         header: "Name",
         accessor: (row: Buyer) => (
-          <Link href={`/buyers/${row.id}`} className="font-medium hover:underline">
+          <Link
+            href={`/buyers/${row.id}`}
+            className="font-medium hover:underline"
+          >
             {row.name}
           </Link>
         ),
@@ -59,10 +64,22 @@ export function BuyerList({
         header: "Actions",
         accessor: (row: Buyer) => (
           <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-2"
+              onClick={() => onView(row)}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
             <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
               Edit
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => onDelete(row)}
+            >
               Delete
             </Button>
           </div>
@@ -70,8 +87,8 @@ export function BuyerList({
         className: "text-right",
       },
     ],
-    [onEdit, onDelete]
-  )
+    [onView, onEdit, onDelete],
+  );
 
   return (
     <div className="space-y-4">
@@ -88,7 +105,10 @@ export function BuyerList({
             Search
           </Button>
         </div>
-        <Button onClick={onCreate} className="bg-black text-white hover:bg-black/90">
+        <Button
+          onClick={onCreate}
+          className="bg-black text-white hover:bg-black/90"
+        >
           Add Buyer
         </Button>
       </div>
@@ -104,5 +124,5 @@ export function BuyerList({
         scrollAreaHeight="h-[calc(100vh-350px)]"
       />
     </div>
-  )
+  );
 }

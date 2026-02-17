@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
-import { InvoiceFormData, InvoiceTerms, OrderSummary } from "./types";
+import { useGetAllQuery, usePostMutation, useGetByIdQuery } from "@/store/services/commonApi";
+import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
-import { toInvoicePayload } from "./helpers";
+import { normalizeInvoice, toInvoiceFormData, toInvoicePayload } from "./helpers";
 import InvoiceForm from "./InvoiceForm";
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
@@ -22,7 +22,11 @@ const emptyInvoice: InvoiceFormData = {
   status: "DRAFT",
 };
 
-const InvoiceCreate = () => {
+type Props = {
+  duplicateId?: string;
+};
+
+const InvoiceCreate = ({ duplicateId }: Props) => {
   const router = useRouter();
   const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
   const [saving, setSaving] = React.useState(false);
@@ -40,11 +44,18 @@ const InvoiceCreate = () => {
     search: "",
     sort: null,
   });
+  const { data: duplicatePayload, error: duplicateError } = useGetByIdQuery(
+    {
+      path: "invoices",
+      id: duplicateId || "",
+    },
+    { skip: !duplicateId },
+  );
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
 
   React.useEffect(() => {
-    const parsed = (ordersError || termsError) as any;
+    const parsed = (ordersError || termsError || duplicateError) as any;
     if (!parsed) return;
     const message =
       parsed?.data?.error?.message ||
@@ -52,7 +63,18 @@ const InvoiceCreate = () => {
       parsed?.error ||
       "Failed to load options";
     console.error("Load Invoice Options Error:", message);
-  }, [ordersError, termsError]);
+  }, [ordersError, termsError, duplicateError]);
+
+  React.useEffect(() => {
+    if (!duplicateId) return;
+    const item = (duplicatePayload as any)?.data as InvoiceApiItem | undefined;
+    if (!item) return;
+    const normalized = normalizeInvoice(item);
+    const form = toInvoiceFormData(normalized);
+    form.piNumber = ""; // Clear PI Number for duplicate
+    form.status = "DRAFT";
+    setDraft(form);
+  }, [duplicatePayload, duplicateId]);
 
   const handleChange = (field: keyof InvoiceFormData, value: any) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
