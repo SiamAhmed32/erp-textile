@@ -122,17 +122,33 @@ export const exportOrderToPdf = (order: Order) => {
   // Product Table
   if (order.productType === "FABRIC" && fabricItem?.fabricItemData) {
     const rows = fabricItem.fabricItemData;
-    const tableData = rows.map((row: any) => [
-      fabricItem.styleNo || "-",
-      fabricItem.discription || "-",
-      fabricItem.width || "-",
-      row.color || "-",
-      row.netWeight ?? "-",
-      row.grossWeight ?? "-",
-      row.quantityYds ?? "-",
-      `$${row.unitPrice ?? "0.00"}`,
-      `$${row.totalAmount ?? "0.00"}`,
-    ]);
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: fabricItem?.styleNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+        rowData.push({
+          content: fabricItem?.discription || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+        rowData.push({
+          content: fabricItem?.width || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.color || "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.quantityYds ?? "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
 
     // Calculate totals
     const totalNetWeight = rows.reduce(
@@ -153,12 +169,12 @@ export const exportOrderToPdf = (order: Order) => {
     );
 
     tableData.push([
-      { content: "Total", colSpan: 4, styles: { fontStyle: "bold" } },
-      totalNetWeight.toFixed(2),
-      totalGrossWeight.toFixed(2),
-      totalQuantity.toFixed(2),
-      "",
-      `$${totalAmount.toFixed(2)}`,
+      { content: "Total", colSpan: 4, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantity.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
     ]);
 
     autoTable(doc, {
@@ -178,8 +194,22 @@ export const exportOrderToPdf = (order: Order) => {
       ],
       body: tableData,
       theme: "grid",
-      headStyles: { fillColor: [71, 85, 105], fontSize: 9 },
-      bodyStyles: { fontSize: 8 },
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
       columnStyles: {
         0: { cellWidth: 20 },
         1: { cellWidth: 25 },
@@ -194,17 +224,25 @@ export const exportOrderToPdf = (order: Order) => {
     });
   } else if (order.productType === "LABEL_TAG" && labelItem?.labelItemData) {
     const rows = labelItem.labelItemData;
-    const tableData = rows.map((row: any) => [
-      labelItem.styleNo || "-",
-      row.desscription || "-",
-      row.color || "-",
-      row.netWeight ?? "-",
-      row.grossWeight ?? "-",
-      row.quantityDzn ?? "-",
-      row.quantityPcs ?? "-",
-      `$${row.unitPrice ?? "0.00"}`,
-      `$${row.totalAmount ?? "0.00"}`,
-    ]);
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: labelItem?.styleNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.desscription || "-");
+      rowData.push(row.color || "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.quantityDzn ?? "-");
+      rowData.push(row.quantityPcs ?? "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
 
     const totalNetWeight = rows.reduce(
       (sum, row) => sum + (Number(row.netWeight) || 0),
@@ -228,13 +266,13 @@ export const exportOrderToPdf = (order: Order) => {
     );
 
     tableData.push([
-      { content: "Total", colSpan: 3, styles: { fontStyle: "bold" } },
-      totalNetWeight.toFixed(2),
-      totalGrossWeight.toFixed(2),
-      totalQuantityDzn.toFixed(2),
-      totalQuantityPcs.toString(),
-      "",
-      `$${totalAmount.toFixed(2)}`,
+      { content: "Total", colSpan: 3, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantityDzn.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantityPcs.toString(), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
     ]);
 
     autoTable(doc, {
@@ -254,22 +292,44 @@ export const exportOrderToPdf = (order: Order) => {
       ],
       body: tableData,
       theme: "grid",
-      headStyles: { fillColor: [71, 85, 105], fontSize: 9 },
-      bodyStyles: { fontSize: 8 },
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
     });
   } else if (order.productType === "CARTON" && cartonItem?.cartonItemData) {
     const rows = cartonItem.cartonItemData;
-    const tableData = rows.map((row: any) => [
-      cartonItem.orderNo || "-",
-      row.cartonMeasurement || "-",
-      row.cartonPly || "-",
-      row.cartonQty ?? "-",
-      row.netWeight ?? "-",
-      row.grossWeight ?? "-",
-      row.unit || "-",
-      `$${row.unitPrice ?? "0.00"}`,
-      `$${row.totalAmount ?? "0.00"}`,
-    ]);
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: cartonItem?.orderNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.cartonMeasurement || "-");
+      rowData.push(row.cartonPly || "-");
+      rowData.push(row.cartonQty ?? "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.unit || "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
 
     const totalCartonQty = rows.reduce(
       (sum, row) => sum + (Number(row.cartonQty) || 0),
@@ -289,13 +349,13 @@ export const exportOrderToPdf = (order: Order) => {
     );
 
     tableData.push([
-      { content: "Total", colSpan: 3, styles: { fontStyle: "bold" } },
-      totalCartonQty.toString(),
-      totalNetWeight.toFixed(2),
-      totalGrossWeight.toFixed(2),
-      "",
-      "",
-      `$${totalAmount.toFixed(2)}`,
+      { content: "Total", colSpan: 3, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalCartonQty.toString(), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
     ]);
 
     autoTable(doc, {
@@ -315,8 +375,22 @@ export const exportOrderToPdf = (order: Order) => {
       ],
       body: tableData,
       theme: "grid",
-      headStyles: { fillColor: [71, 85, 105], fontSize: 9 },
-      bodyStyles: { fontSize: 8 },
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
     });
   }
 

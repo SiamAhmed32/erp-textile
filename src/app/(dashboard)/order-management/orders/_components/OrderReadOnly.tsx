@@ -142,19 +142,19 @@ const OrderReadOnly = ({ order }: Props) => {
                     rowSpan={rows.length}
                     className="text-center align-middle font-medium border"
                   >
-                    {fabricItem.styleNo || "-"}
+                    {fabricItem?.styleNo || "-"}
                   </TableCell>
                   <TableCell
                     rowSpan={rows.length}
                     className="text-center align-middle border"
                   >
-                    {fabricItem.discription || "-"}
+                    {fabricItem?.discription || "-"}
                   </TableCell>
                   <TableCell
                     rowSpan={rows.length}
                     className="text-center align-middle border"
                   >
-                    {fabricItem.width || "-"}
+                    {fabricItem?.width || "-"}
                   </TableCell>
                 </>
               )}
@@ -245,7 +245,7 @@ const OrderReadOnly = ({ order }: Props) => {
                   rowSpan={rows.length}
                   className="text-center align-middle font-medium border"
                 >
-                  {labelItem.styleNo || "-"}
+                  {labelItem?.styleNo || "-"}
                 </TableCell>
               )}
               <TableCell className="text-center border">
@@ -344,7 +344,7 @@ const OrderReadOnly = ({ order }: Props) => {
                   rowSpan={rows.length}
                   className="text-center align-middle font-medium border"
                 >
-                  {cartonItem.orderNo || "-"}
+                  {cartonItem?.orderNo || "-"}
                 </TableCell>
               )}
               <TableCell className="text-center border">
@@ -486,23 +486,6 @@ const OrderReadOnly = ({ order }: Props) => {
           </p>
         </div>
       )}
-
-      {/* Signature Section */}
-      <div className="grid grid-cols-2 gap-8 mt-16 pt-8 border-t border-slate-300">
-        <div className="text-center">
-          <div className="border-t border-slate-900 pt-2 inline-block min-w-[200px]">
-            <p className="text-sm font-semibold">Bayer Acceptance</p>
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="border-t border-slate-900 pt-2 inline-block min-w-[200px]">
-            <p className="text-sm font-semibold">Authorised Signature</p>
-            <p className="text-sm">
-              For {order.companyProfile?.name || "Moon Textile"}
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
