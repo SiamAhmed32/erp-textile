@@ -1,5 +1,6 @@
 "use client";
 
+import { decryptData, encryptData } from "@/lib/encryption";
 import React, { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,13 +41,15 @@ export default function ProfilePage() {
             try {
                 const storedUser = localStorage.getItem("user");
                 if (storedUser) {
-                    const parsedUser = JSON.parse(storedUser);
-                    setUserData(parsedUser);
-                    setFormData({
-                        firstName: parsedUser.firstName,
-                        lastName: parsedUser.lastName,
-                    });
-                    setPreviewUrl(parsedUser.avatarUrl || null);
+                    const parsedUser = decryptData(storedUser);
+                    if (parsedUser) {
+                        setUserData(parsedUser);
+                        setFormData({
+                            firstName: parsedUser.firstName,
+                            lastName: parsedUser.lastName,
+                        });
+                        setPreviewUrl(parsedUser.avatarUrl || null);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to parse user data", error);

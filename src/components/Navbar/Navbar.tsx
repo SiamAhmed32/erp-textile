@@ -1,4 +1,5 @@
 "use client";
+import { decryptData } from "@/lib/encryption";
 import React, { useEffect, useState } from "react";
 import {
 	DropdownMenu,
@@ -36,7 +37,10 @@ const Navbar = () => {
 			const storedUser = localStorage.getItem("user");
 			if (storedUser) {
 				try {
-					setUser(JSON.parse(storedUser));
+					const decryptedUser = decryptData(storedUser);
+					if (decryptedUser) {
+						setUser(decryptedUser);
+					}
 				} catch (error) {
 					console.error("Failed to parse user data", error);
 				}
@@ -46,7 +50,7 @@ const Navbar = () => {
 
 	const handleLogout = () => {
 		dispatch(logout());
-		router.push("/auth/login");
+		router.push("/login");
 	};
 
 	if (!user) {
