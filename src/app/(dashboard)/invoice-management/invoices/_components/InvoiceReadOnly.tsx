@@ -31,6 +31,9 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead className="text-center">Style No</TableHead>
+                        <TableHead className="text-center">Description</TableHead>
+                        <TableHead className="text-center">Width</TableHead>
                         <TableHead>Color</TableHead>
                         <TableHead>Net Weight</TableHead>
                         <TableHead>Gross Weight</TableHead>
@@ -42,6 +45,13 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
                 <TableBody>
                     {rows.map((row: any, index: number) => (
                         <TableRow key={index}>
+                            {index === 0 && (
+                                <>
+                                    <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r">{fabricItem.styleNo || "-"}</TableCell>
+                                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r">{fabricItem.discription || "-"}</TableCell>
+                                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r">{fabricItem.width || "-"}</TableCell>
+                                </>
+                            )}
                             <TableCell>{row.color || "-"}</TableCell>
                             <TableCell>{row.netWeight ?? "-"}</TableCell>
                             <TableCell>{row.grossWeight ?? "-"}</TableCell>
@@ -62,7 +72,7 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Description</TableHead>
+                        <TableHead className="text-center">Style No</TableHead>
                         <TableHead>Color</TableHead>
                         <TableHead>Net Weight</TableHead>
                         <TableHead>Gross Weight</TableHead>
@@ -75,7 +85,9 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
                 <TableBody>
                     {rows.map((row: any, index: number) => (
                         <TableRow key={index}>
-                            <TableCell>{row.desscription || "-"}</TableCell>
+                            {index === 0 && (
+                                <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r">{labelItem.styleNo || "-"}</TableCell>
+                            )}
                             <TableCell>{row.color || "-"}</TableCell>
                             <TableCell>{row.netWeight ?? "-"}</TableCell>
                             <TableCell>{row.grossWeight ?? "-"}</TableCell>
@@ -97,6 +109,7 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead className="text-center">Order No</TableHead>
                         <TableHead>Measurement</TableHead>
                         <TableHead>Ply</TableHead>
                         <TableHead>Qty</TableHead>
@@ -110,6 +123,9 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
                 <TableBody>
                     {rows.map((row: any, index: number) => (
                         <TableRow key={index}>
+                            {index === 0 && (
+                                <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r">{cartonItem.orderNo || "-"}</TableCell>
+                            )}
                             <TableCell>{row.cartonMeasurement || "-"}</TableCell>
                             <TableCell>{row.cartonPly || "-"}</TableCell>
                             <TableCell>{row.cartonQty ?? "-"}</TableCell>
@@ -208,49 +224,9 @@ const InvoiceReadOnly = ({ invoice }: Props) => {
                     <CardTitle>Items</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {order?.productType === "FABRIC" && (
-                        <>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Style No</p>
-                                    <p className="font-medium">{fabricItem?.styleNo || "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Description</p>
-                                    <p className="font-medium">{fabricItem?.discription || "-"}</p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Width</p>
-                                    <p className="font-medium">{fabricItem?.width || "-"}</p>
-                                </div>
-                            </div>
-                            {renderFabricTable()}
-                        </>
-                    )}
-
-                    {order?.productType === "LABEL_TAG" && (
-                        <>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Style No</p>
-                                    <p className="font-medium">{labelItem?.styleNo || "-"}</p>
-                                </div>
-                            </div>
-                            {renderLabelTable()}
-                        </>
-                    )}
-
-                    {order?.productType === "CARTON" && (
-                        <>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                <div>
-                                    <p className="text-xs text-muted-foreground">Order No</p>
-                                    <p className="font-medium">{cartonItem?.orderNo || "-"}</p>
-                                </div>
-                            </div>
-                            {renderCartonTable()}
-                        </>
-                    )}
+                    {order?.productType === "FABRIC" && renderFabricTable()}
+                    {order?.productType === "LABEL_TAG" && renderLabelTable()}
+                    {order?.productType === "CARTON" && renderCartonTable()}
                 </CardContent>
             </Card>
 

@@ -101,20 +101,40 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const splitAddress = doc.splitTextToSize(fullAddress, 85);
         doc.text(splitAddress, 14, currentY + 4);
 
-        // Right Column: PI Info (Right Aligned)
-        const rightLabelX = 180; // Right edge for labels
-        const rightValueX = 196; // Right edge for values
-        doc.setFont("helvetica", "bold");
-        doc.text("PI NO:", rightLabelX, currentY, { align: "right" });
-        doc.text("Date:", rightLabelX, currentY + 5, { align: "right" });
-        doc.text("Buyer:", rightLabelX, currentY + 10, { align: "right" });
-        doc.text("Merchandiser:", rightLabelX, currentY + 15, { align: "right" });
+        // Right Column: PI Info
+        const infoX = 145; // Label start X
+        const valueX = 175; // Value start X
+        const valueWidth = 25; // Max width for values to trigger wrap
 
+        doc.setFont("helvetica", "bold");
+        doc.text("PI NO:", infoX, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(invoice.piNumber || "-", rightValueX, currentY, { align: "right" });
-        doc.text(formatDate(invoice.date), rightValueX, currentY + 5, { align: "right" });
-        doc.text(buyer?.name || "-", rightValueX, currentY + 10, { align: "right" });
-        doc.text(buyer?.merchandiser || "Mr. Shahin", rightValueX, currentY + 15, { align: "right" });
+        doc.text(invoice.piNumber || "-", valueX, currentY);
+        currentY += 5;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Date:", infoX, currentY);
+        doc.setFont("helvetica", "normal");
+        doc.text(formatDate(invoice.date), valueX, currentY);
+        currentY += 5;
+
+        // Buyer wrapping
+        doc.setFont("helvetica", "bold");
+        doc.text("Buyer:", infoX, currentY);
+        doc.setFont("helvetica", "normal");
+        const buyerNameText = buyer?.name || "-";
+        const splitBuyer = doc.splitTextToSize(buyerNameText, valueWidth);
+        doc.text(splitBuyer, valueX, currentY);
+        currentY += splitBuyer.length * 4.5; // Dynamic spacing
+
+        // Merchandiser wrapping
+        doc.setFont("helvetica", "bold");
+        doc.text("Merchandiser:", infoX, currentY);
+        doc.setFont("helvetica", "normal");
+        const merchNameText = buyer?.merchandiser || "Mr. Shahin";
+        const splitMerch = doc.splitTextToSize(merchNameText, valueWidth);
+        doc.text(splitMerch, valueX, currentY);
+        currentY += splitMerch.length * 4.5;
 
         currentY = 65;
 
@@ -124,22 +144,21 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         let totalAmount = 0;
 
         if (order?.productType === "FABRIC" && item?.fabricItem) {
-            tableHead = [["Colour", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty (Yds)", "Unit Price", "Total Amount"]];
-
-            // Add Item Header Row
-            tableBody.push([
-                {
-                    content: `Style No: ${item.fabricItem.styleNo || "-"} | Description: ${item.fabricItem.discription || "-"} | Width: ${item.fabricItem.width || "-"}`,
-                    colSpan: 6,
-                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
-                }
-            ]);
+            tableHead = [["Style No", "Description", "Width", "Colour", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty (Yds)", "Unit Price", "Total Amount"]];
 
             const rows = item.fabricItem.fabricItemData || [];
-            rows.forEach((row: any) => {
+            rows.forEach((row: any, index: number) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
+
+                const styleInfo = index === 0 ? [
+                    { content: item.fabricItem.styleNo || "-", rowSpan: rows.length, styles: { halign: "center", valign: "middle" } },
+                    { content: item.fabricItem.discription || "-", rowSpan: rows.length, styles: { halign: "center", valign: "middle" } },
+                    { content: item.fabricItem.width || "-", rowSpan: rows.length, styles: { halign: "center", valign: "middle" } }
+                ] : [];
+
                 tableBody.push([
+                    ...styleInfo,
                     row.color || "-",
                     row.netWeight || "-",
                     row.grossWeight || "-",
@@ -149,22 +168,19 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                 ]);
             });
         } else if (order?.productType === "CARTON" && item?.cartonItem) {
-            tableHead = [["Measurement", "Ply", "Unit", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty", "Unit Price", "Total Amount"]];
-
-            // Add Item Header Row
-            tableBody.push([
-                {
-                    content: `Order No: ${item.cartonItem.orderNo || "-"}`,
-                    colSpan: 8,
-                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
-                }
-            ]);
+            tableHead = [["Order No", "Measurement", "Ply", "Unit", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty", "Unit Price", "Total Amount"]];
 
             const rows = item.cartonItem.cartonItemData || [];
-            rows.forEach((row: any) => {
+            rows.forEach((row: any, index: number) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
+
+                const styleInfo = index === 0 ? [
+                    { content: item.cartonItem.orderNo || "-", rowSpan: rows.length, styles: { halign: "center", valign: "middle" } }
+                ] : [];
+
                 tableBody.push([
+                    ...styleInfo,
                     row.cartonMeasurement || "-",
                     row.cartonPly || "-",
                     row.unit || "-",
@@ -176,22 +192,19 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
                 ]);
             });
         } else if (order?.productType === "LABEL_TAG" && item?.labelItem) {
-            tableHead = [["Color", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty Dzn", "Qty Pcs", "Unit Price", "Total Amount"]];
-
-            // Add Item Header Row
-            tableBody.push([
-                {
-                    content: `Style No: ${item.labelItem.styleNo || "-"}`,
-                    colSpan: 7,
-                    styles: { halign: "left", fontStyle: "bold", fillColor: [245, 245, 245] }
-                }
-            ]);
+            tableHead = [["Style No", "Color", "Net Wt (Kg)", "Gross Wt (Kg)", "Qty Dzn", "Qty Pcs", "Unit Price", "Total Amount"]];
 
             const rows = item.labelItem.labelItemData || [];
-            rows.forEach((row: any) => {
+            rows.forEach((row: any, index: number) => {
                 const amount = parseFloat(row.totalAmount) || 0;
                 totalAmount += amount;
+
+                const styleInfo = index === 0 ? [
+                    { content: item.labelItem.styleNo || "-", rowSpan: rows.length, styles: { halign: "center", valign: "middle" } }
+                ] : [];
+
                 tableBody.push([
+                    ...styleInfo,
                     row.color || "-",
                     row.netWeight || "-",
                     row.grossWeight || "-",
