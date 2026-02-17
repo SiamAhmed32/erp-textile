@@ -109,8 +109,10 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.setFont("helvetica", "bold");
         doc.text("PI NO:", infoX, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(invoice.piNumber || "-", valueX, currentY);
-        currentY += 5;
+        const piNoText = invoice.piNumber || "-";
+        const splitPi = doc.splitTextToSize(piNoText, valueWidth);
+        doc.text(splitPi, valueX, currentY);
+        currentY += splitPi.length * 4.5;
 
         doc.setFont("helvetica", "bold");
         doc.text("Date:", infoX, currentY);
@@ -136,7 +138,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.text(splitMerch, valueX, currentY);
         currentY += splitMerch.length * 4.5;
 
-        currentY = 65;
+        currentY = Math.max(currentY + 5, 65); // Dynamic Y with minimum offset
 
         // Table Implementation
         let tableHead: string[][] = [];
@@ -246,9 +248,10 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         doc.setFont("helvetica", "bold");
         doc.text("In Word:", 14, currentY);
         doc.setFont("helvetica", "normal");
-        doc.text(amountInWords(totalAmount), 27, currentY); // Narrow space
-
-        currentY += 6; // Narrow space
+        const words = amountInWords(totalAmount);
+        const splitWords = doc.splitTextToSize(words, 160); // Wrap to almost full width
+        doc.text(splitWords, 27, currentY);
+        currentY += splitWords.length * 4;
 
         // Payment & Terms
         doc.setFont("helvetica", "bold");
@@ -310,19 +313,28 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         currentY += 4;
         doc.text(`A/C No: ${company?.bankAccountNumber || "0116-3112001201"}`, 14, currentY);
 
-        // Authorized Signature & Buyer Acceptance
-        currentY += 32; // Big space before signature
+        // Authorized Signature & Buyer Acceptance (Positioned at bottom)
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const footerY = pageHeight - 20; // Position from bottom
 
         // Buyer Acceptance (Left)
+        const leftStartX = 14;
+        const leftEndX = 70;
+        const leftCenterX = (leftStartX + leftEndX) / 2;
         doc.setFont("helvetica", "normal");
-        doc.line(14, currentY, 60, currentY); // Add line for Buyer Acceptance
-        doc.text("Buyer Acceptance", 14, currentY + 4);
+        doc.line(leftStartX, footerY, leftEndX, footerY);
+        doc.text("Buyer Acceptance", leftCenterX, footerY + 5, { align: "center" });
 
         // Authorized Signature (Right)
+        const rightStartX = 150;
+        const rightEndX = 196;
+        const rightCenterX = (rightStartX + rightEndX) / 2;
+
+        doc.line(rightStartX, footerY, rightEndX, footerY); // Upper border for section
         doc.setFont("helvetica", "bold");
-        doc.text(`For ${company?.name || "Moon Textile."}`, 196, currentY, { align: "right" });
+        doc.text(`For ${company?.name || "Moon Textile."}`, rightCenterX, footerY + 5, { align: "center" });
         doc.setFont("helvetica", "normal");
-        doc.text("Authorized Signature", 196, currentY + 4, { align: "right" });
+        doc.text("Authorized Signature", rightCenterX, footerY + 9, { align: "center" });
 
         const filename = `${invoice.piNumber || invoice.id}.pdf`;
         doc.save(filename);
