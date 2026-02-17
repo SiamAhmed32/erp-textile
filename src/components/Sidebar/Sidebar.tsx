@@ -45,37 +45,37 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      module: 'dashboard',
+      module: "dashboard",
       url: "/",
       icon: Home,
     },
     {
       title: "Company Profile",
-      module: 'company-profile',
+      module: "company-profile",
       url: "/company-profile",
       icon: Building2,
     },
     {
       title: "Users",
-      module: 'users',
+      module: "users",
       url: "/users",
       icon: Users,
     },
     {
       title: "Buyers",
-      module: 'buyers',
+      module: "buyers",
       url: "/buyers",
       icon: Users,
     },
     {
       title: "Invoice Terms",
-      module: 'invoice-terms',
+      module: "invoice-terms",
       url: "/invoice-terms",
       icon: FileText,
     },
     {
       title: "Order Management",
-      module: 'order-management',
+      module: "order-management",
       icon: ShoppingCart,
       items: [
         {
@@ -92,7 +92,7 @@ const data = {
     },
     {
       title: "Proforma Invoice",
-      module: 'proforma-invoice',
+      module: "proforma-invoice",
       icon: FileText,
       url: "/invoice-management/invoices",
       // items: [
@@ -106,6 +106,12 @@ const data = {
       //   //   icon: FileText,
       //   // },
       // ],
+    },
+    {
+      title: "LC Management",
+      module: "lcManagement",
+      url: "/lc-management/lc-managements",
+      icon: ClipboardList,
     },
   ],
 };

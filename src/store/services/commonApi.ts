@@ -55,16 +55,16 @@ export const userApi = mainApi.injectEndpoints({
 
     getById: builder.query({
       query: ({ path, id }) => `${path}/${id}`,
-      providesTags: (_result, _error, { path, invalidate = [] }) => [
-        path,
-        ...invalidate,
-      ],
+      providesTags: (_result, _error, { path, invalidate = [] }) => {
+        const baseTag = path.split("/")[0];
+        return [baseTag, ...invalidate];
+      },
     }),
 
     getByParentCategory: builder.query({
       query: ({ path, parentCategoryId }) =>
         `${path}?parentCategory=${parentCategoryId}`,
-      providesTags: (_result, _error, { path }) => [path],
+      providesTags: (_result, _error, { path }) => [path.split("/")[0]],
     }),
 
     post: builder.mutation({
@@ -73,11 +73,10 @@ export const userApi = mainApi.injectEndpoints({
         method: "POST",
         body: body,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        const baseTag = path.split("/")[0];
+        return ["filters", baseTag, ...invalidate];
+      },
     }),
 
     patch: builder.mutation({
@@ -86,11 +85,10 @@ export const userApi = mainApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        const baseTag = path.split("/")[0];
+        return ["filters", baseTag, ...invalidate];
+      },
     }),
 
     put: builder.mutation({
@@ -99,11 +97,10 @@ export const userApi = mainApi.injectEndpoints({
         method: "PUT",
         body,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        const baseTag = path.split("/")[0];
+        return ["filters", baseTag, ...invalidate];
+      },
     }),
 
     deleteOne: builder.mutation({
@@ -112,11 +109,10 @@ export const userApi = mainApi.injectEndpoints({
         method: "DELETE",
         body,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        const baseTag = path.split("/")[0];
+        return ["filters", baseTag, ...invalidate];
+      },
     }),
   }),
 });
