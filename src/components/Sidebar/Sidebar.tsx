@@ -13,6 +13,13 @@ import {
   FileText,
   Truck,
   ClipboardList,
+  Calculator,
+  LayoutDashboard,
+  UserRound,
+  Building,
+  ReceiptText,
+  BookOpen,
+  Wallet,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -106,6 +113,43 @@ const data = {
       //   //   icon: FileText,
       //   // },
       // ],
+    },
+    {
+      title: "Accounting",
+      module: 'accounting',
+      icon: Calculator,
+      items: [
+        {
+          title: "Overview",
+          url: "/accounting/overview",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Customer Ledger",
+          url: "/accounting/customer-ledger",
+          icon: UserRound,
+        },
+        {
+          title: "Supplier Ledger",
+          url: "/accounting/supplier-ledger",
+          icon: Building,
+        },
+        {
+          title: "MOI (Cash Book)",
+          url: "/accounting/cash-book",
+          icon: ReceiptText,
+        },
+        {
+          title: "Daily Bookkeeping",
+          url: "/accounting/daily-bookkeeping",
+          icon: BookOpen,
+        },
+        {
+          title: "Loan Management",
+          url: "/accounting/loan-management",
+          icon: Wallet,
+        },
+      ],
     },
   ],
 };
