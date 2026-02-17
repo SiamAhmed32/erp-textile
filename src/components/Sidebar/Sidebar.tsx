@@ -83,11 +83,11 @@ const data = {
           url: "/order-management/orders",
           icon: ClipboardList,
         },
-        {
-          title: "Order Delivered",
-          url: "/order-management/delivered",
-          icon: Truck,
-        },
+        // {
+        //   title: "Order Delivered",
+        //   url: "/order-management/delivered",
+        //   icon: Truck,
+        // },
       ],
     },
     {

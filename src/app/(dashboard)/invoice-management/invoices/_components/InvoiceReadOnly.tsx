@@ -18,10 +18,11 @@ type Props = {
 
 const InvoiceReadOnly = ({ invoice }: Props) => {
     const order = invoice.order;
-    const item = order?.orderItems?.[0] || null;
-    const fabricItem = item?.fabricItem;
-    const labelItem = item?.labelItem;
-    const cartonItem = item?.cartonItem;
+    const orderItems = order?.orderItems;
+    const item = Array.isArray(orderItems) ? orderItems[0] : (orderItems || null);
+    const fabricItem = (item as any)?.fabricItem;
+    const labelItem = (item as any)?.labelItem;
+    const cartonItem = (item as any)?.cartonItem;
     const terms = invoice.invoiceTerms;
 
     const renderFabricTable = () => {

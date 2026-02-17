@@ -24,6 +24,8 @@ const InvoicePage = () => {
   const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null);
   const [deleteOne] = useDeleteOneMutation();
 
+  //  console.log("edit invoice:", editInvoiceId);
+
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(handle);

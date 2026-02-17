@@ -112,6 +112,10 @@ export function InvoiceFormModal({ open, mode, invoiceId, onClose, onSuccess }: 
                 }).unwrap();
                 toast.success("Invoice created successfully");
             } else {
+
+                console.log("invoiceId", invoiceId);
+                console.log("toInvoicePayload(draft)", toInvoicePayload(draft));
+
                 await patchItem({
                     path: `invoices/${invoiceId}`,
                     body: toInvoicePayload(draft),
