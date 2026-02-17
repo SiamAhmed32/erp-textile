@@ -1,12 +1,11 @@
 import React from 'react';
+import SupplierLedgerPage from "./_components/SupplierLedgerPage";
+import { Container } from "@/components/reusables";
 
-const SupplierLedgerPage = () => {
+export default function Page() {
     return (
-        <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-bold">Supplier Ledger</h1>
-            <p className="text-muted-foreground">Manage and view supplier ledger records.</p>
-        </div>
+        <Container className="pb-10 h-full overflow-hidden">
+            <SupplierLedgerPage />
+        </Container>
     );
-};
-
-export default SupplierLedgerPage;
+}

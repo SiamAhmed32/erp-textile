@@ -45,9 +45,15 @@ const CustomerLedgerTable = ({ data, onRowClick, onSearchChange, onSearchSubmit,
         },
         {
             header: "ACTIONS",
-            accessor: () => (
+            accessor: (row: CustomerLedgerItem) => (
                 <Flex className="justify-end p-1">
-                    <Box className="h-8 w-8 flex items-center justify-center rounded-md border text-secondary hover:bg-slate-100 transition-colors cursor-pointer">
+                    <Box
+                        className="h-8 w-8 flex items-center justify-center rounded-md border text-secondary hover:bg-slate-100 transition-colors cursor-pointer"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onRowClick(row);
+                        }}
+                    >
                         <Eye className="h-4 w-4" />
                     </Box>
                 </Flex>
