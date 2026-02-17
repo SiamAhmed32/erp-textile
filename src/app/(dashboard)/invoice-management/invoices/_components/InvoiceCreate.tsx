@@ -13,7 +13,7 @@ import { toInvoicePayload } from "./helpers";
 import InvoiceForm from "./InvoiceForm";
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
-
+// note:
 const emptyInvoice: InvoiceFormData = {
   piNumber: "",
   date: "",
@@ -37,7 +37,7 @@ const InvoiceCreate = () => {
     path: "invoice-terms",
     page: 1,
     limit: 100,
-    search: '',
+    search: "",
     sort: null,
   });
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
