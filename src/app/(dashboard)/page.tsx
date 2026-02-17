@@ -1,70 +1,109 @@
+"use client";
+
 import React from "react";
 import {
   PrimaryHeading,
   PrimarySubHeading,
-  SectionGap,
   Container,
   Flex,
-  ButtonPrimary,
-  PrimaryText,
+  SectionGap,
 } from "@/components/reusables";
+import StatsCard from "@/components/dashboard/StatsCard";
+import RecentOrders from "@/components/dashboard/RecentOrders";
+import {
+  ShoppingCart,
+  Users,
+  Package,
+  ArrowUpRight,
+  TrendingUp,
+} from "lucide-react";
+import { useGetCountQuery } from "@/store/services/commonApi";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
-const Home = () => {
+const Dashboard = () => {
+  const { data: ordersCount, isLoading: loadingOrders } = useGetCountQuery({
+    path: "orders",
+    filters: {},
+  });
+  const { data: buyersCount, isLoading: loadingBuyers } = useGetCountQuery({
+    path: "buyers",
+    filters: {},
+  });
+  const { data: productsCount, isLoading: loadingProducts } = useGetCountQuery({
+    path: "products",
+    filters: {},
+  });
+
   return (
-    <>
-      <Container className="py-20">
-        <Flex className="flex-col items-center text-center max-w-4xl mx-auto">
-          <PrimaryHeading className="mb-6">
-            Build Something <span className="text-button">Extraordinary</span>
-          </PrimaryHeading>
-          <PrimarySubHeading className="mb-8">
-            Welcome to your new premium Next.js starter template. Clean,
-            modular, and ready for any project.
-          </PrimarySubHeading>
-          <Flex className="gap-4">
-            <ButtonPrimary>Get Started</ButtonPrimary>
-            <button className="px-8 py-3 border border-primaryText rounded-full hover:bg-primaryText hover:text-white transition-all">
-              View Documentation
-            </button>
-          </Flex>
-        </Flex>
+    <Container className="py-8">
+      <Flex className="flex-col gap-8">
+        <div>
+          <PrimaryHeading>Dashboard</PrimaryHeading>
+          <PrimarySubHeading>Overview of your store's performance.</PrimarySubHeading>
+        </div>
 
-        <SectionGap />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Total Revenue"
+            value="$45,231.89"
+            icon={TrendingUp}
+            description="+20.1% from last month"
+          />
+          <StatsCard
+            title="Orders"
+            value={ordersCount?.count || "+0"}
+            icon={ShoppingCart}
+            description="+180.1% from last month"
+            loading={loadingOrders}
+          />
+          <StatsCard
+            title="Products"
+            value={productsCount?.count || "+0"}
+            icon={Package}
+            description="+19% from last month"
+            loading={loadingProducts}
+          />
+          <StatsCard
+            title="Active Buyers"
+            value={buyersCount?.count || "+0"}
+            icon={Users}
+            description="+201 since last hour"
+            loading={loadingBuyers}
+          />
+        </div>
 
-        <Flex className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div className="p-8 bg-white shadow-sm rounded-2xl border border-borderBg border-opacity-50">
-            <h3 className="text-xl font-bold mb-4 font-secondary">
-              Next.js 15 Ready
-            </h3>
-            <PrimaryText>
-              Leverage the latest App Router features, Server Components, and
-              optimized performance.
-            </PrimaryText>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <div className="col-span-4">
+            <RecentOrders />
           </div>
-          <div className="p-8 bg-white shadow-sm rounded-2xl border border-borderBg border-opacity-50">
-            <h3 className="text-xl font-bold mb-4 font-secondary">
-              Tailwind 4 Powered
-            </h3>
-            <PrimaryText>
-              Experience the future of styling with Tailwind CSS v4's
-              high-performance engine.
-            </PrimaryText>
-          </div>
-          <div className="p-8 bg-white shadow-sm rounded-2xl border border-borderBg border-opacity-50">
-            <h3 className="text-xl font-bold mb-4 font-secondary">
-              Redux Toolkit
-            </h3>
-            <PrimaryText>
-              Pre-configured state management with RTK Query for efficient data
-              fetching and caching.
-            </PrimaryText>
-          </div>
-        </Flex>
-      </Container>
-
-      <SectionGap />
-    </>
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <Button asChild className="w-full justify-between">
+                <Link href="/order-management/orders/add-new-order">
+                  Create New Order <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/invoice-management/invoices/add-new-invoice">
+                  Create Invoice <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="w-full justify-between">
+                <Link href="/buyers/add-new-buyer">
+                  Add New Buyer <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </Flex>
+    </Container>
   );
 };
 
-export default Home;
+export default Dashboard;

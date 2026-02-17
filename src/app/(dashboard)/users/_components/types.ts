@@ -6,6 +6,8 @@ export type User = {
     lastName: string;
     avatarUrl?: string;
     role?: string;
+    designation?: string;
+    modules?: string[];
     createdAt?: string;
     updatedAt?: string;
 };
@@ -15,5 +17,7 @@ export type UserCreateInput = {
     username: string;
     firstName: string;
     lastName: string;
+    designation: string;
+    modules: string[];
     avatar?: string | File | null;
 };

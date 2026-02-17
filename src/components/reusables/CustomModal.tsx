@@ -33,7 +33,7 @@ const CustomModal = ({
                     "p-0 overflow-hidden border-none [&>button]:text-white [&>button]:opacity-100 [&>button]:cursor-pointer [&>button]:h-8 [&>button]:w-8 [&>button]:top-6 [&>button]:right-6 [&>button]:rounded-full [&>button]:transition-all [&>button:hover]:bg-white/10 [&>button:hover]:border [&>button:hover]:border-white/50 [&>button]:flex [&>button]:items-center [&>button]:justify-center",
                     className
                 )}
-                style={{ maxWidth, width }}
+                style={{ maxWidth, width, maxHeight: '80vh', overflow: 'auto' }}
             >
                 <DialogHeader className="bg-secondary p-6 relative flex flex-row items-center justify-between space-y-0">
                     <DialogTitle className="text-white text-xl font-semibold">{title}</DialogTitle>
