@@ -1,453 +1,436 @@
-import { jsPDF } from "jspdf";
+import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Order } from "./types";
-import { formatDate } from "./helpers";
 
 export const exportOrderToPdf = (order: Order) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 14;
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let yPosition = 20;
 
-    // --- COMPANY HEADER ---
-    doc.setFontSize(18);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0, 102, 204); // Blue color
-    doc.text(order.companyProfile?.name || "Moon Textile", pageWidth / 2, 20, { align: "center" });
+  // Get order items
+  const orderItems = Array.isArray(order.orderItems)
+    ? order.orderItems
+    : order.orderItems
+      ? [order.orderItems]
+      : [];
+  const item = orderItems[0] || null;
+  const fabricItem = item?.fabricItem;
+  const labelItem = item?.labelItem;
+  const cartonItem = item?.cartonItem;
 
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(80);
-    const companyAddress = order.companyProfile?.address || "Bangladesh";
-    const companyPhone = order.companyProfile?.phone || "";
-    doc.text(companyAddress, pageWidth / 2, 26, { align: "center" });
-    if (companyPhone) {
-        doc.text(`(Phone: ${companyPhone})`, pageWidth / 2, 31, { align: "center" });
-    }
+  // Header - Company Name
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text(order.companyProfile?.name || "Moon Textile", pageWidth / 2, yPosition, {
+    align: "center",
+  });
+  yPosition += 7;
 
-    // --- ORDER TITLE ---
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0);
-    doc.text("Purchase Order", pageWidth / 2, 42, { align: "center" });
-
-    // Horizontal line
-    doc.setDrawColor(200);
-    doc.setLineWidth(0.5);
-    doc.line(margin, 46, pageWidth - margin, 46);
-
-    // --- ORDER INFO BOX ---
-    let yPos = 54;
-    
-    // Create a light gray box for order info
-    doc.setFillColor(250, 250, 250);
-    doc.rect(margin, yPos - 4, pageWidth - 2 * margin, 24, 'F');
-    
-    doc.setFontSize(9);
-    doc.setTextColor(0);
-    
-    // Left column
-    doc.setFont("helvetica", "bold");
-    doc.text("Order Number:", margin + 3, yPos);
-    doc.setFont("helvetica", "normal");
-    doc.text(order.orderNumber || "-", margin + 32, yPos);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Location:", margin + 3, yPos + 6);
-    doc.setFont("helvetica", "normal");
-    doc.text("Bangladesh", margin + 32, yPos + 6);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Status:", margin + 3, yPos + 12);
-    doc.setFont("helvetica", "normal");
-    doc.text(order.status || "DRAFT", margin + 32, yPos + 12);
-
-    // Right column - with proper spacing to avoid overlap
-    const rightColX = pageWidth - 85;
-    
-    doc.setFont("helvetica", "bold");
-    doc.text("Date:", rightColX, yPos);
-    doc.setFont("helvetica", "normal");
-    doc.text(formatDate(order.orderDate) || "-", rightColX + 25, yPos);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Buyer:", rightColX, yPos + 6);
-    doc.setFont("helvetica", "normal");
-    doc.text(order.buyer?.name || "-", rightColX + 25, yPos + 6);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Delivery Date:", rightColX, yPos + 12);
-    doc.setFont("helvetica", "normal");
-    doc.text(formatDate(order.deliveryDate) || "-", rightColX + 25, yPos + 12);
-
-    yPos += 30;
-
-    // --- UNIFIED PRODUCT TABLE ---
-    const orderItems = Array.isArray(order.orderItems)
-        ? order.orderItems
-        : order.orderItems ? [order.orderItems] : [];
-    
-    const orderItem = orderItems[0] as any;
-
-    if (order.productType === "FABRIC" && orderItem?.fabricItem) {
-        const fabric = orderItem.fabricItem;
-        
-        if (fabric.fabricItemData?.length) {
-            const tableData = fabric.fabricItemData.map((d: any, index: number) => {
-                // Only show Style No and Description in the first row
-                if (index === 0) {
-                    return [
-                        fabric.styleNo || "-",
-                        fabric.discription || "-",
-                        d.color || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.quantityYds?.toString() || "0.00",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                } else {
-                    return [
-                        "", // Empty Style No for subsequent rows
-                        "", // Empty Description for subsequent rows
-                        d.color || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.quantityYds?.toString() || "0.00",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                }
-            });
-
-            // Calculate totals
-            const totalNet = fabric.fabricItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.netWeight) || 0), 0);
-            const totalGross = fabric.fabricItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.grossWeight) || 0), 0);
-            const totalQty = fabric.fabricItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.quantityYds) || 0), 0);
-            const totalAmount = fabric.fabricItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.totalAmount) || 0), 0);
-
-            const totalRow = [
-                "",
-                "",
-                "Total",
-                totalNet.toFixed(2),
-                totalGross.toString(),
-                totalQty.toFixed(2),
-                "",
-                totalAmount.toFixed(2)
-            ];
-            tableData.push(totalRow);
-
-            autoTable(doc, {
-                startY: yPos,
-                head: [[
-                    "Style No",
-                    "Description",
-                    "Colour",
-                    "Net Weight",
-                    "Gross Weight",
-                    "Qty (Yds)",
-                    "Unit Price (US$)",
-                    "Total (US$)"
-                ]],
-                body: tableData,
-                theme: "grid",
-                styles: { 
-                    fontSize: 8, 
-                    cellPadding: 2.5,
-                    halign: 'center',
-                    valign: 'middle'
-                },
-                headStyles: { 
-                    fillColor: [241, 245, 249], 
-                    textColor: [0, 0, 0],
-                    fontStyle: "bold",
-                    halign: 'center'
-                },
-                bodyStyles: { textColor: [0, 0, 0] },
-                alternateRowStyles: { fillColor: [250, 250, 250] },
-                columnStyles: {
-                    0: { cellWidth: 25 }, // Style No
-                    1: { cellWidth: 35 }, // Description
-                    2: { cellWidth: 20 }, // Colour
-                    3: { cellWidth: 22 }, // Net Weight
-                    4: { cellWidth: 22 }, // Gross Weight
-                    5: { cellWidth: 20 }, // Qty
-                    6: { cellWidth: 25 }, // Unit Price
-                    7: { cellWidth: 25 }  // Total
-                },
-                margin: { left: margin, right: margin },
-                didParseCell: (data) => {
-                    // Bold and gray background for total row
-                    if (data.row.index === tableData.length - 1) {
-                        data.cell.styles.fontStyle = "bold";
-                        data.cell.styles.fillColor = [240, 240, 240];
-                    }
-                    // Merge cells for Style No and Description (first column spanning multiple rows)
-                    if ((data.column.index === 0 || data.column.index === 1) && data.row.index > 0 && data.row.index < tableData.length - 1) {
-                        if (data.cell.raw === "") {
-                            data.cell.styles.fillColor = [255, 255, 255];
-                        }
-                    }
-                }
-            });
-        }
-    } else if (order.productType === "LABEL_TAG" && orderItem?.labelItem) {
-        const label = orderItem.labelItem;
-        
-        if (label.labelItemData?.length) {
-            const tableData = label.labelItemData.map((d: any, index: number) => {
-                if (index === 0) {
-                    return [
-                        label.styleNo || "-",
-                        d.desscription || "-",
-                        d.color || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.quantityDzn?.toString() || "0.00",
-                        d.quantityPcs?.toString() || "0",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                } else {
-                    return [
-                        "",
-                        d.desscription || "-",
-                        d.color || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.quantityDzn?.toString() || "0.00",
-                        d.quantityPcs?.toString() || "0",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                }
-            });
-
-            const totalNet = label.labelItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.netWeight) || 0), 0);
-            const totalGross = label.labelItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.grossWeight) || 0), 0);
-            const totalDzn = label.labelItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.quantityDzn) || 0), 0);
-            const totalPcs = label.labelItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.quantityPcs) || 0), 0);
-            const totalAmount = label.labelItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.totalAmount) || 0), 0);
-
-            const totalRow = [
-                "",
-                "",
-                "Total",
-                totalNet.toFixed(2),
-                totalGross.toString(),
-                totalDzn.toFixed(2),
-                totalPcs.toString(),
-                "",
-                totalAmount.toFixed(2)
-            ];
-            tableData.push(totalRow);
-
-            autoTable(doc, {
-                startY: yPos,
-                head: [[
-                    "Style No",
-                    "Description",
-                    "Colour",
-                    "Net Weight",
-                    "Gross Weight",
-                    "Qty (Dzn)",
-                    "Qty (Pcs)",
-                    "Unit Price (US$)",
-                    "Total (US$)"
-                ]],
-                body: tableData,
-                theme: "grid",
-                styles: { 
-                    fontSize: 8, 
-                    cellPadding: 2.5,
-                    halign: 'center',
-                    valign: 'middle'
-                },
-                headStyles: { 
-                    fillColor: [241, 245, 249], 
-                    textColor: [0, 0, 0],
-                    fontStyle: "bold",
-                    halign: 'center'
-                },
-                bodyStyles: { textColor: [0, 0, 0] },
-                alternateRowStyles: { fillColor: [250, 250, 250] },
-                columnStyles: {
-                    0: { cellWidth: 22 },
-                    1: { cellWidth: 30 },
-                    2: { cellWidth: 18 },
-                    3: { cellWidth: 20 },
-                    4: { cellWidth: 20 },
-                    5: { cellWidth: 18 },
-                    6: { cellWidth: 18 },
-                    7: { cellWidth: 22 },
-                    8: { cellWidth: 22 }
-                },
-                margin: { left: margin, right: margin },
-                didParseCell: (data) => {
-                    if (data.row.index === tableData.length - 1) {
-                        data.cell.styles.fontStyle = "bold";
-                        data.cell.styles.fillColor = [240, 240, 240];
-                    }
-                }
-            });
-        }
-    } else if (order.productType === "CARTON" && orderItem?.cartonItem) {
-        const carton = orderItem.cartonItem;
-        
-        if (carton.cartonItemData?.length) {
-            const tableData = carton.cartonItemData.map((d: any, index: number) => {
-                if (index === 0) {
-                    return [
-                        carton.orderNo || "-",
-                        d.cartonMeasurement || "-",
-                        d.cartonPly || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.cartonQty?.toString() || "0",
-                        d.unit || "-",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                } else {
-                    return [
-                        "",
-                        d.cartonMeasurement || "-",
-                        d.cartonPly || "-",
-                        d.netWeight?.toString() || "0.00",
-                        d.grossWeight?.toString() || "0",
-                        d.cartonQty?.toString() || "0",
-                        d.unit || "-",
-                        d.unitPrice?.toString() || "0.00",
-                        d.totalAmount?.toString() || "0.00"
-                    ];
-                }
-            });
-
-            const totalNet = carton.cartonItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.netWeight) || 0), 0);
-            const totalGross = carton.cartonItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.grossWeight) || 0), 0);
-            const totalQty = carton.cartonItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.cartonQty) || 0), 0);
-            const totalAmount = carton.cartonItemData.reduce((sum: number, d: any) => sum + (parseFloat(d.totalAmount) || 0), 0);
-
-            const totalRow = [
-                "",
-                "",
-                "Total",
-                totalNet.toFixed(2),
-                totalGross.toString(),
-                totalQty.toString(),
-                "",
-                "",
-                totalAmount.toFixed(2)
-            ];
-            tableData.push(totalRow);
-
-            autoTable(doc, {
-                startY: yPos,
-                head: [[
-                    "Order No",
-                    "Measurement",
-                    "Ply",
-                    "Net Weight",
-                    "Gross Weight",
-                    "Qty",
-                    "Unit",
-                    "Unit Price (US$)",
-                    "Total (US$)"
-                ]],
-                body: tableData,
-                theme: "grid",
-                styles: { 
-                    fontSize: 8, 
-                    cellPadding: 2.5,
-                    halign: 'center',
-                    valign: 'middle'
-                },
-                headStyles: { 
-                    fillColor: [241, 245, 249], 
-                    textColor: [0, 0, 0],
-                    fontStyle: "bold",
-                    halign: 'center'
-                },
-                bodyStyles: { textColor: [0, 0, 0] },
-                alternateRowStyles: { fillColor: [250, 250, 250] },
-                columnStyles: {
-                    0: { cellWidth: 22 },
-                    1: { cellWidth: 28 },
-                    2: { cellWidth: 15 },
-                    3: { cellWidth: 20 },
-                    4: { cellWidth: 20 },
-                    5: { cellWidth: 15 },
-                    6: { cellWidth: 15 },
-                    7: { cellWidth: 22 },
-                    8: { cellWidth: 22 }
-                },
-                margin: { left: margin, right: margin },
-                didParseCell: (data) => {
-                    if (data.row.index === tableData.length - 1) {
-                        data.cell.styles.fontStyle = "bold";
-                        data.cell.styles.fillColor = [240, 240, 240];
-                    }
-                }
-            });
-        }
-    }
-
-
-    yPos = (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 10 : yPos + 10;
-
-    // --- TOTAL AMOUNT IN WORDS ---
-    if (orderItem) {
-        const totalAmount = 
-            orderItem.fabricItem?.totalAmount ||
-            orderItem.labelItem?.totalAmount ||
-            orderItem.cartonItem?.totalAmount ||
-            0;
-
-        // Convert number to words (simple implementation)
-        const amountInWords = typeof totalAmount === 'number' 
-            ? `US Dollar ${totalAmount.toFixed(2)}`
-            : `US Dollar ${totalAmount}`;
-
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0);
-        doc.text(`Total Amount (in Words): ${amountInWords}`, margin, yPos);
-        yPos += 10;
-    }
-
-    // --- REMARKS ---
-    if (order.remarks && order.remarks.trim() !== "") {
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(0);
-        doc.text("Remarks:", margin, yPos);
-        yPos += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        const splitRemarks = doc.splitTextToSize(order.remarks, pageWidth - 2 * margin);
-        doc.text(splitRemarks, margin, yPos);
-        yPos += splitRemarks.length * 5 + 10;
-    }
-
-    // --- SIGNATURE SECTION ---
-    // Add some space before signature section
-    const signatureY = Math.max(yPos + 5, pageHeight - 50);
-
+  // Company Address
+  if (order.companyProfile?.address) {
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.setTextColor(0);
+    doc.text(order.companyProfile.address, pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 5;
+  }
 
-    // Left side - Buyer Acceptance (far left)
-    doc.text("Buyer Acceptance", margin, signatureY + 10);
+  // Company Phone
+  if (order.companyProfile?.phone) {
+    doc.setFontSize(10);
+    doc.text(order.companyProfile.phone, pageWidth / 2, yPosition, {
+      align: "center",
+    });
+    yPosition += 5;
+  }
 
-    // Right side - Authorised Signature (far right)
-    doc.text("Authorised Signature", pageWidth - margin, signatureY + 10, { align: "right" });
+  // Horizontal line
+  doc.setLineWidth(0.5);
+  doc.line(15, yPosition, pageWidth - 15, yPosition);
+  yPosition += 10;
+
+  // Document Title
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.text("Order Invoice", pageWidth / 2, yPosition, { align: "center" });
+  yPosition += 10;
+
+  // Buyer and Order Information
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  // Left side - Buyer Info
+  const leftX = 15;
+  doc.setFont("helvetica", "bold");
+  doc.text(order.buyer?.name || "[Buyer Name]", leftX, yPosition);
+  doc.setFont("helvetica", "normal");
+  yPosition += 5;
+  if (order.buyer?.email) {
+    doc.text(order.buyer.email, leftX, yPosition);
+    yPosition += 5;
+  }
+  if (order.buyer?.phone) {
+    doc.text(order.buyer.phone, leftX, yPosition);
+    yPosition += 5;
+  }
+  if (order.buyer?.address) {
+    doc.text(order.buyer.address, leftX, yPosition);
+    yPosition += 5;
+  }
+  if (order.buyer?.location) {
+    doc.text(order.buyer.location, leftX, yPosition);
+    yPosition += 5;
+  }
+
+  // Right side - Order Details
+  const rightX = pageWidth - 15;
+  let rightY = yPosition - 25;
+  doc.setFont("helvetica", "bold");
+  doc.text("Date: ", rightX - 60, rightY);
+  doc.setFont("helvetica", "normal");
+  doc.text(
+    order.orderDate ? new Date(order.orderDate).toLocaleDateString() : "-",
+    rightX,
+    rightY,
+    { align: "right" }
+  );
+  rightY += 5;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Order No: ", rightX - 60, rightY);
+  doc.setFont("helvetica", "normal");
+  doc.text(`${order.orderNumber} (${order.status})`, rightX, rightY, {
+    align: "right",
+  });
+  rightY += 5;
+
+  if (order.deliveryDate) {
     doc.setFont("helvetica", "bold");
-    doc.text(`For ${order.companyProfile?.name || "Company"}`, pageWidth - margin, signatureY + 16, { align: "right" });
+    doc.text("Delivery: ", rightX - 60, rightY);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      new Date(order.deliveryDate).toLocaleDateString(),
+      rightX,
+      rightY,
+      { align: "right" }
+    );
+  }
 
+  yPosition += 10;
 
+  // Product Table
+  if (order.productType === "FABRIC" && fabricItem?.fabricItemData) {
+    const rows = fabricItem.fabricItemData;
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: fabricItem?.styleNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+        rowData.push({
+          content: fabricItem?.discription || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+        rowData.push({
+          content: fabricItem?.width || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.color || "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.quantityYds ?? "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
 
-    const filename = `Order_${order.orderNumber}_${new Date().getTime()}.pdf`;
-    doc.save(filename);
+    // Calculate totals
+    const totalNetWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.netWeight) || 0),
+      0
+    );
+    const totalGrossWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.grossWeight) || 0),
+      0
+    );
+    const totalQuantity = rows.reduce(
+      (sum, row) => sum + (Number(row.quantityYds) || 0),
+      0
+    );
+    const totalAmount = rows.reduce(
+      (sum, row) => sum + (Number(row.totalAmount) || 0),
+      0
+    );
+
+    tableData.push([
+      { content: "Total", colSpan: 4, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantity.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [
+        [
+          "Style No/Po Number",
+          "Description",
+          "Width",
+          "Colour",
+          "Net Weight",
+          "Gross Weight",
+          "Qty (Yds)",
+          "Unit Price (US$)",
+          "Total (US$)",
+        ],
+      ],
+      body: tableData,
+      theme: "grid",
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 15 },
+        3: { cellWidth: 20 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 18 },
+        7: { cellWidth: 22 },
+        8: { cellWidth: 22 },
+      },
+    });
+  } else if (order.productType === "LABEL_TAG" && labelItem?.labelItemData) {
+    const rows = labelItem.labelItemData;
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: labelItem?.styleNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.desscription || "-");
+      rowData.push(row.color || "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.quantityDzn ?? "-");
+      rowData.push(row.quantityPcs ?? "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
+
+    const totalNetWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.netWeight) || 0),
+      0
+    );
+    const totalGrossWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.grossWeight) || 0),
+      0
+    );
+    const totalQuantityDzn = rows.reduce(
+      (sum, row) => sum + (Number(row.quantityDzn) || 0),
+      0
+    );
+    const totalQuantityPcs = rows.reduce(
+      (sum, row) => sum + (Number(row.quantityPcs) || 0),
+      0
+    );
+    const totalAmount = rows.reduce(
+      (sum, row) => sum + (Number(row.totalAmount) || 0),
+      0
+    );
+
+    tableData.push([
+      { content: "Total", colSpan: 3, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantityDzn.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalQuantityPcs.toString(), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [
+        [
+          "Style No/Po Number",
+          "Description",
+          "Colour",
+          "Net Weight",
+          "Gross Weight",
+          "Qty (Dzn)",
+          "Qty (Pcs)",
+          "Unit Price (US$)",
+          "Total (US$)",
+        ],
+      ],
+      body: tableData,
+      theme: "grid",
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+    });
+  } else if (order.productType === "CARTON" && cartonItem?.cartonItemData) {
+    const rows = cartonItem.cartonItemData;
+    const tableData = rows.map((row: any, index: number) => {
+      const rowData = [];
+      if (index === 0) {
+        rowData.push({
+          content: cartonItem?.orderNo || "-",
+          rowSpan: rows.length,
+          styles: { halign: "center", valign: "middle" },
+        });
+      }
+      rowData.push(row.cartonMeasurement || "-");
+      rowData.push(row.cartonPly || "-");
+      rowData.push(row.cartonQty ?? "-");
+      rowData.push(row.netWeight ?? "-");
+      rowData.push(row.grossWeight ?? "-");
+      rowData.push(row.unit || "-");
+      rowData.push(`$${row.unitPrice ?? "0.00"}`);
+      rowData.push(`$${row.totalAmount ?? "0.00"}`);
+      return rowData;
+    });
+
+    const totalCartonQty = rows.reduce(
+      (sum, row) => sum + (Number(row.cartonQty) || 0),
+      0
+    );
+    const totalNetWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.netWeight) || 0),
+      0
+    );
+    const totalGrossWeight = rows.reduce(
+      (sum, row) => sum + (Number(row.grossWeight) || 0),
+      0
+    );
+    const totalAmount = rows.reduce(
+      (sum, row) => sum + (Number(row.totalAmount) || 0),
+      0
+    );
+
+    tableData.push([
+      { content: "Total", colSpan: 3, styles: { fontStyle: "bold", fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalCartonQty.toString(), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalNetWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: totalGrossWeight.toFixed(2), styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: "", styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+      { content: `$${totalAmount.toFixed(2)}`, styles: { fillColor: [248, 250, 252], lineColor: [203, 213, 225], lineWidth: 0.1 } },
+    ]);
+
+    autoTable(doc, {
+      startY: yPosition,
+      head: [
+        [
+          "Order No",
+          "Measurement",
+          "Ply",
+          "Qty",
+          "Net Weight",
+          "Gross Weight",
+          "Unit",
+          "Unit Price (US$)",
+          "Total (US$)",
+        ],
+      ],
+      body: tableData,
+      theme: "grid",
+      styles: {
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [248, 250, 252],
+        textColor: [0, 0, 0],
+        fontSize: 9,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+      bodyStyles: {
+        fontSize: 8,
+        lineColor: [203, 213, 225],
+        lineWidth: 0.1,
+      },
+    });
+  }
+
+  // Get Y position after table
+  yPosition = (doc as any).lastAutoTable.finalY + 10;
+
+  // Remarks
+  if (order.remarks) {
+    yPosition += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Remarks: ", 15, yPosition);
+    doc.setFont("helvetica", "normal");
+    doc.text(order.remarks, 35, yPosition, { maxWidth: pageWidth - 50 });
+    yPosition += 10;
+  }
+
+  // Signature Section
+  if (yPosition > 240) {
+    doc.addPage();
+    yPosition = 20;
+  } else {
+    yPosition = 260;
+  }
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Bayer Acceptance", 40, yPosition);
+  doc.text("Authorised Signature", pageWidth - 60, yPosition);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.text(
+    `For ${order.companyProfile?.name || "Moon Textile"}`,
+    pageWidth - 60,
+    yPosition + 5
+  );
+
+  // Draw signature lines
+  doc.line(25, yPosition - 5, 80, yPosition - 5);
+  doc.line(pageWidth - 80, yPosition - 5, pageWidth - 25, yPosition - 5);
+
+  // Save the PDF
+  doc.save(`Order_Invoice_${order.orderNumber}.pdf`);
 };

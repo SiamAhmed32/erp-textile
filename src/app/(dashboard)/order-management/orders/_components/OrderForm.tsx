@@ -127,7 +127,7 @@ const OrderForm = ({
         <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="orderNumber" className="text-sm font-semibold">
-              Order Number *
+              Order Number <span className="text-red-400">*</span>
             </Label>
             <Input
               id="orderNumber"
@@ -147,7 +147,7 @@ const OrderForm = ({
           </div>
           <div className="space-y-2">
             <Label htmlFor="orderDate" className="text-sm font-semibold">
-              Order Date *
+              Order Date <span className="text-red-400">*</span>
             </Label>
             <Input
               id="orderDate"
@@ -170,7 +170,7 @@ const OrderForm = ({
               htmlFor="status"
               className="text-sm font-semibold text-foreground"
             >
-              Status *
+              Status <span className="text-red-400">*</span>
             </Label>
             <Select
               value={data.status}
@@ -206,7 +206,7 @@ const OrderForm = ({
               htmlFor="productType"
               className="text-sm font-semibold text-foreground"
             >
-              Category *
+              Category <span className="text-red-400">*</span>
             </Label>
             <Select
               value={data.productType}
@@ -241,7 +241,7 @@ const OrderForm = ({
               htmlFor="buyerId"
               className="text-sm font-semibold text-foreground"
             >
-              Select Buyer *
+              Select Buyer <span className="text-red-400">*</span>
             </Label>
             <Select
               value={data.buyerId}
@@ -266,7 +266,7 @@ const OrderForm = ({
           </div>
           <div className="space-y-2 text-foreground">
             <Label htmlFor="companyProfileId" className="text-sm font-semibold">
-              Manufacturing Company *
+              Manufacturing Company <span className="text-red-400">*</span>
             </Label>
             <Select
               value={data.companyProfileId}
@@ -341,7 +341,9 @@ const OrderForm = ({
             <CardContent className="p-6 space-y-8">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Style No *</Label>
+                  <Label className="text-sm font-semibold">
+                    Style No <span className="text-red-400">*</span>
+                  </Label>
                   <Input
                     value={data.orderItems.fabricItem?.styleNo || ""}
                     onChange={(e) =>
@@ -377,7 +379,7 @@ const OrderForm = ({
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-foreground">
-                    Width *
+                    Width <span className="text-red-400">*</span>
                   </Label>
                   <Input
                     value={data.orderItems.fabricItem?.width || ""}
@@ -593,7 +595,9 @@ const OrderForm = ({
             <CardContent className="p-6 space-y-8">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Style No *</Label>
+                  <Label className="text-sm font-semibold">
+                    Style No <span className="text-red-400">*</span>
+                  </Label>
                   <Input
                     value={data.orderItems.labelItem?.styleNo || ""}
                     onChange={(e) =>
@@ -842,7 +846,9 @@ const OrderForm = ({
             <CardContent className="p-6 space-y-8">
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Order No *</Label>
+                  <Label className="text-sm font-semibold">
+                    Order No <span className="text-red-400">*</span>
+                  </Label>
                   <Input
                     value={data.orderItems.cartonItem?.orderNo || ""}
                     onChange={(e) =>
@@ -1088,7 +1094,7 @@ const OrderForm = ({
         <CardContent className="p-6 md:w-1/2">
           <div className="space-y-2">
             <Label htmlFor="deliveryDate" className="text-sm font-semibold">
-              Expected Delivery Date *
+              Expected Delivery Date <span className="text-red-400">*</span>
             </Label>
             <Input
               id="deliveryDate"

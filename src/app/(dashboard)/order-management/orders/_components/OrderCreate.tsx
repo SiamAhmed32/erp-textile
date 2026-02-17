@@ -263,6 +263,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
         onNestedChange={handleNestedChange}
         onValidateStep={handleValidateStep}
         errors={errors}
+        disableStatus={true}
       />
     </Container>
   );
