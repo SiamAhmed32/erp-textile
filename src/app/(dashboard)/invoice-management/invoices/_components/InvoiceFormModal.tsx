@@ -122,9 +122,10 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
 
                 await patchItem({
                     path: `invoices/${invoiceId}`,
-                    body: toInvoicePayload(draft),
+                    body: toInvoicePayload(draft, true),
                     invalidate: ["invoices"],
                 }).unwrap();
+
                 toast.success("Invoice updated successfully");
             }
 
@@ -145,11 +146,11 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
     };
 
     const title = isDuplicate ? "Duplicate Invoice" : isCreate ? "Create Invoice" : "Edit Invoice";
-    const description = isDuplicate
-        ? "Create a new Invoice based on an existing one."
-        : isCreate
-            ? "Create a new Invoice for an order with terms and conditions."
-            : "Update invoice information to keep records accurate and consistent.";
+    // const description = isDuplicate
+    //     ? "Create a new Invoice based on an existing one."
+    //     : isCreate
+    //         ? "Create a new Invoice for an order with terms and conditions."
+    //         : "Update invoice information to keep records accurate and consistent.";
 
     return (
         <CustomModal
@@ -159,9 +160,9 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
             maxWidth="800px"
             width="90vw"
         >
-            <p className="text-sm text-muted-foreground mb-6 -mt-2">
+            {/* <p className="text-sm text-muted-foreground mb-6 -mt-2">
                 {description}
-            </p>
+            </p> */}
 
             {loadingInvoice && !isCreate ? (
                 <div className="py-8 text-center text-sm text-muted-foreground">
