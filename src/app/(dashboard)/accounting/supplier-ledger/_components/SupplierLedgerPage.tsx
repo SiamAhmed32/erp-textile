@@ -1,18 +1,15 @@
 'use client'
-import { useState } from "react";
+import { Box, Container, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
+import { Info, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import SupplierCreateModal from "./SupplierCreateModal";
+import { useState } from "react";
 import MakePaymentModal from "./MakePaymentModal";
-import { mockSupplierLedgerData, mockSupplierStats, SupplierLedgerItem } from "./types";
-import { Flex, Box, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
-import { Eye } from "lucide-react";
-import StatsCards from "./StatsCards";
+import SupplierCreateModal from "./SupplierCreateModal";
 import SupplierLedgerTable from "./SupplierLedgerTable";
-import SupplierDetails from "./SupplierDetails";
+import { mockSupplierLedgerData } from "./types";
 
 const SupplierLedgerPage = () => {
     const router = useRouter();
-    const [selectedSupplier, setSelectedSupplier] = useState<SupplierLedgerItem | null>(null);
     const [search, setSearch] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isMakePaymentModalOpen, setIsMakePaymentModalOpen] = useState(false);
@@ -31,24 +28,23 @@ const SupplierLedgerPage = () => {
     );
 
     return (
-        <Flex className="flex-col gap-6 p-2 h-full overflow-hidden">
+        <Container className="space-y-6 !p-0">
             <Box>
                 <PrimaryHeading>Supplier Ledger</PrimaryHeading>
-                <PrimarySubHeading>Manage supplier accounts and payment obligations</PrimarySubHeading>
+                <PrimarySubHeading>Track and manage supplier payables and transactions</PrimarySubHeading>
             </Box>
 
-            <Box className="flex-1 min-h-0">
-                <SupplierLedgerTable
-                    data={filteredData}
-                    onRowClick={(supplier) => {
-                        router.push(`/accounting/supplier-ledger/${supplier.id}`);
-                    }}
-                    onSearchChange={onSearchChange}
-                    onSearchSubmit={onSearchSubmit}
-                    onAddSupplier={() => setIsCreateModalOpen(true)}
-                    search={search}
-                />
-            </Box>
+            {/* Table */}
+            <SupplierLedgerTable
+                data={filteredData}
+                onRowClick={(supplier) => {
+                    router.push(`/accounting/supplier-ledger/${supplier.id}`);
+                }}
+                onSearchChange={onSearchChange}
+                onSearchSubmit={onSearchSubmit}
+                onAddSupplier={() => setIsCreateModalOpen(true)}
+                search={search}
+            />
 
             <SupplierCreateModal
                 open={isCreateModalOpen}
@@ -60,7 +56,7 @@ const SupplierLedgerPage = () => {
                 onOpenChange={setIsMakePaymentModalOpen}
                 supplier={null}
             />
-        </Flex>
+        </Container>
     );
 };
 

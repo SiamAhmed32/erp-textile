@@ -27,15 +27,15 @@ type Props = {
   search: string;
   statusFilter: string;
   typeFilter: string;
-  dateFrom: string;
-  dateTo: string;
+  startDate: string;
+  endDate: string;
   counts: { all: number; FABRIC: number; LABEL_TAG: number; CARTON: number };
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onStatusFilterChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
+  onStartDateChange: (value: string) => void;
+  onEndDateChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onAddInvoice: () => void;
   onRowClick: (row: Invoice) => void;
@@ -54,15 +54,15 @@ const InvoicesTable = ({
   search,
   statusFilter,
   typeFilter,
-  dateFrom,
-  dateTo,
+  startDate,
+  endDate,
   counts,
   onSearchChange,
   onSearchSubmit,
   onStatusFilterChange,
   onTypeFilterChange,
-  onDateFromChange,
-  onDateToChange,
+  onStartDateChange,
+  onEndDateChange,
   onPageChange,
   onAddInvoice,
   onRowClick,
@@ -206,13 +206,13 @@ const InvoicesTable = ({
           <div className="flex w-full gap-2 sm:max-w-[260px]">
             <Input
               type="date"
-              value={dateFrom}
-              onChange={(e) => onDateFromChange(e.target.value)}
+              value={startDate}
+              onChange={(e) => onStartDateChange(e.target.value)}
             />
             <Input
               type="date"
-              value={dateTo}
-              onChange={(e) => onDateToChange(e.target.value)}
+              value={endDate}
+              onChange={(e) => onEndDateChange(e.target.value)}
             />
           </div>
           <Button

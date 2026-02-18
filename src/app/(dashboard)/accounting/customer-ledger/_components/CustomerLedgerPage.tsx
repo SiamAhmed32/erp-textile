@@ -1,18 +1,15 @@
 'use client'
-import { useState } from "react";
+import { Box, Container, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
+import { Info, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import CustomerCreateModal from "./CustomerCreateModal";
-import RecordPaymentModal from "./RecordPaymentModal";
-import { mockCustomerLedgerData, mockCustomerStats, CustomerLedgerItem } from "./types";
-import { Flex, Box, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
-import { Eye } from "lucide-react";
-import StatsCards from "./StatsCards";
 import CustomerLedgerTable from "./CustomerLedgerTable";
-import CustomerDetails from "./CustomerDetails";
+import RecordPaymentModal from "./RecordPaymentModal";
+import { mockCustomerLedgerData } from "./types";
 
 const CustomerLedgerPage = () => {
     const router = useRouter();
-    const [selectedCustomer, setSelectedCustomer] = useState<CustomerLedgerItem | null>(null);
     const [search, setSearch] = useState("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isRecordPaymentModalOpen, setIsRecordPaymentModalOpen] = useState(false);
@@ -31,24 +28,23 @@ const CustomerLedgerPage = () => {
     );
 
     return (
-        <Flex className="flex-col gap-6 p-2 h-full overflow-hidden">
+        <Container className="space-y-6 !p-0">
             <Box>
                 <PrimaryHeading>Customer Ledger</PrimaryHeading>
-                <PrimarySubHeading>Track customer balances and payment history</PrimarySubHeading>
+                <PrimarySubHeading>View and manage all customer accounts and their balances</PrimarySubHeading>
             </Box>
 
-            <Box className="flex-1 min-h-0">
-                <CustomerLedgerTable
-                    data={filteredData}
-                    onRowClick={(customer) => {
-                        router.push(`/accounting/customer-ledger/${customer.id}`);
-                    }}
-                    onSearchChange={onSearchChange}
-                    onSearchSubmit={onSearchSubmit}
-                    onAddCustomer={() => setIsCreateModalOpen(true)}
-                    search={search}
-                />
-            </Box>
+            {/* Table */}
+            <CustomerLedgerTable
+                data={filteredData}
+                onRowClick={(customer) => {
+                    router.push(`/accounting/customer-ledger/${customer.id}`);
+                }}
+                onSearchChange={onSearchChange}
+                onSearchSubmit={onSearchSubmit}
+                onAddCustomer={() => setIsCreateModalOpen(true)}
+                search={search}
+            />
 
             <CustomerCreateModal
                 open={isCreateModalOpen}
@@ -58,9 +54,9 @@ const CustomerLedgerPage = () => {
             <RecordPaymentModal
                 open={isRecordPaymentModalOpen}
                 onOpenChange={setIsRecordPaymentModalOpen}
-                customer={null} // This might need adjustment if still used from here
+                customer={null}
             />
-        </Flex>
+        </Container>
     );
 };
 

@@ -1,11 +1,12 @@
-import React from 'react';
+"use client";
+
+import React, { useMemo } from 'react';
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Eye } from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { SupplierLedgerItem } from "./types";
-import { Box, Flex } from "@/components/reusables";
-import { Button } from '@/components/ui/button';
-import PrimaryButton from '@/components/reusables/PrimaryButton';
+import { cn } from "@/lib/utils";
+import PrimaryButton from "@/components/reusables/PrimaryButton";
+import { Search } from "lucide-react";
 
 interface SupplierLedgerTableProps {
     data: SupplierLedgerItem[];
@@ -16,83 +17,107 @@ interface SupplierLedgerTableProps {
     search: string;
 }
 
-const SupplierLedgerTable = ({ data, onRowClick, onSearchChange, onSearchSubmit, onAddSupplier, search }: SupplierLedgerTableProps) => {
-    const columns = [
-        {
-            header: "SUPPLIER",
-            accessor: (row: SupplierLedgerItem) => (
-                <Box className="flex flex-col">
-                    <span className="font-semibold text-foreground uppercase">{row.supplierName}</span>
-                    <span className="text-xs text-muted-foreground">{row.supplierId}</span>
-                </Box>
-            )
-        },
-        {
-            header: "ADDRESS",
-            accessor: (row: SupplierLedgerItem) => <span className="text-xs">{row.address}</span>
-        },
-        {
-            header: "ENTRIES",
-            accessor: (row: SupplierLedgerItem) => row.entries,
-            className: "text-center"
-        },
-        {
-            header: "BALANCE",
-            accessor: (row: SupplierLedgerItem) => (
-                <span className={`font-semibold ${row.balance < 0 ? 'text-secondary' : 'text-green-600'}`}>
-                    {row.balance < 0 ? `-$${Math.abs(row.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : `$${row.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                </span>
-            ),
-            className: "text-right"
-        },
-        {
-            header: "ACTIONS",
-            accessor: (row: SupplierLedgerItem) => (
-                <Flex className="justify-end p-1">
-                    <Box
-                        className="h-8 w-8 flex items-center justify-center rounded-md border text-secondary hover:bg-slate-100 transition-colors cursor-pointer"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onRowClick(row);
-                        }}
-                    >
-                        <Eye className="h-4 w-4" />
-                    </Box>
-                </Flex>
-            ),
-            className: "text-right"
-        }
-    ];
+const SupplierLedgerTable = ({
+    data,
+    onRowClick,
+    onSearchChange,
+    onSearchSubmit,
+    onAddSupplier,
+    search
+}: SupplierLedgerTableProps) => {
+
+    const columns = useMemo(
+        () => [
+            {
+                header: "Supplier",
+                accessor: (row: SupplierLedgerItem) => (
+                    <div>
+                        <div className="font-semibold text-foreground text-sm uppercase">{row.supplierName}</div>
+                        <div className="text-xs text-muted-foreground font-mono">{row.supplierId}</div>
+                    </div>
+                ),
+            },
+            {
+                header: "Due Raised",
+                accessor: (row: SupplierLedgerItem) => (
+                    <div className="font-mono font-medium text-amber-600">
+                        ৳ {(row.balance + (row.entries * 1200)).toLocaleString()}
+                    </div>
+                ),
+            },
+            {
+                header: "Paid",
+                accessor: (row: SupplierLedgerItem) => (
+                    <div className="font-mono font-medium text-emerald-600">
+                        ৳ {(row.entries * 1200).toLocaleString()}
+                    </div>
+                ),
+            },
+            {
+                header: "Outstanding",
+                accessor: (row: SupplierLedgerItem) => (
+                    <div className={cn(
+                        "font-mono font-bold",
+                        row.balance === 0 ? "text-muted-foreground" : "text-destructive"
+                    )}>
+                        ৳ {row.balance.toLocaleString()}
+                    </div>
+                ),
+            },
+            {
+                header: "Status",
+                className: "text-right",
+                accessor: (row: SupplierLedgerItem) => {
+                    const isSettled = row.balance === 0;
+
+                    return (
+                        <div className="flex justify-end">
+                            <span className={cn(
+                                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                                isSettled ? "bg-slate-100 text-slate-500" :
+                                    "bg-red-50 text-red-700"
+                            )}>
+                                {isSettled ? 'SETTLED' : 'YOU OWE'}
+                            </span>
+                        </div>
+                    )
+                },
+            },
+        ],
+        []
+    );
 
     return (
-        <Box className="space-y-4">
-            <Flex className="items-center justify-between">
-                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-                    <div className="relative w-full">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search suppliers..."
-                            className="pl-8"
-                            value={search}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                        />
-                    </div>
-                    {/* <Button variant="outline" onClick={onSearchSubmit}>
-                        Search
-                    </Button> */}
+        <div className="space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search suppliers..."
+                        value={search}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        className="pl-9"
+                    />
                 </div>
-                <PrimaryButton handleClick={onAddSupplier}>
-                    + Add Supplier
-                </PrimaryButton>
-            </Flex>
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                    <PrimaryButton handleClick={onAddSupplier}>Add Supplier</PrimaryButton>
+                </div>
+            </div>
+
             <CustomTable
                 data={data}
                 columns={columns}
+                isLoading={false}
+                pagination={{
+                    currentPage: 1,
+                    totalPages: 1,
+                    onPageChange: () => { },
+                }}
                 onRowClick={onRowClick}
-                scrollAreaHeight="h-[calc(100vh-450px)]"
-                className="bg-white rounded-lg shadow-sm border-none overflow-hidden"
+                scrollAreaHeight="h-[calc(100vh-380px)]"
+                rowClassName="cursor-pointer hover:bg-muted/50 transition-colors"
             />
-        </Box>
+        </div>
     );
 };
 

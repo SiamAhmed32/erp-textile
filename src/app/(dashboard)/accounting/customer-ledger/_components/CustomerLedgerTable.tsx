@@ -1,11 +1,12 @@
-import React from 'react';
+"use client";
+
+import React, { useMemo } from 'react';
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Eye } from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { CustomerLedgerItem } from "./types";
-import { Box, Flex, ButtonPrimary } from "@/components/reusables";
-import { Button } from '@/components/ui/button';
-import PrimaryButton from '@/components/reusables/PrimaryButton';
+import { cn } from "@/lib/utils";
+import PrimaryButton from "@/components/reusables/PrimaryButton";
+import { Search } from "lucide-react";
 
 interface CustomerLedgerTableProps {
   data: CustomerLedgerItem[];
@@ -16,78 +17,109 @@ interface CustomerLedgerTableProps {
   search: string;
 }
 
-const CustomerLedgerTable = ({ data, onRowClick, onSearchChange, onSearchSubmit, onAddCustomer, search }: CustomerLedgerTableProps) => {
-  const columns = [
-    {
-      header: "CUSTOMER",
-      accessor: (row: CustomerLedgerItem) => (
-        <Box className="flex flex-col">
-          <span className="font-semibold text-foreground uppercase">{row.customerName}</span>
-          <span className="text-xs text-muted-foreground">{row.customerId}</span>
-        </Box>
-      )
-    },
-    {
-      header: "ADDRESS",
-      accessor: (row: CustomerLedgerItem) => <span className="text-xs">{row.address}</span>
-    },
-    {
-      header: "ENTRIES",
-      accessor: (row: CustomerLedgerItem) => row.entries,
-      className: "text-center"
-    },
-    {
-      header: "BALANCE",
-      accessor: (row: CustomerLedgerItem) => (
-        <span className="font-semibold text-secondary">${row.balance.toLocaleString()}</span>
-      ),
-      className: "text-right"
-    },
-    {
-      header: "ACTIONS",
-      accessor: (row: CustomerLedgerItem) => (
-        <Flex className="justify-end p-1">
-          <Box
-            className="h-8 w-8 flex items-center justify-center rounded-md border text-secondary hover:bg-slate-100 transition-colors cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRowClick(row);
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Box>
-        </Flex>
-      ),
-      className: "text-right"
-    }
-  ];
+const CustomerLedgerTable = ({
+  data,
+  onRowClick,
+  onSearchChange,
+  onSearchSubmit,
+  onAddCustomer,
+  search
+}: CustomerLedgerTableProps) => {
+
+  const columns = useMemo(
+    () => [
+      {
+        header: "Customer",
+        accessor: (row: CustomerLedgerItem) => (
+          <div>
+            <div className="font-semibold text-foreground text-sm uppercase">{row.customerName}</div>
+            <div className="text-xs text-muted-foreground font-mono">{row.customerId}</div>
+          </div>
+        ),
+      },
+      {
+        header: "Due Raised",
+        accessor: (row: CustomerLedgerItem) => (
+          <div className="font-mono font-medium text-amber-600">
+            ৳ {(row.balance + (row.entries * 1000)).toLocaleString()}
+          </div>
+        ),
+      },
+      {
+        header: "Received",
+        accessor: (row: CustomerLedgerItem) => (
+          <div className="font-mono font-medium text-emerald-600">
+            ৳ {(row.entries * 1000).toLocaleString()}
+          </div>
+        ),
+      },
+      {
+        header: "Outstanding",
+        accessor: (row: CustomerLedgerItem) => (
+          <div className={cn(
+            "font-mono font-bold",
+            row.balance === 0 ? "text-muted-foreground" : "text-destructive"
+          )}>
+            ৳ {row.balance.toLocaleString()}
+          </div>
+        ),
+      },
+      {
+        header: "Status",
+        className: "text-right",
+        accessor: (row: CustomerLedgerItem) => {
+          const isSettled = row.balance === 0;
+          const isOverdue = row.balance > 50000;
+
+          return (
+            <div className="flex justify-end">
+              <span className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                isSettled ? "bg-slate-100 text-slate-500" :
+                  isOverdue ? "bg-red-50 text-red-700" :
+                    "bg-amber-50 text-amber-700"
+              )}>
+                {isSettled ? 'SETTLED' : isOverdue ? 'OVERDUE' : 'OUTSTANDING'}
+              </span>
+            </div>
+          )
+        },
+      },
+    ],
+    []
+  );
 
   return (
-    <Box className="space-y-4">
-      <Flex className="items-center justify-between">
-
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search order number, buyer, company"
+            placeholder="Search customers..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-9"
           />
-          <Button variant="outline" onClick={onSearchSubmit}>
-            Search
-          </Button>
         </div>
-        <PrimaryButton handleClick={onAddCustomer}>
-          Add Customer
-        </PrimaryButton>
-      </Flex>
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+          <PrimaryButton handleClick={onAddCustomer}>Add Customer</PrimaryButton>
+        </div>
+      </div>
+
       <CustomTable
         data={data}
         columns={columns}
+        isLoading={false}
+        pagination={{
+          currentPage: 1,
+          totalPages: 1,
+          onPageChange: () => { },
+        }}
         onRowClick={onRowClick}
-        scrollAreaHeight="h-[calc(100vh-450px)]"
-        className="bg-white rounded-lg shadow-sm border-none overflow-hidden"
+        scrollAreaHeight="h-[calc(100vh-380px)]"
+        rowClassName="cursor-pointer hover:bg-muted/50 transition-colors"
       />
-    </Box>
+    </div>
   );
 };
 
