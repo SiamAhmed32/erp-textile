@@ -70,8 +70,21 @@ export const navMain = [
         url: "/invoice-management/invoices",
     },
     {
+        title: "LC Management",
+        module: 'lcManagement',
+        icon: FileText,
+        items: [
+            {
+                title: "LC List",
+                url: "/lc-management/lc-managements",
+                icon: ClipboardList,
+            },
+
+        ],
+    },
+    {
         title: "Accounting",
-        module: 'accounting',
+        module: 'accounts',
         icon: Calculator,
         items: [
             {
