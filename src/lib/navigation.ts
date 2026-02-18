@@ -6,6 +6,13 @@ import {
     ShoppingCart,
     ClipboardList,
     Truck,
+    Calculator,
+    LayoutDashboard,
+    UserRound,
+    Building,
+    ReceiptText,
+    BookOpen,
+    Wallet,
 } from "lucide-react";
 
 export const navMain = [
@@ -17,7 +24,7 @@ export const navMain = [
     },
     {
         title: "Company Profile",
-        module: 'finance',
+        module: 'companyProfile',
         url: "/company-profile",
         icon: Building2,
     },
@@ -29,7 +36,7 @@ export const navMain = [
     },
     {
         title: "Buyers",
-        module: 'buyer',
+        module: 'buyers',
         url: "/buyers",
         icon: Users,
     },
@@ -61,5 +68,42 @@ export const navMain = [
         module: 'piManagement',
         icon: FileText,
         url: "/invoice-management/invoices",
+    },
+    {
+        title: "Accounting",
+        module: 'accounting',
+        icon: Calculator,
+        items: [
+            {
+                title: "Overview",
+                url: "/accounting/overview",
+                icon: LayoutDashboard,
+            },
+            {
+                title: "Customer Ledger",
+                url: "/accounting/customer-ledger",
+                icon: UserRound,
+            },
+            {
+                title: "Supplier Ledger",
+                url: "/accounting/supplier-ledger",
+                icon: Building,
+            },
+            {
+                title: "MOI (Cash Book)",
+                url: "/accounting/cash-book",
+                icon: ReceiptText,
+            },
+            {
+                title: "Daily Bookkeeping",
+                url: "/accounting/daily-bookkeeping",
+                icon: BookOpen,
+            },
+            {
+                title: "Loan Management",
+                url: "/accounting/loan-management",
+                icon: Wallet,
+            },
+        ],
     },
 ];
