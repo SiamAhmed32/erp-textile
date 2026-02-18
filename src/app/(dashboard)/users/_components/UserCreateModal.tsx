@@ -57,6 +57,10 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (formData.modules.length < 2) {
+            toast.error("Please select at least 2 modules");
+            return;
+        }
         try {
             const data = new FormData();
             data.append("email", formData.email);
@@ -85,7 +89,8 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
             onOpenChange(false);
             resetForm();
         } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to create user");
+            console.log(error.data)
+            toast.error(error?.data?.error?.message || "Failed to create user");
         }
     };
 

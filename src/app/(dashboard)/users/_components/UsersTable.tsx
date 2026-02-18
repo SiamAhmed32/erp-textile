@@ -22,8 +22,8 @@ const UsersTable = ({
   page,
   totalPages,
   onPageChange,
-  onEdit = () => {},
-  onDelete = () => {},
+  onEdit = () => { },
+  onDelete = () => { },
 }: Props) => {
   const columns = useMemo(
     () => [
@@ -56,6 +56,12 @@ const UsersTable = ({
         ),
       },
       {
+        header: "Designation",
+        accessor: (row: User) => (
+          <div className="text-muted-foreground">{row.designation || "N/A"}</div>
+        ),
+      },
+      {
         header: "Username",
         accessor: (row: User) => (
           <div className="text-muted-foreground">{row.username}</div>
@@ -65,6 +71,12 @@ const UsersTable = ({
         header: "Email",
         accessor: (row: User) => (
           <div className="text-muted-foreground">{row.email}</div>
+        ),
+      },
+      {
+        header: "Role",
+        accessor: (row: User) => (
+          <div className="text-muted-foreground">{row.role}</div>
         ),
       },
       {
