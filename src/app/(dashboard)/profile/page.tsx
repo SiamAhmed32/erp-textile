@@ -45,12 +45,12 @@ export default function ProfilePage() {
     // Password change state
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const [passwordFormData, setPasswordFormData] = useState({
-        oldPassword: "",
+        currentPassword: "",
         newPassword: "",
         confirmPassword: ""
     });
     const [showPasswords, setShowPasswords] = useState({
-        old: false,
+        current: false,
         new: false,
         confirm: false
     });
@@ -123,13 +123,13 @@ export default function ProfilePage() {
 
         try {
             await updatePassword({
-                oldPassword: passwordFormData.oldPassword,
+                currentPassword: passwordFormData.currentPassword,
                 newPassword: passwordFormData.newPassword
             }).unwrap();
 
             toast.success("Password changed successfully");
             setIsPasswordModalOpen(false);
-            setPasswordFormData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+            setPasswordFormData({ currentPassword: "", newPassword: "", confirmPassword: "" });
         } catch (error: any) {
             console.error("Failed to update password", error);
             toast.error(error?.data?.message || error?.data?.error?.message || "Failed to update password");
@@ -419,19 +419,19 @@ export default function ProfilePage() {
                     <div className="relative">
                         <InputField
                             label="Current Password"
-                            name="oldPassword"
-                            type={showPasswords.old ? "text" : "password"}
-                            value={passwordFormData.oldPassword}
-                            onChange={(e) => setPasswordFormData({ ...passwordFormData, oldPassword: e.target.value })}
+                            name="currentPassword"
+                            type={showPasswords.current ? "text" : "password"}
+                            value={passwordFormData.currentPassword}
+                            onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
                             placeholder="••••••"
                             required
                         />
                         <button
                             type="button"
                             className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground"
-                            onClick={() => setShowPasswords({ ...showPasswords, old: !showPasswords.old })}
+                            onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
                         >
-                            {showPasswords.old ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                     </div>
 

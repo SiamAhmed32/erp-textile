@@ -18,7 +18,7 @@ interface Props {
 
 const UserEditModal = ({ open, onOpenChange, user }: Props) => {
   const [formData, setFormData] = useState<
-    Omit<User, "id" | "avatarUrl" | "role" | "createdAt" | "updatedAt">
+    Omit<User, "id" | "avatarUrl" | "createdAt" | "updatedAt">
   >({
     email: "",
     username: "",
@@ -40,6 +40,7 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         designation: user.designation || "",
+        role: user.role || "user",
         modules: user.modules || [],
       });
       setPreviewUrl(user.avatarUrl || null);
@@ -88,6 +89,9 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
       data.append("firstName", formData.firstName);
       data.append("lastName", formData.lastName);
       data.append("designation", formData.designation || "");
+      if (formData.role) {
+        data.append("role", formData.role);
+      }
 
       (formData.modules || []).forEach((module) => {
         data.append("modules", module);
@@ -115,55 +119,95 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
     >
       <form
         onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
       >
-        {/* Left Side: Inputs */}
-        <div className="space-y-1">
-          <InputField
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="rahim@gmail.com"
-            required
-          />
-          <InputField
-            label="Username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="rahim123"
-            required
-          />
-          <InputField
-            label="First Name"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            placeholder="Abdur"
-            required
-          />
-          <InputField
-            label="Last Name"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            placeholder="Rahman"
-            required
-          />
-          <InputField
-            label="Designation"
-            name="designation"
-            value={formData.designation || ""}
-            onChange={handleChange}
-            placeholder="Finance Manager"
-            required
-          />
+        {/* Left Side: User Information (Spans 3 columns) */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-2">
+            {/* Column 1: Email & Username */}
+            <div className="space-y-4">
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="rahim@gmail.com"
+                required
+              />
+              <InputField
+                label="Username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                placeholder="rahim123"
+                required
+              />
+            </div>
+
+            {/* Column 2: First Name & Last Name */}
+            <div className="space-y-4 grid grid-cols-2 gap-2" >
+              <InputField
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                placeholder="Abdur"
+                required
+              />
+              <InputField
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                placeholder="Rahman"
+                required
+              />
+            </div>
+
+            {/* Column 3: Designation & Role */}
+            <div className="space-y-4 grid grid-cols-2 gap-2">
+              <InputField
+                label="Designation"
+                name="designation"
+                value={formData.designation || ""}
+                onChange={handleChange}
+                placeholder="Finance Manager"
+                required
+              />
+              <div className="space-y-2">
+                <Label className="text-sm font-medium font-outfit">Role</Label>
+                <div className="flex gap-4 h-10 items-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="user"
+                      checked={formData.role === "user"}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-secondary"
+                    />
+                    <span className="text-sm font-outfit">User</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="admin"
+                      checked={formData.role === "admin"}
+                      onChange={handleChange}
+                      className="w-4 h-4 accent-secondary"
+                    />
+                    <span className="text-sm font-outfit">Admin</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Right Side: Avatar Upload & Module Selection */}
-        <div className="flex flex-col space-y-6">
+        {/* Right Side: Avatar Upload & Module Selection (Spans 1 column) */}
+        <div className="lg:col-span-1 flex flex-col space-y-6">
           {/* Avatar Upload Section */}
           <div className="flex flex-col items-center space-y-4 pb-6 border-b border-border/50">
             <div className="relative group">
