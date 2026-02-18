@@ -15,6 +15,8 @@ export type User = {
 export type UserCreateInput = {
     email: string;
     username: string;
+    password?: string;
+    role: "admin" | "user";
     firstName: string;
     lastName: string;
     designation: string;

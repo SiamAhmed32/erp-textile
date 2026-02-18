@@ -13,6 +13,7 @@ import {
     ReceiptText,
     BookOpen,
     Wallet,
+    Contact,
 } from "lucide-react";
 
 export const navMain = [
@@ -38,7 +39,7 @@ export const navMain = [
         title: "Buyers",
         module: 'buyers',
         url: "/buyers",
-        icon: Users,
+        icon: Contact,
     },
     {
         title: "Invoice Terms",

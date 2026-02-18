@@ -9,6 +9,7 @@ import { AVAILABLE_MODULES } from "./modules";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { CustomModal, InputField } from "@/components/reusables";
+import { Eye, EyeOff } from "lucide-react";
 
 interface Props {
     open: boolean;
@@ -19,11 +20,14 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
     const [formData, setFormData] = useState<Omit<UserCreateInput, "avatar">>({
         email: "",
         username: "",
+        password: "",
+        role: "user",
         firstName: "",
         lastName: "",
         designation: "",
         modules: [],
     });
+    const [showPassword, setShowPassword] = useState(false);
     const [avatar, setAvatar] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -57,13 +61,22 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (formData.modules.length < 2) {
+            toast.error("Please select at least 2 modules");
+            return;
+        }
         try {
             const data = new FormData();
             data.append("email", formData.email);
             data.append("username", formData.username);
+            if (formData.password) {
+                data.append("password", formData.password);
+                data.append("confirmPassword", formData.password);
+            }
             data.append("firstName", formData.firstName);
             data.append("lastName", formData.lastName);
             data.append("designation", formData.designation);
+            data.append("role", formData.role);
 
             // Append modules as JSON string or individual items based on API requirements
             // Append modules as individual fields or allow backend to handle array
@@ -85,7 +98,8 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
             onOpenChange(false);
             resetForm();
         } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to create user");
+            console.log(error.data)
+            toast.error(error?.data?.error?.message || "Failed to create user");
         }
     };
 
@@ -93,6 +107,8 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
         setFormData({
             email: "",
             username: "",
+            password: "",
+            role: "user",
             firstName: "",
             lastName: "",
             designation: "",
@@ -128,38 +144,91 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
                         placeholder="rahim@gmail.com"
                         required
                     />
-                    <InputField
-                        label="Username"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleChange}
-                        placeholder="rahim123"
-                        required
-                    />
-                    <InputField
-                        label="First Name"
-                        name="firstName"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        placeholder="Abdur"
-                        required
-                    />
-                    <InputField
-                        label="Last Name"
-                        name="lastName"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        placeholder="Rahman"
-                        required
-                    />
-                    <InputField
-                        label="Designation"
-                        name="designation"
-                        value={formData.designation}
-                        onChange={handleChange}
-                        placeholder="Finance Manager"
-                        required
-                    />
+
+                    <div className="grid grid-cols-1 ">
+                        <InputField
+                            label="Username"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            placeholder="rahim123"
+                            required
+                        />
+                        <div className="relative">
+                            <InputField
+                                label="Password"
+                                name="password"
+                                type={showPassword ? "text" : "password"}
+                                value={formData.password || ""}
+                                onChange={handleChange}
+                                placeholder="••••••••"
+                            />
+                            <button
+                                type="button"
+                                className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ">
+                        <InputField
+                            label="First Name"
+                            name="firstName"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            placeholder="Abdur"
+                            required
+                        />
+                        <InputField
+                            label="Last Name"
+                            name="lastName"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            placeholder="Rahman"
+                            required
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <InputField
+                            label="Designation"
+                            name="designation"
+                            value={formData.designation}
+                            onChange={handleChange}
+                            placeholder="Finance Manager"
+                            required
+                        />
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Role</Label>
+                            <div className="flex gap-4 h-10 items-center">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="role"
+                                        value="user"
+                                        checked={formData.role === "user"}
+                                        onChange={handleChange}
+                                        className="w-4 h-4 accent-secondary"
+                                    />
+                                    <span className="text-sm">User</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="role"
+                                        value="admin"
+                                        checked={formData.role === "admin"}
+                                        onChange={handleChange}
+                                        className="w-4 h-4 accent-secondary"
+                                    />
+                                    <span className="text-sm">Admin</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right Side: Avatar Upload & Module Selection */}
