@@ -10,6 +10,7 @@ import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
+import { toast } from "react-toastify";
 
 const emptyLC: LCFormData = {
   bblcNumber: "",
@@ -18,9 +19,21 @@ const emptyLC: LCFormData = {
   lcIssueBankName: "",
   lcIssueBankBranch: "",
   destination: "",
+  exportLcNo: "",
+  exportLcDate: "",
+  binNo: "",
+  hsCodeNo: "",
+  remarks: "",
+  carrier: "",
+  salesTerm: "",
   issueDate: "",
   expiryDate: "",
   amount: 0,
+  challanNo: "",
+  transportMode: "",
+  vehicleNo: "",
+  driverName: "",
+  contactNo: "",
   invoiceId: "",
 };
 
@@ -37,22 +50,16 @@ const LCCreate = () => {
     path: "invoices",
     page: 1,
     limit: 100,
-    filters: {
-      // Logic: Only show invoices that are approved and don't have an LC yet
-      // This depends on the backend filter support, but we'll fetch all and filter if needed
-    },
   });
 
-  // Filter out invoices that already have LC (if not already filtered by backend)
   const invoices = ((invoicesPayload as any)?.data || []) as Invoice[];
 
   React.useEffect(() => {
     const error = invoicesError as any;
     if (error) {
-      console.error(
-        "Load Invoices Error:",
-        error?.data?.message || "Failed to load invoices",
-      );
+      const msg = error?.data?.message || "Failed to load invoices";
+      console.error("Load Invoices Error:", msg);
+      toast.error(msg);
     }
   }, [invoicesError]);
 
@@ -60,22 +67,37 @@ const LCCreate = () => {
     setDraft((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
 
-    // Auto-populate amount if invoice is selected
+    // Auto-populate data if invoice is selected
     if (field === "invoiceId") {
       const selectedInvoice = invoices.find((inv) => inv.id === value);
       if (selectedInvoice) {
-        // Logic to calculate total amount from order items if not directly on invoice
         const order = selectedInvoice.order;
+        let amount = 0;
         if (order) {
-          const orderItem = Array.isArray(order.orderItems)
-            ? order.orderItems[0]
-            : order.orderItems;
-          const amount =
-            orderItem?.fabricItem?.totalAmount ||
-            orderItem?.labelItem?.totalAmount ||
-            orderItem?.cartonItem?.totalAmount ||
-            0;
-          setDraft((prev) => ({ ...prev, amount: Number(amount) }));
+          const orderItems = Array.isArray(order.orderItems)
+            ? order.orderItems
+            : [order.orderItems];
+
+          amount = orderItems.reduce((acc, item: any) => {
+            const itemAmount =
+              item?.fabricItem?.totalAmount ||
+              item?.labelItem?.totalAmount ||
+              item?.cartonItem?.totalAmount ||
+              0;
+            return acc + Number(itemAmount);
+          }, 0);
+
+          // Update remarks with PI info
+          const piDate = new Date(selectedInvoice.date)
+            .toLocaleDateString("en-GB")
+            .replace(/\//g, "-");
+          const remarkText = `We certify that the invoice is true and correct and the goods are of Bangladeshi Origin.\nThe goods herein are confirmed with our Proforma Invoice No: ${selectedInvoice.piNumber} Date-${piDate}`;
+
+          setDraft((prev) => ({
+            ...prev,
+            amount: Number(amount),
+            remarks: remarkText,
+          }));
         }
       }
     }
@@ -86,6 +108,9 @@ const LCCreate = () => {
     if (!schemaResult.success) {
       const nextErrors = toFieldErrors(schemaResult.error.issues) as any;
       setErrors(nextErrors);
+      // Log for debugging
+      console.log("Validation Errors:", nextErrors);
+      toast.error("Please fill in the required fields");
       return;
     }
 
@@ -97,14 +122,16 @@ const LCCreate = () => {
         dateOfOpening: new Date(draft.dateOfOpening).toISOString(),
         issueDate: new Date(draft.issueDate).toISOString(),
         expiryDate: new Date(draft.expiryDate).toISOString(),
+        exportLcDate: new Date(draft.exportLcDate).toISOString(),
       };
 
       const result = await postItem({
         path: "lc-managements",
         body: payload,
-        invalidate: ["lc-managements", "orders", "invoices"], // Invalidate related tags
+        invalidate: ["lc-managements", "orders", "invoices"],
       }).unwrap();
 
+      toast.success("BBLC Created Successfully");
       const id = (result as any)?.data?.id || (result as any)?.id;
       router.push(
         id
@@ -112,10 +139,9 @@ const LCCreate = () => {
           : "/lc-management/lc-managements",
       );
     } catch (err: any) {
-      console.error(
-        "Create LC Error:",
-        err?.data?.message || "Failed to create LC",
-      );
+      const msg = err?.data?.message || err?.message || "Failed to create LC";
+      console.error("Create LC Error:", msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

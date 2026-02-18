@@ -79,6 +79,11 @@ export const navMain = [
                 url: "/lc-management/lc-managements",
                 icon: ClipboardList,
             },
+            {
+                title: "Exporter Certificates",
+                url: "/lc-management/exporter-certificates",
+                icon: FileText,
+            },
 
         ],
     },

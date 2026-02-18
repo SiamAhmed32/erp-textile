@@ -22,30 +22,46 @@ type Props = {
   isEdit?: boolean;
 };
 
+const InputGroup = ({
+  id,
+  label,
+  placeholder,
+  type = "text",
+  value,
+  error,
+  onChange,
+}: any) => (
+  <div className="space-y-2">
+    <Label htmlFor={id} className="text-sm font-semibold">
+      {label} <span className="text-destructive">*</span>
+    </Label>
+    <Input
+      id={id}
+      type={type}
+      placeholder={placeholder}
+      value={value ?? ""}
+      onChange={(e) => onChange(id, e.target.value)}
+      className={
+        error ? "border-destructive focus-visible:ring-destructive" : ""
+      }
+    />
+    {error && (
+      <p className="text-[10px] font-medium text-destructive">{error}</p>
+    )}
+  </div>
+);
+
 const LCForm = ({ data, invoices, onChange, errors, isEdit }: Props) => {
   return (
-    <div className="grid gap-6">
-      <Card>
+    <div className="grid gap-8">
+      {/* 1. Core Relationship & Main Numbers */}
+      <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* BBLC Number */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="bblcNumber">BBLC Number</Label>
-              <Input
-                id="bblcNumber"
-                placeholder="e.g. BBLC-2026-001"
-                value={data.bblcNumber}
-                onChange={(e) => onChange("bblcNumber", e.target.value)}
-                className={errors.bblcNumber ? "border-destructive" : ""}
-              />
-              {errors.bblcNumber && (
-                <p className="text-xs text-destructive">{errors.bblcNumber}</p>
-              )}
-            </div>
-
-            {/* Invoice Dropdown */}
-            <div className="space-y-2">
-              <Label htmlFor="invoiceId">Source Invoice</Label>
+              <Label htmlFor="invoiceId" className="text-sm font-semibold">
+                Source Invoice (PI) <span className="text-destructive">*</span>
+              </Label>
               <Select
                 value={data.invoiceId}
                 onValueChange={(val) => onChange("invoiceId", val)}
@@ -54,171 +70,233 @@ const LCForm = ({ data, invoices, onChange, errors, isEdit }: Props) => {
                 <SelectTrigger
                   className={errors.invoiceId ? "border-destructive" : ""}
                 >
-                  <SelectValue placeholder="Select an Invoice" />
+                  <SelectValue placeholder="Select PI" />
                 </SelectTrigger>
                 <SelectContent>
                   {invoices.map((inv) => (
                     <SelectItem key={inv.id} value={inv.id}>
-                      {inv.piNumber} - {inv.order?.orderNumber} (
-                      {inv.user?.displayName || "System"})
+                      {inv.piNumber} - {inv.order?.orderNumber}
                     </SelectItem>
                   ))}
-                  {invoices.length === 0 && (
-                    <SelectItem value="none" disabled>
-                      No eligible invoices found
-                    </SelectItem>
-                  )}
                 </SelectContent>
               </Select>
               {errors.invoiceId && (
-                <p className="text-xs text-destructive">{errors.invoiceId}</p>
-              )}
-              {isEdit && (
-                <p className="text-xs text-muted-foreground italic">
-                  Invoice cannot be changed after creation.
+                <p className="text-[10px] font-medium text-destructive">
+                  {errors.invoiceId}
                 </p>
               )}
             </div>
 
-            {/* Date of Opening */}
+            <InputGroup
+              id="bblcNumber"
+              label="BBLC Number"
+              placeholder="e.g. 988240400814"
+              value={data.bblcNumber}
+              error={errors.bblcNumber}
+              onChange={onChange}
+            />
+
+            <InputGroup
+              id="dateOfOpening"
+              label="Date of Opening"
+              type="date"
+              value={data.dateOfOpening ? data.dateOfOpening.split("T")[0] : ""}
+              error={errors.dateOfOpening}
+              onChange={onChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 2. Export LC & Bank Details */}
+      <Card className="border-none shadow-sm">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <InputGroup
+              id="exportLcNo"
+              label="Export LC No"
+              placeholder="e.g. SSL-004-PIAZZA"
+              value={data.exportLcNo}
+              error={errors.exportLcNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="exportLcDate"
+              label="Export LC Date"
+              type="date"
+              value={data.exportLcDate ? data.exportLcDate.split("T")[0] : ""}
+              error={errors.exportLcDate}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="issueDate"
+              label="LC Issue Date"
+              type="date"
+              value={data.issueDate ? data.issueDate.split("T")[0] : ""}
+              error={errors.issueDate}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="expiryDate"
+              label="LC Expiry Date"
+              type="date"
+              value={data.expiryDate ? data.expiryDate.split("T")[0] : ""}
+              error={errors.expiryDate}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <InputGroup
+              id="lcIssueBankName"
+              label="LC Issuing Bank"
+              placeholder="e.g. NATIONAL BANK LIMITED"
+              value={data.lcIssueBankName}
+              error={errors.lcIssueBankName}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="lcIssueBankBranch"
+              label="Bank Branch"
+              placeholder="e.g. PAGATI, SARANI BRANCH"
+              value={data.lcIssueBankBranch}
+              error={errors.lcIssueBankBranch}
+              onChange={onChange}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. Document Info & Logistics */}
+      <Card className="border-none shadow-sm">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <InputGroup
+              id="binNo"
+              label="BIN No"
+              placeholder="e.g. 001056745-0103"
+              value={data.binNo}
+              error={errors.binNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="hsCodeNo"
+              label="HS Code No"
+              placeholder="e.g. 52093100"
+              value={data.hsCodeNo}
+              error={errors.hsCodeNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="amount"
+              label="LC Amount (US$)"
+              type="number"
+              value={data.amount}
+              error={errors.amount}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+            <InputGroup
+              id="carrier"
+              label="Carrier"
+              value={data.carrier}
+              error={errors.carrier}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="salesTerm"
+              label="Sales Term"
+              value={data.salesTerm}
+              error={errors.salesTerm}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="destination"
+              label="Destination"
+              placeholder="e.g. Customers Factory"
+              value={data.destination}
+              error={errors.destination}
+              onChange={onChange}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 mt-6">
             <div className="space-y-2">
-              <Label htmlFor="dateOfOpening">Date of Opening</Label>
-              <Input
-                id="dateOfOpening"
-                type="date"
-                value={
-                  data.dateOfOpening ? data.dateOfOpening.split("T")[0] : ""
-                }
-                onChange={(e) => onChange("dateOfOpening", e.target.value)}
-                className={errors.dateOfOpening ? "border-destructive" : ""}
+              <Label htmlFor="remarks" className="text-sm font-semibold">
+                Remarks / Certification Text{" "}
+                <span className="text-destructive">*</span>
+              </Label>
+              <textarea
+                id="remarks"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                value={data.remarks}
+                onChange={(e) => onChange("remarks", e.target.value)}
               />
-              {errors.dateOfOpening && (
-                <p className="text-xs text-destructive">
-                  {errors.dateOfOpening}
+              {errors.remarks && (
+                <p className="text-[10px] font-medium text-destructive">
+                  {errors.remarks}
                 </p>
-              )}
-            </div>
-
-            {/* Issue Date */}
-            <div className="space-y-2">
-              <Label htmlFor="issueDate">Issue Date</Label>
-              <Input
-                id="issueDate"
-                type="date"
-                value={data.issueDate ? data.issueDate.split("T")[0] : ""}
-                onChange={(e) => onChange("issueDate", e.target.value)}
-                className={errors.issueDate ? "border-destructive" : ""}
-              />
-              {errors.issueDate && (
-                <p className="text-xs text-destructive">{errors.issueDate}</p>
-              )}
-            </div>
-
-            {/* Expiry Date */}
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Expiry Date</Label>
-              <Input
-                id="expiryDate"
-                type="date"
-                value={data.expiryDate ? data.expiryDate.split("T")[0] : ""}
-                onChange={(e) => onChange("expiryDate", e.target.value)}
-                className={errors.expiryDate ? "border-destructive" : ""}
-              />
-              {errors.expiryDate && (
-                <p className="text-xs text-destructive">{errors.expiryDate}</p>
-              )}
-            </div>
-
-            {/* Amount */}
-            <div className="space-y-2">
-              <Label htmlFor="amount">LC Amount (US$)</Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="0.00"
-                value={data.amount}
-                onChange={(e) => onChange("amount", e.target.value)}
-                className={errors.amount ? "border-destructive" : ""}
-              />
-              {errors.amount && (
-                <p className="text-xs text-destructive">{errors.amount}</p>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
+      {/* 4. Transport & Driver Info */}
+      <Card className="border-none shadow-sm bg-slate-50/50">
         <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bank Name */}
-            <div className="space-y-2">
-              <Label htmlFor="lcIssueBankName">LC Issuing Bank</Label>
-              <Input
-                id="lcIssueBankName"
-                placeholder="e.g. Standard Chartered Bank"
-                value={data.lcIssueBankName}
-                onChange={(e) => onChange("lcIssueBankName", e.target.value)}
-                className={errors.lcIssueBankName ? "border-destructive" : ""}
-              />
-              {errors.lcIssueBankName && (
-                <p className="text-xs text-destructive">
-                  {errors.lcIssueBankName}
-                </p>
-              )}
-            </div>
-
-            {/* Bank Branch */}
-            <div className="space-y-2">
-              <Label htmlFor="lcIssueBankBranch">Bank Branch</Label>
-              <Input
-                id="lcIssueBankBranch"
-                placeholder="e.g. Dhaka Main Branch"
-                value={data.lcIssueBankBranch}
-                onChange={(e) => onChange("lcIssueBankBranch", e.target.value)}
-                className={errors.lcIssueBankBranch ? "border-destructive" : ""}
-              />
-              {errors.lcIssueBankBranch && (
-                <p className="text-xs text-destructive">
-                  {errors.lcIssueBankBranch}
-                </p>
-              )}
-            </div>
-
-            {/* Notify Party */}
-            <div className="space-y-2">
-              <Label htmlFor="notifyParty">Notify Party</Label>
-              <Input
-                id="notifyParty"
-                placeholder="e.g. ABC Garments Ltd."
-                value={data.notifyParty || ""}
-                onChange={(e) => onChange("notifyParty", e.target.value)}
-                className={errors.notifyParty ? "border-destructive" : ""}
-              />
-              {errors.notifyParty && (
-                <p className="text-xs text-destructive">{errors.notifyParty}</p>
-              )}
-            </div>
-
-            {/* Destination */}
-            <div className="space-y-2">
-              <Label htmlFor="destination">Destination Port</Label>
-              <Input
-                id="destination"
-                placeholder="e.g. Chittagong Port"
-                value={data.destination || ""}
-                onChange={(e) => onChange("destination", e.target.value)}
-                className={errors.destination ? "border-destructive" : ""}
-              />
-              {errors.destination && (
-                <p className="text-xs text-destructive">{errors.destination}</p>
-              )}
-            </div>
+          <h3 className="text-sm font-bold mb-4 uppercase tracking-wider text-slate-500">
+            Transport & Delivery Info
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <InputGroup
+              id="transportMode"
+              label="Transport Mode"
+              value={data.transportMode}
+              error={errors.transportMode}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="challanNo"
+              label="Challan No"
+              value={data.challanNo}
+              error={errors.challanNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="vehicleNo"
+              label="Vehicle No"
+              value={data.vehicleNo}
+              error={errors.vehicleNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="contactNo"
+              label="Contact No"
+              value={data.contactNo}
+              error={errors.contactNo}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="driverName"
+              label="Driver Name"
+              value={data.driverName}
+              error={errors.driverName}
+              onChange={onChange}
+            />
+            <InputGroup
+              id="notifyParty"
+              label="Notify Party"
+              value={data.notifyParty}
+              error={errors.notifyParty}
+              onChange={onChange}
+            />
           </div>
         </CardContent>
       </Card>
     </div>
   );
 };
-
 export default LCForm;

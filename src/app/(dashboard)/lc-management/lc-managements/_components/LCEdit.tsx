@@ -15,6 +15,7 @@ import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { LCManagement } from "./types";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
+import { toast } from "react-toastify";
 
 type Props = {
   id: string;
@@ -53,9 +54,21 @@ const LCEdit = ({ id }: Props) => {
         lcIssueBankName: lc.lcIssueBankName,
         lcIssueBankBranch: lc.lcIssueBankBranch,
         destination: lc.destination || "",
+        exportLcNo: lc.exportLcNo || "",
+        exportLcDate: lc.exportLcDate || "",
+        binNo: lc.binNo || "",
+        hsCodeNo: lc.hsCodeNo || "",
+        remarks: lc.remarks || "",
+        carrier: lc.carrier || "",
+        salesTerm: lc.salesTerm || "",
         issueDate: lc.issueDate,
         expiryDate: lc.expiryDate,
         amount: Number(lc.amount),
+        challanNo: lc.challanNo || "",
+        transportMode: lc.transportMode || "",
+        vehicleNo: lc.vehicleNo || "",
+        driverName: lc.driverName || "",
+        contactNo: lc.contactNo || "",
         invoiceId: lc.invoiceId,
       });
     }
@@ -75,6 +88,7 @@ const LCEdit = ({ id }: Props) => {
     if (!schemaResult.success) {
       const nextErrors = toFieldErrors(schemaResult.error.issues) as any;
       setErrors(nextErrors);
+      toast.error("Please fill in the required fields");
       return;
     }
 
@@ -86,6 +100,9 @@ const LCEdit = ({ id }: Props) => {
         dateOfOpening: new Date(draft.dateOfOpening).toISOString(),
         issueDate: new Date(draft.issueDate).toISOString(),
         expiryDate: new Date(draft.expiryDate).toISOString(),
+        exportLcDate: draft.exportLcDate
+          ? new Date(draft.exportLcDate).toISOString()
+          : undefined,
       };
 
       await patchItem({
@@ -94,12 +111,12 @@ const LCEdit = ({ id }: Props) => {
         invalidate: ["lc-managements"],
       }).unwrap();
 
+      toast.success("BBLC Updated Successfully");
       router.push(`/lc-management/lc-managements/${id}`);
     } catch (err: any) {
-      console.error(
-        "Update LC Error:",
-        err?.data?.message || "Failed to update LC",
-      );
+      const msg = err?.data?.message || "Failed to update LC";
+      console.error("Update LC Error:", msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
