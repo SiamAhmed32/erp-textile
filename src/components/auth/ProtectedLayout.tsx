@@ -8,16 +8,18 @@ import { TOKEN_NAME } from "@/lib/constants";
 import { useSelector } from "react-redux";
 import { usePathname } from "next/navigation";
 
-// Define module mapping based on Sidebar data
-const MODULE_ROUTES: { [key: string]: string } = {
-    "/": "dashboard",
-    "/company-profile": "company-profile",
-    "/users": "users",
-    "/buyers": "buyer",
-    "/invoice-terms": "invoice-terms",
-    "/order-management": "order-management",
-    "/invoice-management": "proforma-invoice",
-};
+import { navMain } from "@/lib/navigation";
+
+// Define module mapping based on shared navigation data
+const MODULE_ROUTES: { [key: string]: string } = navMain.reduce((acc, item) => {
+    if (item.url) acc[item.url] = item.module;
+    if (item.items) {
+        item.items.forEach(subItem => {
+            if (subItem.url) acc[subItem.url] = item.module;
+        });
+    }
+    return acc;
+}, {} as { [key: string]: string });
 
 export default function ProtectedLayout({
     children,
@@ -43,13 +45,32 @@ export default function ProtectedLayout({
 
         // RBAC Check
         if (user) {
+            const isDashboard = pathname === "/";
+            const userModules = user.modules || [];
+
             if (user.role !== "admin") {
                 // Find required module for current path
                 const requiredModule = Object.entries(MODULE_ROUTES).find(([route, module]) =>
                     pathname === route || pathname.startsWith(route + "/")
                 )?.[1];
 
-                if (requiredModule && !user.modules?.includes(requiredModule)) {
+                if (requiredModule && !userModules.includes(requiredModule)) {
+                    // Special case: if on dashboard and no access, redirect to first allowed route
+                    if (isDashboard) {
+                        const firstAllowedItem = navMain.find(item =>
+                            item.module && userModules.includes(item.module)
+                        );
+                        const firstAllowedRoute = firstAllowedItem?.url ||
+                            navMain.find(item =>
+                                item.items?.some(() => userModules.includes(item.module))
+                            )?.items?.[0]?.url;
+
+                        if (firstAllowedRoute) {
+                            router.push(firstAllowedRoute);
+                            return;
+                        }
+                    }
+
                     setIsUnauthorized(true);
                     setIsLoading(false);
                     return;

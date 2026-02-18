@@ -292,8 +292,8 @@ const OrderForm = ({
         </CardContent>
       </Card>
 
-      <Card className="overflow-hidden border-none shadow-premium bg-white">
-        <CardHeader className="bg-slate-50 border-b">
+      <Card className="overflow-hidden border-none shadow-premium bg-slate-50">
+        <CardHeader className=" border-b">
           <CardTitle className="flex items-center space-x-2 text-xl">
             <FileText className="h-5 w-5 text-slate-500" />
             <span>Additional Remarks</span>
@@ -534,9 +534,9 @@ const OrderForm = ({
                           </Label>
                           <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-red-50 w-full"
+                            variant="destructive"
+                            size="sm"
+                            className="w-full h-9 flex items-center justify-center gap-2 shadow-sm"
                             onClick={() => {
                               const next = rows.filter((_, i) => i !== index);
                               onNestedChange(
@@ -546,6 +546,9 @@ const OrderForm = ({
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="font-semibold text-xs">
+                              Delete
+                            </span>
                           </Button>
                         </div>
                       </div>
@@ -785,9 +788,9 @@ const OrderForm = ({
                           </Label>
                           <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="w-full text-destructive hover:bg-red-50"
+                            variant="destructive"
+                            size="sm"
+                            className="w-full h-9 flex items-center justify-center gap-2 shadow-sm"
                             onClick={() => {
                               const next = rows.filter((_, i) => i !== index);
                               onNestedChange(
@@ -797,6 +800,9 @@ const OrderForm = ({
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="font-semibold text-xs">
+                              Delete
+                            </span>
                           </Button>
                         </div>
                       </div>
@@ -1034,9 +1040,9 @@ const OrderForm = ({
                           </Label>
                           <Button
                             type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-red-50 mb-0.5 w-full"
+                            variant="destructive"
+                            size="sm"
+                            className="w-full h-9 flex items-center justify-center gap-2 shadow-sm"
                             onClick={() => {
                               const next = rows.filter((_, i) => i !== index);
                               onNestedChange(
@@ -1046,6 +1052,9 @@ const OrderForm = ({
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="font-semibold text-xs">
+                              Delete
+                            </span>
                           </Button>
                         </div>
                       </div>

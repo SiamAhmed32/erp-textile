@@ -14,6 +14,7 @@ import {
 } from "./types";
 import { InvoiceTermsList } from "./InvoiceTermsList";
 import { InvoiceTermsForm } from "./InvoiceTermsForm";
+import { InvoiceTermsViewModal } from "./InvoiceTermsViewModal";
 import { DeleteConfirmDialog } from "../shared/DeleteConfirmDialog";
 import {
   useGetAllQuery,
@@ -80,6 +81,7 @@ export function InvoiceTermsManagementPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<InvoiceTerms | null>(
     null,
   );
+  const [viewTarget, setViewTarget] = React.useState<InvoiceTerms | null>(null);
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
@@ -125,6 +127,10 @@ export function InvoiceTermsManagementPage() {
 
   const handleDelete = (item: InvoiceTerms) => {
     setDeleteTarget(item);
+  };
+
+  const handleView = (item: InvoiceTerms) => {
+    setViewTarget(item);
   };
 
   const confirmDelete = async () => {
@@ -219,6 +225,7 @@ export function InvoiceTermsManagementPage() {
         onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onView={handleView}
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
@@ -233,6 +240,13 @@ export function InvoiceTermsManagementPage() {
         onClose={() => setFormOpen(false)}
         onChange={handleFormChange}
         onSubmit={handleFormSubmit}
+      />
+
+      <InvoiceTermsViewModal
+        open={Boolean(viewTarget)}
+        terms={viewTarget}
+        onClose={() => setViewTarget(null)}
+        onEdit={handleEdit}
       />
 
       <DeleteConfirmDialog

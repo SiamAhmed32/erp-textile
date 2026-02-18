@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Next.js Starter Template",
+  title: "Moon Textile",
   description:
     "A premium Next.js starter template with Tailwind CSS and Redux Toolkit.",
 };

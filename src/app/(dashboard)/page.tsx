@@ -41,7 +41,9 @@ const Dashboard = () => {
       <Flex className="flex-col gap-8">
         <div>
           <PrimaryHeading>Dashboard</PrimaryHeading>
-          <PrimarySubHeading>Overview of your store's performance.</PrimarySubHeading>
+          <PrimarySubHeading>
+            Overview of your store's performance.
+          </PrimarySubHeading>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -50,6 +52,7 @@ const Dashboard = () => {
             value="$45,231.89"
             icon={TrendingUp}
             description="+20.1% from last month"
+            color="indigo"
           />
           <StatsCard
             title="Orders"
@@ -57,6 +60,7 @@ const Dashboard = () => {
             icon={ShoppingCart}
             description="+180.1% from last month"
             loading={loadingOrders}
+            color="orange"
           />
           <StatsCard
             title="Products"
@@ -64,6 +68,7 @@ const Dashboard = () => {
             icon={Package}
             description="+19% from last month"
             loading={loadingProducts}
+            color="purple"
           />
           <StatsCard
             title="Active Buyers"
@@ -71,6 +76,7 @@ const Dashboard = () => {
             icon={Users}
             description="+201 since last hour"
             loading={loadingBuyers}
+            color="green"
           />
         </div>
 
@@ -88,12 +94,20 @@ const Dashboard = () => {
                   Create New Order <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full justify-between">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-between"
+              >
                 <Link href="/invoice-management/invoices/add-new-invoice">
                   Create Invoice <ArrowUpRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full justify-between">
+              <Button
+                asChild
+                variant="outline"
+                className="w-full justify-between"
+              >
                 <Link href="/buyers/add-new-buyer">
                   Add New Buyer <ArrowUpRight className="h-4 w-4" />
                 </Link>

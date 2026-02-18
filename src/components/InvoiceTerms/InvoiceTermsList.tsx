@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
-import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Eye, SquarePen, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import CustomTable from "@/components/reusables/CustomTable";
@@ -13,6 +12,7 @@ type Props = {
   onCreate: () => void;
   onEdit: (terms: InvoiceTerms) => void;
   onDelete: (terms: InvoiceTerms) => void;
+  onView: (terms: InvoiceTerms) => void;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -26,6 +26,7 @@ export function InvoiceTermsList({
   onCreate,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
@@ -36,13 +37,7 @@ export function InvoiceTermsList({
       {
         header: "Name",
         accessor: (row: InvoiceTerms) => (
-          <Link
-            href={`/invoice-terms/${row.id}`}
-            className="font-semibold text-foreground underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.name}
-          </Link>
+          <span className="font-semibold text-foreground">{row.name}</span>
         ),
       },
       {
@@ -63,27 +58,50 @@ export function InvoiceTermsList({
       },
       {
         header: "Actions",
-        className: "text-right",
+        className: "text-left w-40 pr-4",
         accessor: (row: InvoiceTerms) => (
-          <div
-            className="flex justify-end gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-              Edit
+          <div className="flex justify-end gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete(row)}
+              size="icon"
+              variant="ghost"
+              title="Edit Terms"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
             >
-              Delete
+              <SquarePen className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Delete"
+              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onView, onEdit, onDelete],
   );
 
   return (
