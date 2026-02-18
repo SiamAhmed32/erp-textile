@@ -29,6 +29,7 @@ const UsersTable = ({
   onDelete = () => { },
 }: Props) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
+  const isAuthorized = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
 
   const columns = useMemo(
     () => [
@@ -120,10 +121,12 @@ const UsersTable = ({
         accessor: (row: User) => (
           <div className="flex justify-end gap-1">
             {/* Logic: 
+                - Only Admin or Super Admin can edit/delete
                 - Can't delete/edit self
-                - Admin can't delete/edit another Admin
+                - Admin can't delete/edit super_admin
+                - Admin can't delete/edit another Admin (previous logic)
             */}
-            {row.id !== currentUser?.id && (currentUser?.role !== 'admin' || row.role !== 'admin') && (
+            {row.id !== currentUser?.id && isAuthorized && (currentUser?.role === 'super_admin' || row.role !== 'super_admin') && (currentUser?.role === 'super_admin' || row.role !== 'admin') && (
               <>
                 <Button
                   size="icon"

@@ -25,6 +25,7 @@ import Cookies from "js-cookie";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { login as loginAction } from "@/store/slices/authSlice";
+import ForgotPasswordModal from "../auth/ForgotPasswordModal";
 
 export function LoginForm({
   className,
@@ -36,6 +37,7 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -93,12 +95,13 @@ export function LoginForm({
               <Field>
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    href="/reset-password"
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPasswordOpen(true)}
                     className="ml-auto cursor-pointer inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </Link>
+                  </button>
                 </div>
                 <div className="relative">
                   <Input
@@ -139,6 +142,10 @@ export function LoginForm({
           </form>
         </CardContent>
       </Card>
+      <ForgotPasswordModal
+        open={isForgotPasswordOpen}
+        onOpenChange={setIsForgotPasswordOpen}
+      />
     </div>
   );
 }
