@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Eye, Landmark, ListTree, PieChart, SquarePen, Trash2 } from "lucide-react";
+import { Activity, Eye, Landmark, ListTree, PieChart, SquarePen, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SelectBox } from "@/components/reusables";
 
 // Mock Data for Account Headers
 const mockHeaders = [
@@ -36,6 +37,11 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
     const resetForm = () => setFormData(initialFormData);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -53,8 +59,8 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
             title="Create Account Header"
             maxWidth="600px"
         >
-            <form onSubmit={handleSubmit} className="space-y-1">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+            <form onSubmit={handleSubmit} className="space-y-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
                     <InputField
                         label="Account Code"
                         name="accountCode"
@@ -63,24 +69,20 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
                         placeholder="e.g. 1003"
                         required
                     />
-                    <div className="mb-4">
-                        <Label htmlFor="accountType">Account Type <span className="text-red-400">*</span></Label>
-                        <select
-                            id="accountType"
-                            name="accountType"
-                            value={formData.accountType}
-                            onChange={(e) => setFormData((prev) => ({ ...prev, accountType: e.target.value }))}
-                            className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
-                            required
-                        >
-                            <option value="">Select Type</option>
-                            <option value="Asset">Asset</option>
-                            <option value="Liability">Liability</option>
-                            <option value="Revenue">Revenue</option>
-                            <option value="Expense">Expense</option>
-                            <option value="Equity">Equity</option>
-                        </select>
-                    </div>
+                    <SelectBox
+                        label="Account Type"
+                        name="accountType"
+                        value={formData.accountType}
+                        onChange={handleSelectChange}
+                        options={[
+                            { _id: "Asset", name: "Asset" },
+                            { _id: "Liability", name: "Liability" },
+                            { _id: "Revenue", name: "Revenue" },
+                            { _id: "Expense", name: "Expense" },
+                            { _id: "Equity", name: "Equity" },
+                        ]}
+                        required
+                    />
                 </div>
                 <InputField
                     label="Account Name"
@@ -90,23 +92,19 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
                     placeholder="e.g. Petty Cash"
                     required
                 />
-                <div className="mb-4">
-                    <Label htmlFor="parentCategory">Parent Category</Label>
-                    <select
-                        id="parentCategory"
-                        name="parentCategory"
-                        value={formData.parentCategory}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, parentCategory: e.target.value }))}
-                        className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
-                    >
-                        <option value="">Select Category</option>
-                        <option value="Current Asset">Current Asset</option>
-                        <option value="Fixed Asset">Fixed Asset</option>
-                        <option value="Current Liability">Current Liability</option>
-                        <option value="Long Term Debt">Long Term Debt</option>
-                        <option value="Operating Expense">Operating Expense</option>
-                    </select>
-                </div>
+                <SelectBox
+                    label="Parent Category"
+                    name="parentCategory"
+                    value={formData.parentCategory}
+                    onChange={handleSelectChange}
+                    options={[
+                        { _id: "Current Asset", name: "Current Asset" },
+                        { _id: "Fixed Asset", name: "Fixed Asset" },
+                        { _id: "Current Liability", name: "Current Liability" },
+                        { _id: "Long Term Debt", name: "Long Term Debt" },
+                        { _id: "Operating Expense", name: "Operating Expense" },
+                    ]}
+                />
                 <InputField
                     label="Opening Balance (৳)"
                     name="openingBalance"
@@ -127,10 +125,57 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
     );
 }
 
+function HeaderDetailsModal({ open, onClose, header }: { open: boolean; onClose: () => void; header: any }) {
+    if (!header) return null;
+
+    return (
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => { if (!val) onClose(); }}
+            title="Account Header Details"
+            maxWidth="500px"
+        >
+            <div className="space-y-4 py-2">
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Account Code</p>
+                        <p className="text-sm font-bold text-slate-900">{header.id}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Account Type</p>
+                        <p className="text-sm font-bold text-slate-900">{header.type}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Account Name</p>
+                        <p className="text-sm font-bold text-slate-900">{header.name}</p>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</p>
+                        <p className="text-sm font-bold text-slate-900">{header.category}</p>
+                    </div>
+                </div>
+                <div className="pt-4 border-t border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Balance</p>
+                    <p className="text-xl font-black text-secondary">৳ {header.balance.toLocaleString()}</p>
+                </div>
+                <div className="flex justify-end pt-2">
+                    <Button onClick={onClose} className="bg-secondary text-white">
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </CustomModal>
+    );
+}
+
 export default function AccountHeadersPage() {
     const [search, setSearch] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedHeader, setSelectedHeader] = useState<any>(null);
     const [typeFilter, setTypeFilter] = useState("all");
+
+    // ... (rest of the component remains the same)
 
     const columns = useMemo(() => [
         {
@@ -168,15 +213,17 @@ export default function AccountHeadersPage() {
         {
             header: "Actions",
             accessor: (row: any) => (
-                <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-black hover:bg-slate-100">
+                <div className="flex gap-1 justify-end pr-4">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                        onClick={() => {
+                            setSelectedHeader(row);
+                            setIsDetailsModalOpen(true);
+                        }}
+                    >
                         <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-black hover:bg-slate-100">
-                        <SquarePen className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
             ),
@@ -240,6 +287,11 @@ export default function AccountHeadersPage() {
             </div>
 
             <HeaderFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
+            <HeaderDetailsModal
+                open={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                header={selectedHeader}
+            />
         </Container>
     );
 }

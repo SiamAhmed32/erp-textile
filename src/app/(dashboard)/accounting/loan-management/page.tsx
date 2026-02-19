@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, Info, Banknote, Eye, FileDown } from "lucide-react";
+import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, Info, Banknote, Eye, FileDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { SelectBox } from "@/components/reusables";
 
 /* ─── Mock ──────────────────────────────────────────────── */
 interface ScheduleItem {
@@ -93,6 +95,11 @@ function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () =>
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
     const resetForm = () => setFormData(initialFormData);
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -110,7 +117,7 @@ function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () =>
             title="Add New Stakeholder / Lender"
             maxWidth="600px"
         >
-            <form onSubmit={handleSubmit} className="space-y-1">
+            <form onSubmit={handleSubmit} className="space-y-0">
                 <InputField
                     label="Lender Name"
                     name="lenderName"
@@ -119,22 +126,18 @@ function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () =>
                     placeholder="e.g. Brac Bank"
                     required
                 />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
-                    <div className="mb-4">
-                        <Label htmlFor="lenderType">Lender Type</Label>
-                        <select
-                            id="lenderType"
-                            name="lenderType"
-                            value={formData.lenderType}
-                            onChange={(e) => setFormData((prev) => ({ ...prev, lenderType: e.target.value }))}
-                            className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
-                        >
-                            <option value="">Select Type</option>
-                            <option value="bank">Bank</option>
-                            <option value="director">Director</option>
-                            <option value="personal">Personal</option>
-                        </select>
-                    </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                    <SelectBox
+                        label="Lender Type"
+                        name="lenderType"
+                        value={formData.lenderType}
+                        onChange={handleSelectChange}
+                        options={[
+                            { _id: "bank", name: "Bank" },
+                            { _id: "director", name: "Director" },
+                            { _id: "personal", name: "Personal" },
+                        ]}
+                    />
                     <InputField
                         label="Interest Rate (%)"
                         name="interestRate"
@@ -214,17 +217,15 @@ export default function LoanManagementPage() {
         {
             header: "Action",
             accessor: (row: Loan) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-black hover:bg-slate-100"
-                    onClick={() => {
-                        setSelectedLoanId(row.id);
-                        setViewMode("details");
-                    }}
-                >
-                    <Eye className="h-4 w-4" />
-                </Button>
+                <Link href={`/accounting/loan-management/${row.id}`}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                    >
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                </Link>
             )
         }
     ], []);
@@ -280,96 +281,12 @@ export default function LoanManagementPage() {
                     <StatsCard title="Net Liability" value="৳ 4,99,617" icon={TrendingDown} color="red" />
                 </div>
 
-                {viewMode === "list" ? (
-                    <>
-                        {/* Toolbar */}
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-                                <Input
-                                    placeholder="Search by lender name or type..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                                <Button variant="outline" onClick={() => { }}>
-                                    Search
-                                </Button>
-                            </div>
-                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-                                <div className="w-full sm:max-w-[160px]">
-                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="All Status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Status</SelectItem>
-                                            <SelectItem value="active">Active</SelectItem>
-                                            <SelectItem value="settled">Settled</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                <div className="flex w-full gap-2 sm:max-w-[260px]">
-                                    <Input type="date" />
-                                    <Input type="date" />
-                                </div>
-                                <Button
-                                    className="bg-black text-white hover:bg-black/90"
-                                    onClick={() => setIsAddModalOpen(true)}
-                                >
-                                    Add Stakeholder
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Loan Table */}
-                        <CustomTable
-                            data={loans}
-                            columns={listColumns}
-                            rowClassName="cursor-pointer"
-                            scrollAreaHeight="h-[calc(100vh-320px)]"
-                        />
-                    </>
-                ) : (
-                    <div className="space-y-4 animate-in fade-in duration-500">
-                        {/* Back Button */}
-                        <div className="flex items-center">
-                            <Button
-                                variant="outline"
-                                onClick={() => setViewMode("list")}
-                            >
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-                            </Button>
-                        </div>
-
-                        {/* Detail Toolbar */}
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="size-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
-                                    <Banknote className="size-6" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-lg text-slate-900 leading-tight">{selectedLoan?.lender}</h3>
-                                    <p className="text-xs text-muted-foreground">{selectedLoan?.type.toUpperCase()} FACILITY · {selectedLoan?.interestRate}% APR</p>
-                                </div>
-                            </div>
-                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-                                <div className="flex w-full gap-2 sm:max-w-[260px]">
-                                    <Input type="date" />
-                                    <Input type="date" />
-                                </div>
-                                <Button className="bg-black text-white hover:bg-black/90">
-                                    <FileDown className="size-4 mr-2" /> Export Schedule
-                                </Button>
-                            </div>
-                        </div>
-
-                        {/* Amortization Schedule Table */}
-                        <CustomTable
-                            data={selectedLoan?.schedule || []}
-                            columns={detailColumns}
-                            scrollAreaHeight="h-[calc(100vh-400px)]"
-                        />
-                    </div>
-                )}
+                {/* Loan Table */}
+                <CustomTable
+                    data={loans}
+                    columns={listColumns}
+                    scrollAreaHeight="h-[calc(100vh-320px)]"
+                />
             </div>
 
             <StakeholderFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />

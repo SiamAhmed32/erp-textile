@@ -8,20 +8,76 @@ import StatsCard from "@/components/dashboard/StatsCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, SquarePen, Trash2, BookOpen, Receipt, History, Plus } from "lucide-react";
+import { Eye, SquarePen, Trash2, BookOpen, Receipt, History, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CustomModal } from "@/components/reusables";
 
-// Mock Data for Journal Entries
 const mockEntries = [
     { id: 'JE-2024-001', date: '18 Feb 2026', type: 'Customer Due', party: 'Rahim Corp', amount: 75000, narration: 'Sold goods on credit', status: 'Posted' },
     { id: 'JE-2024-002', date: '17 Feb 2026', type: 'Expense', party: 'Office Expense', amount: 5000, narration: 'Monthly office rent', status: 'Posted' },
     { id: 'JE-2024-003', date: '16 Feb 2026', type: 'Receipt', party: 'Karim Traders', amount: 30000, narration: 'Payment received', status: 'Posted' },
 ];
 
+function JournalEntryDetailsModal({ open, onClose, entry }: { open: boolean; onClose: () => void; entry: any }) {
+    if (!entry) return null;
+
+    return (
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => { if (!val) onClose(); }}
+            title="Journal Entry Details"
+            maxWidth="600px"
+        >
+            <div className="space-y-4 py-2">
+                <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Entry ID</p>
+                        <p className="text-base font-black text-slate-900">{entry.id}</p>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Date</p>
+                        <p className="text-sm font-bold text-slate-700">{entry.date}</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Type</p>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 uppercase">
+                            {entry.type}
+                        </span>
+                    </div>
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Party / Head</p>
+                        <p className="text-sm font-bold text-slate-900">{entry.party}</p>
+                    </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-lg p-4">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Narration</p>
+                    <p className="text-sm text-slate-600 italic">"{entry.narration}"</p>
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount</p>
+                        <p className="text-2xl font-black text-secondary">৳ {entry.amount.toLocaleString()}</p>
+                    </div>
+                    <Button onClick={onClose} className="bg-secondary text-white">
+                        Close
+                    </Button>
+                </div>
+            </div>
+        </CustomModal>
+    );
+}
+
 export default function DailyBookkeepingList() {
     const router = useRouter();
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState("all");
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
     const columns = useMemo(() => [
         {
@@ -57,15 +113,17 @@ export default function DailyBookkeepingList() {
         {
             header: "Actions",
             accessor: (row: any) => (
-                <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-black hover:bg-slate-100">
+                <div className="flex gap-1 justify-end pr-4">
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                        onClick={() => {
+                            setSelectedEntry(row);
+                            setIsDetailsModalOpen(true);
+                        }}
+                    >
                         <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-black hover:bg-slate-100">
-                        <SquarePen className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50">
-                        <Trash2 className="h-4 w-4" />
                     </Button>
                 </div>
             ),
@@ -123,7 +181,6 @@ export default function DailyBookkeepingList() {
                     </div>
                 </div>
 
-                {/* Entry Table */}
                 <CustomTable
                     data={mockEntries}
                     columns={columns}
@@ -131,6 +188,12 @@ export default function DailyBookkeepingList() {
                     scrollAreaHeight="h-[calc(100vh-320px)]"
                 />
             </div>
+
+            <JournalEntryDetailsModal
+                open={isDetailsModalOpen}
+                onClose={() => setIsDetailsModalOpen(false)}
+                entry={selectedEntry}
+            />
         </Container>
     );
 }
