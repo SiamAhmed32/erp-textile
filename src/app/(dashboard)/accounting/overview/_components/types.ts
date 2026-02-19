@@ -73,17 +73,7 @@ export const mockAccountingStats: AccountingStat[] = [
 ];
 
 export const mockModuleSummaries: ModuleSummary[] = [
-    {
-        title: "Customer Ledger",
-        description: "Track customer balances and payments",
-        icon: "Users",
-        href: "/accounting/customer-ledger",
-        color: "bg-indigo-50",
-        metrics: [
-            { label: "Total Customers", value: "2" },
-            { label: "Total Receivables", value: "$11,990.81" }
-        ]
-    },
+
     {
         title: "Supplier Ledger",
         description: "Manage supplier accounts and payments",
