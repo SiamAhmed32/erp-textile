@@ -1,24 +1,17 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Box, Container, PrimaryHeading, PrimarySubHeading, ButtonPrimary, CustomModal } from "@/components/reusables";
+import { Container, CustomModal, InputField } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import StatsCard from "@/components/dashboard/StatsCard";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Wallet, CheckCircle2, AlertCircle, ArrowLeft, History, Info, Eye, UserPlus, FileDown, Calendar, Search } from "lucide-react";
+import { Wallet, CheckCircle2, AlertCircle, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 /* ─── Mock data ─────────────────────────────────────────── */
-interface Transaction {
-    ref: string;
-    date: string;
-    type: string;
-    amount: number;
-    balance: number;
-    note: string;
-}
-
 interface EmployeeIOU {
     id: string;
     name: string;
@@ -27,289 +20,185 @@ interface EmployeeIOU {
     totalReturned: number;
     outstanding: number;
     lastTransaction: string;
-    transactions: Transaction[];
 }
 
 const employees: EmployeeIOU[] = [
-    {
-        id: "1",
-        name: "Salim Ahmed",
-        designation: "Production Manager",
-        totalIssued: 15000,
-        totalReturned: 5000,
-        outstanding: 10000,
-        lastTransaction: "17 Feb 2026",
-        transactions: [
-            { ref: "JE-046", date: "15 Feb 2026", type: "Advance", amount: 15000, balance: 15000, note: "Travel advance issued" },
-            { ref: "JE-048", date: "17 Feb 2026", type: "Return", amount: -5000, balance: 10000, note: "Partial return from trip" },
-        ],
-    },
-    {
-        id: "2",
-        name: "Kamal Hossain",
-        designation: "Executive (Admin)",
-        totalIssued: 8000,
-        totalReturned: 8000,
-        outstanding: 0,
-        lastTransaction: "16 Feb 2026",
-        transactions: [
-            { ref: "JE-044", date: "12 Feb 2026", type: "Advance", amount: 8000, balance: 8000, note: "Cash advance for supplies" },
-            { ref: "JE-047", date: "16 Feb 2026", type: "Return", amount: -8000, balance: 0, note: "Fully settled with receipts" },
-        ],
-    },
-    {
-        id: "3",
-        name: "Rina Begum",
-        designation: "Support Staff",
-        totalIssued: 5000,
-        totalReturned: 0,
-        outstanding: 5000,
-        lastTransaction: "18 Feb 2026",
-        transactions: [
-            { ref: "JE-050", date: "18 Feb 2026", type: "Advance", amount: 5000, balance: 5000, note: "Petty cash issued" },
-        ],
-    },
+    { id: "1", name: "Salim Ahmed", designation: "Production Manager", totalIssued: 15000, totalReturned: 5000, outstanding: 10000, lastTransaction: "17 Feb 2026" },
+    { id: "2", name: "Kamal Hossain", designation: "Executive (Admin)", totalIssued: 8000, totalReturned: 8000, outstanding: 0, lastTransaction: "16 Feb 2026" },
+    { id: "3", name: "Rina Begum", designation: "Support Staff", totalIssued: 5000, totalReturned: 0, outstanding: 5000, lastTransaction: "18 Feb 2026" },
 ];
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
 
-function EmployeeFormModal({ open, onClose }: { open: boolean, onClose: () => void }) {
+const initialFormData = {
+    employeeName: "",
+    designation: "",
+    employeeId: "",
+    openingBalance: "",
+};
+
+function EmployeeFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const [formData, setFormData] = useState(initialFormData);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const resetForm = () => setFormData(initialFormData);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onClose();
+        resetForm();
+    };
+
     return (
-        <CustomModal open={open} onOpenChange={(v) => !v && onClose()} title="Add New Employee Record" maxWidth="600px">
-            <div className="space-y-4 pt-2 font-outfit">
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Employee Full Name</label>
-                    <input type="text" className="form-input" placeholder="e.g. Tanvir Ahmed" />
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => {
+                if (!val) { onClose(); resetForm(); }
+            }}
+            title="Add New Employee Record"
+            maxWidth="600px"
+        >
+            <form onSubmit={handleSubmit} className="space-y-1">
+                <InputField
+                    label="Employee Full Name"
+                    name="employeeName"
+                    value={formData.employeeName}
+                    onChange={handleChange}
+                    placeholder="e.g. Tanvir Ahmed"
+                    required
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+                    <InputField
+                        label="Designation"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleChange}
+                        placeholder="e.g. Sales Officer"
+                        required
+                    />
+                    <InputField
+                        label="Employee ID"
+                        name="employeeId"
+                        value={formData.employeeId}
+                        onChange={handleChange}
+                        placeholder="e.g. EMP-1024"
+                    />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Designation</label>
-                        <input type="text" className="form-input" placeholder="e.g. Sales Officer" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Employee ID</label>
-                        <input type="text" className="form-input" placeholder="e.g. EMP-1024" />
-                    </div>
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Opening Advance Balance (৳)</label>
-                    <input type="text" className="form-input" placeholder="0.00" />
-                </div>
+                <InputField
+                    label="Opening Advance Balance (৳)"
+                    name="openingBalance"
+                    value={formData.openingBalance}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                />
                 <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={onClose} className="font-bold">Cancel</Button>
-                    <ButtonPrimary onClick={onClose} className="font-bold">Register Employee</ButtonPrimary>
+                    <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                        Register Employee
+                    </Button>
                 </div>
-            </div>
+            </form>
         </CustomModal>
     );
 }
 
 export default function CashBookPage() {
-    const [viewMode, setViewMode] = useState<"list" | "details">("list");
-    const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [search, setSearch] = useState("");
 
-    const selectedEmployee = employees.find(e => e.id === selectedEmployeeId);
-
     const listColumns = useMemo(() => [
         {
-            header: "Employee Details",
+            header: "Employee",
             accessor: (row: EmployeeIOU) => (
-                <div className="py-2">
-                    <div className="font-bold text-sm text-slate-900 leading-tight">{row.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-widest font-bold mt-0.5">{row.designation}</div>
-                </div>
+                <div className="font-semibold text-foreground">{row.name}</div>
             )
+        },
+        {
+            header: "Designation",
+            accessor: (row: EmployeeIOU) => row.designation,
         },
         {
             header: "Total Advance",
-            className: "text-right",
-            accessor: (row: EmployeeIOU) => <span className="font-mono text-sm text-amber-600 font-bold">{fmt(row.totalIssued)}</span>
+            accessor: (row: EmployeeIOU) => fmt(row.totalIssued),
         },
         {
             header: "Settled",
-            className: "text-right",
-            accessor: (row: EmployeeIOU) => <span className="font-mono text-sm text-emerald-600 font-bold">{fmt(row.totalReturned)}</span>
+            accessor: (row: EmployeeIOU) => fmt(row.totalReturned),
         },
         {
             header: "Current IOU",
-            className: "text-right",
-            accessor: (row: EmployeeIOU) => <span className="font-mono text-sm font-black text-red-600">{fmt(row.outstanding)}</span>
+            accessor: (row: EmployeeIOU) => fmt(row.outstanding),
         },
         {
             header: "Last Activity",
-            accessor: (row: EmployeeIOU) => <span className="text-xs text-slate-500 font-medium">{row.lastTransaction}</span>
+            accessor: (row: EmployeeIOU) => row.lastTransaction,
         },
         {
             header: "Action",
-            className: "text-right",
             accessor: (row: EmployeeIOU) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-black hover:bg-slate-100"
-                    onClick={() => {
-                        setSelectedEmployeeId(row.id);
-                        setViewMode("details");
-                    }}
-                >
-                    <Eye className="h-4 w-4" />
-                </Button>
+                <Link href={`/accounting/cash-book/${row.id}`}>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                    >
+                        <Eye className="h-4 w-4" />
+                    </Button>
+                </Link>
             )
-        }
-    ], []);
-
-    const detailColumns = useMemo(() => [
-        {
-            header: "Ref No",
-            accessor: (row: Transaction) => <span className="font-mono text-slate-500 font-bold">{row.ref}</span>
-        },
-        {
-            header: "Date",
-            accessor: (row: Transaction) => <span className="text-slate-600 font-medium">{row.date}</span>
-        },
-        {
-            header: "Type",
-            accessor: (row: Transaction) => (
-                <span className={cn(
-                    "inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-tight",
-                    row.type === "Return" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
-                )}>
-                    {row.type}
-                </span>
-            )
-        },
-        {
-            header: "Amount",
-            className: "text-right",
-            accessor: (row: Transaction) => (
-                <span className={cn("font-mono font-black",
-                    row.amount > 0 ? "text-amber-600" : "text-emerald-700"
-                )}>{row.amount > 0 ? "+" : ""}{fmt(row.amount)}</span>
-            )
-        },
-        {
-            header: "Balance",
-            className: "text-right",
-            accessor: (row: Transaction) => <span className="font-mono font-black text-slate-900">{fmt(row.balance)}</span>
-        },
-        {
-            header: "Note",
-            accessor: (row: Transaction) => <span className="text-slate-500 italic font-medium">{row.note}</span>
         }
     ], []);
 
     return (
-        <Container className="space-y-6 !p-0 pb-10 font-outfit">
-            <div className="flex justify-between items-start">
-                <Box>
-                    <PrimaryHeading>MOI / Cash Book</PrimaryHeading>
-                    <PrimarySubHeading>Employee advances, petty cash management and IOU recovery tracking</PrimarySubHeading>
-                </Box>
-                {viewMode === "details" && (
-                    <Button
-                        variant="outline"
-                        onClick={() => setViewMode("list")}
-                        className="mt-2 border-slate-200 font-bold text-slate-600 h-9"
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-                    </Button>
-                )}
-            </div>
+        <Container className="pb-10">
+            <div className="space-y-4">
+                {/* Stats Cards */}
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <StatsCard title="Total Employees" value={employees.length} icon={Wallet} color="blue" />
+                    <StatsCard title="Total Advanced" value="৳ 28,000" icon={Wallet} color="orange" />
+                    <StatsCard title="Settled to Date" value="৳ 13,000" icon={CheckCircle2} color="green" />
+                    <StatsCard title="Net Outstanding" value="৳ 15,000" icon={AlertCircle} color="red" />
+                </div>
 
-            {/* KPI Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatsCard title="Total Advanced" value="৳ 28,000" icon={Wallet} color="blue" description="Total cash out to team" />
-                <StatsCard title="Settled to Date" value="৳ 13,000" icon={CheckCircle2} color="green" description="Successfully recovered/adjusted" />
-                <StatsCard title="Net Outstanding" value="৳ 15,000" icon={AlertCircle} color="red" description="Active employee liabilities" />
-            </div>
-
-            {viewMode === "list" ? (
-                <>
-                    {/* Standardized Toolbar - Matches Image Reference */}
-                    <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-                            <Input
-                                placeholder="Search by employee name or designation..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
-                            />
-                            <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
-                                Search
-                            </Button>
-                        </div>
-
-                        <Button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-8 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 ml-auto"
-                        >
-                            <UserPlus className="size-3.5" /> Add Employee
+                {/* Toolbar */}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                        <Input
+                            placeholder="Search by employee name or designation..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <Button variant="outline" onClick={() => { }}>
+                            Search
                         </Button>
                     </div>
-
-                    {/* Employee Table */}
-                    <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
-                        <CustomTable
-                            data={employees}
-                            columns={listColumns}
-                            scrollAreaHeight="h-auto"
-                            rowClassName="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
-                        />
-                    </Box>
-                </>
-            ) : (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                    {/* Detail Toolbar */}
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="size-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl">
-                                {selectedEmployee?.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h3 className="font-black text-lg text-slate-900 leading-tight">{selectedEmployee?.name}</h3>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedEmployee?.designation}</p>
-                            </div>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                        <div className="flex w-full gap-2 sm:max-w-[260px]">
+                            <Input type="date" />
+                            <Input type="date" />
                         </div>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-                            <div className="flex gap-2">
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-50 border-slate-200 font-medium w-[160px]" />
-                                </div>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-50 border-slate-200 font-medium w-[160px]" />
-                                </div>
-                            </div>
-                            <Button className="bg-emerald-600 text-white hover:bg-emerald-700 h-11 px-6 font-black uppercase tracking-widest text-[11px] flex items-center gap-2">
-                                <FileDown className="size-4" /> Export PDF
-                            </Button>
-                        </div>
+                        <Button
+                            className="bg-black text-white hover:bg-black/90"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            Add Employee
+                        </Button>
                     </div>
-
-                    {/* Transaction History Table */}
-                    <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
-                        <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Transaction Timeline</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-slate-500 uppercase">Current Balance:</span>
-                                <span className="font-mono font-black text-red-500 text-sm">{fmt(selectedEmployee?.outstanding || 0)}</span>
-                            </div>
-                        </div>
-                        <CustomTable
-                            data={selectedEmployee?.transactions || []}
-                            columns={detailColumns}
-                            scrollAreaHeight="h-auto"
-                            rowClassName="border-b border-slate-50 last:border-0"
-                        />
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <Info className="size-3" /> All movements are automatically synced with financial journals
-                        </div>
-                    </Box>
                 </div>
-            )}
+
+                {/* Employee Table */}
+                <CustomTable
+                    data={employees}
+                    columns={listColumns}
+                    scrollAreaHeight="h-[calc(100vh-320px)]"
+                />
+            </div>
 
             <EmployeeFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
         </Container>
