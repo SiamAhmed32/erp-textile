@@ -14,6 +14,7 @@ export type LoginBodyType = {
 export interface AuthState {
 	token: string | null;
 	loggedIn: boolean;
+	user: any | null;
 }
 
 export interface RootState {

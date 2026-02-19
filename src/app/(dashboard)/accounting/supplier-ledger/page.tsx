@@ -215,42 +215,52 @@ export default function SupplierLedgerPage() {
                 <StatsCard title="Outstanding" value="৳ 32,000" icon={AlertCircle} color="red" description="Total current payable" />
             </div>
 
-            {/* Standardized Toolbar - Exactly like Image 2 */}
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+            {/* Standardized Toolbar - Matching Image Reference */}
+            <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-2 flex-1 min-w-[300px]">
                     <Input
-                        placeholder="Search supplier name or code..."
+                        placeholder="Search PI number, order, terms..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="bg-slate-50 border-slate-200 focus:bg-white transition-all shadow-inner font-medium h-11"
+                        className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
                     />
-                    <Button variant="outline" className="shrink-0 h-11 px-6 font-bold text-slate-600 hover:bg-slate-50 border-slate-200">
+                    <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
                         Search
                     </Button>
                 </div>
-                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-                    <div className="w-full sm:max-w-[160px]">
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="h-11 bg-slate-50 border-slate-200 font-bold text-slate-600">
-                                <SelectValue placeholder="All Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
-                                <SelectItem value="active">Active</SelectItem>
-                                <SelectItem value="settled">Settled</SelectItem>
-                                <SelectItem value="overdue">Overdue</SelectItem>
-                            </SelectContent>
-                        </Select>
+
+                <div className="flex items-center gap-2 ml-auto">
+                    <Select defaultValue="all">
+                        <SelectTrigger className="w-[130px] h-10 bg-white border-slate-200 font-bold text-slate-600">
+                            <SelectValue placeholder="All Types" />
+                        </SelectTrigger>
+                        <SelectContent className="font-outfit">
+                            <SelectItem value="all">All Types</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-[130px] h-10 bg-white border-slate-200 font-bold text-slate-600">
+                            <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent className="font-outfit">
+                            <SelectItem value="all">All Status</SelectItem>
+                            <SelectItem value="active">Active</SelectItem>
+                            <SelectItem value="settled">Settled</SelectItem>
+                            <SelectItem value="overdue">Overdue</SelectItem>
+                        </SelectContent>
+                    </Select>
+
+                    <div className="flex items-center gap-1">
+                        <Input type="date" className="h-10 w-[130px] bg-white border-slate-200 font-medium text-xs" />
+                        <Input type="date" className="h-10 w-[130px] bg-white border-slate-200 font-medium text-xs" />
                     </div>
-                    <div className="flex w-full gap-2 sm:max-w-[280px]">
-                        <Input type="date" className="h-11 bg-slate-50 border-slate-200 font-medium" />
-                        <Input type="date" className="h-11 bg-slate-50 border-slate-200 font-medium" />
-                    </div>
+
                     <Button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-black text-white hover:bg-slate-800 shrink-0 h-11 px-8 font-black uppercase tracking-widest text-[11px] flex items-center gap-2"
+                        className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-6 font-black uppercase tracking-widest text-[10px] flex items-center gap-1.5"
                     >
-                        <UserPlus className="size-4" /> Add Supplier
+                        <UserPlus className="size-3.5" /> Add Supplier
                     </Button>
                 </div>
             </div>

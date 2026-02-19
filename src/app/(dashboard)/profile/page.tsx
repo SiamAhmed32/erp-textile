@@ -5,18 +5,20 @@ import React, { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Mail, User, Shield, Calendar, Clock, AtSign, Pencil, X, Save, Camera } from "lucide-react";
+import { Mail, User, Shield, Calendar, Clock, AtSign, Pencil, X, Save, Camera, Key, Eye, EyeOff, Lock } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { usePatchUpdateSelfMutation } from "@/store/services/authApi";
+import { usePatchUpdateSelfMutation, useUpdatePasswordMutation } from "@/store/services/authApi";
 import { useDispatch } from "react-redux";
 import { updateUser } from "@/store/slices/authSlice";
+import { CustomModal, InputField } from "@/components/reusables";
 
 interface UserData {
     id: string;
     email: string;
+    designation: string;
     username: string;
     firstName: string;
     lastName: string;
@@ -36,8 +38,22 @@ export default function ProfilePage() {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [updateProfile, { isLoading: isUpdating }] = usePatchUpdateSelfMutation();
+    const [updatePassword, { isLoading: isUpdatingPassword }] = useUpdatePasswordMutation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dispatch = useDispatch();
+
+    // Password change state
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [passwordFormData, setPasswordFormData] = useState({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+    });
+    const [showPasswords, setShowPasswords] = useState({
+        current: false,
+        new: false,
+        confirm: false
+    });
 
     useEffect(() => {
         if (typeof window !== "undefined") {
@@ -91,6 +107,32 @@ export default function ProfilePage() {
         } catch (error) {
             console.error("Failed to update profile", error);
             toast.error("Failed to update profile");
+        }
+    };
+
+    const handlePasswordChange = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
+            toast.error("New passwords do not match");
+            return;
+        }
+        if (passwordFormData.newPassword.length < 6) {
+            toast.error("Password must be at least 6 characters long");
+            return;
+        }
+
+        try {
+            await updatePassword({
+                currentPassword: passwordFormData.currentPassword,
+                newPassword: passwordFormData.newPassword
+            }).unwrap();
+
+            toast.success("Password changed successfully");
+            setIsPasswordModalOpen(false);
+            setPasswordFormData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+        } catch (error: any) {
+            console.error("Failed to update password", error);
+            toast.error(error?.data?.message || error?.data?.error?.message || "Failed to update password");
         }
     };
 
@@ -282,12 +324,12 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="flex gap-2 mt-3">
-                            <p className="text-muted-foreground bg-secondary/50 px-3 py-1 rounded-full text-sm font-medium capitalize">
-                                {userData.role}
+                            <p className="text-muted-foreground bg-secondary/10 px-3 py-1 rounded-full text-sm font-medium capitalize">
+                                {userData?.designation || 'N/A'}
                             </p>
-                            <p className={`text-muted-foreground px-3 py-1 rounded-full text-sm font-medium capitalize ${userData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            {/* <p className={`text-muted-foreground px-3 py-1 rounded-full text-sm font-medium capitalize ${userData.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                                 {userData.status.replace('_', ' ')}
-                            </p>
+                            </p> */}
                         </div>
                     </div>
                 </CardHeader>
@@ -347,8 +389,109 @@ export default function ProfilePage() {
                             {formatDate(userData.createdAt)}
                         </p>
                     </div>
+
+                    <div className="space-y-1 col-span-1 md:col-span-2 border-t pt-4">
+                        <h3 className="font-medium text-sm text-muted-foreground flex items-center gap-2">
+                            <Lock className="h-4 w-4" /> Password
+                        </h3>
+                        <div className="flex items-center gap-3">
+                            <p className="text-lg font-medium tracking-widest">••••••</p>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2 ml-4"
+                                onClick={() => setIsPasswordModalOpen(true)}
+                            >
+                                <Key className="h-4 w-4" /> Change Password
+                            </Button>
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
+
+            <CustomModal
+                open={isPasswordModalOpen}
+                onOpenChange={setIsPasswordModalOpen}
+                title="Change Password"
+                maxWidth="450px"
+            >
+                <form onSubmit={handlePasswordChange} className="space-y-4">
+                    <div className="relative">
+                        <InputField
+                            label="Current Password"
+                            name="currentPassword"
+                            type={showPasswords.current ? "text" : "password"}
+                            value={passwordFormData.currentPassword}
+                            onChange={(e) => setPasswordFormData({ ...passwordFormData, currentPassword: e.target.value })}
+                            placeholder="••••••"
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowPasswords({ ...showPasswords, current: !showPasswords.current })}
+                        >
+                            {showPasswords.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                    </div>
+
+                    <div className="relative">
+                        <InputField
+                            label="New Password"
+                            name="newPassword"
+                            type={showPasswords.new ? "text" : "password"}
+                            value={passwordFormData.newPassword}
+                            onChange={(e) => setPasswordFormData({ ...passwordFormData, newPassword: e.target.value })}
+                            placeholder="••••••"
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowPasswords({ ...showPasswords, new: !showPasswords.new })}
+                        >
+                            {showPasswords.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                    </div>
+
+                    <div className="relative">
+                        <InputField
+                            label="Confirm New Password"
+                            name="confirmPassword"
+                            type={showPasswords.confirm ? "text" : "password"}
+                            value={passwordFormData.confirmPassword}
+                            onChange={(e) => setPasswordFormData({ ...passwordFormData, confirmPassword: e.target.value })}
+                            placeholder="••••••"
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="absolute right-3 top-[38px] text-muted-foreground hover:text-foreground"
+                            onClick={() => setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm })}
+                        >
+                            {showPasswords.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4 border-t">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsPasswordModalOpen(false)}
+                            disabled={isUpdatingPassword}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="bg-secondary"
+                            disabled={isUpdatingPassword}
+                        >
+                            {isUpdatingPassword ? "Updating..." : "Update Password"}
+                        </Button>
+                    </div>
+                </form>
+            </CustomModal>
         </div>
     );
 }

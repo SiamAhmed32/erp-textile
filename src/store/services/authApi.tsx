@@ -55,6 +55,16 @@ export const authApi = createApi({
     updateUser: builder.mutation<any, { id: string; body: any }>({
       query: ({ id, body }) => ({
         url: `/users/${id}`,
+        method: "PATCH",
+        body,
+        formData: true,
+      }),
+      invalidatesTags: ["users" as any],
+    }),
+
+    deleteUser: builder.mutation<any, { id: string; body: { isDeleted: boolean } }>({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
         method: "PUT",
         body,
       }),
@@ -112,13 +122,6 @@ export const authApi = createApi({
       invalidatesTags: (result, error, { field }) => [field, "self"],
     }),
 
-    requestPasswordChange: builder.mutation({
-      query: ({ email }) => ({
-        url: `auth/request-password-change`, // ✅ unchanged
-        method: "POST",
-        body: { email },
-      }),
-    }),
     patchUpdateSelf: builder.mutation<any, any>({
       query: (body) => ({
         url: `/users/update-profile`,
@@ -128,17 +131,26 @@ export const authApi = createApi({
       }),
       invalidatesTags: ["self"],
     }),
-    verifyToken: builder.query({
-      query: ({ token }) => ({
-        url: `auth/verify-reset-token/${token}`, // ✅ unchanged
-        method: "GET",
+
+    forgotPassword: builder.mutation<any, { email: string }>({
+      query: (body) => ({
+        url: `auth/forgot-password`,
+        method: "POST",
+        body,
       }),
     }),
-    resetPassword: builder.mutation({
-      query: ({ token, password }) => ({
-        url: `auth/reset`, // ✅ unchanged
+    verifyResetOTP: builder.mutation<any, { email: string; code: string }>({
+      query: (body) => ({
+        url: `auth/verify-reset-password-OTP`,
         method: "POST",
-        body: { token, password },
+        body,
+      }),
+    }),
+    resetPassword: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `auth/reset-password`,
+        method: "POST",
+        body,
       }),
     }),
   }),
@@ -151,14 +163,15 @@ export const {
   useRegisterMutation,
   useUpdatePasswordMutation,
   useUpdateSelfMutation,
-  useRequestPasswordChangeMutation,
-  useVerifyTokenQuery,
+  useForgotPasswordMutation,
+  useVerifyResetOTPMutation,
   useResetPasswordMutation,
   usePlaceOrderMutation,
   useGetMyOrdersQuery,
   useGetSingleOrderQuery,
   useGetUsersQuery,
   useUpdateUserMutation,
+  useDeleteUserMutation,
   usePatchUpdateSelfMutation,
 } = authApi;
 

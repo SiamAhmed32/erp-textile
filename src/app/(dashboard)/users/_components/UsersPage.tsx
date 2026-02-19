@@ -4,7 +4,9 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/reusables/PrimaryButton";
-import { useGetUsersQuery, useUpdateUserMutation } from "@/store/services/authApi";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store/services/types";
+import { useGetUsersQuery, useUpdateUserMutation, useDeleteUserMutation } from "@/store/services/authApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
@@ -21,7 +23,11 @@ const UsersPage = () => {
     const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
     const { data, isLoading } = useGetUsersQuery({ search });
-    const [updateUser, { isLoading: isDeleting }] = useUpdateUserMutation();
+    const [updateUser] = useUpdateUserMutation();
+    const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+
+    const currentUser = useSelector((state: RootState) => state.auth.user);
+    const isAuthorized = currentUser?.role === "admin" || currentUser?.role === "super_admin";
 
     const handleSearchSubmit = () => {
         setSearch(searchInput);
@@ -31,7 +37,7 @@ const UsersPage = () => {
     const handleDelete = async () => {
         if (!deletingUser) return;
         try {
-            await updateUser({ id: deletingUser.id, body: { isDeleted: true } }).unwrap();
+            await deleteUser({ id: deletingUser.id, body: { isDeleted: true } }).unwrap();
             toast.success("User deleted successfully (soft delete)");
             setDeletingUser(null);
         } catch (error: any) {
@@ -57,9 +63,11 @@ const UsersPage = () => {
                         Search
                     </Button>
                 </div>
-                <PrimaryButton handleClick={() => setIsCreateModalOpen(true)}>
-                    Create User
-                </PrimaryButton>
+                {isAuthorized && (
+                    <PrimaryButton handleClick={() => setIsCreateModalOpen(true)}>
+                        Create User
+                    </PrimaryButton>
+                )}
             </div>
 
             <UsersTable

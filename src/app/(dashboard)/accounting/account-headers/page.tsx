@@ -139,24 +139,25 @@ export default function AccountHeadersPage() {
                 <StatsCard title="Profit/Loss" value="৳ 14.2M" icon={Landmark} color="purple" description="Net retained earnings" />
             </div>
 
-            {/* Toolbar */}
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+            {/* Standardized Toolbar - Matches Image Reference */}
+            <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                <div className="flex items-center gap-2 flex-1 min-w-[300px]">
                     <Input
                         placeholder="Search account name, code or category..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="bg-slate-50 border-slate-200 font-medium h-11"
+                        className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
                     />
-                    <Button variant="outline" className="h-11 px-6 font-bold text-slate-600 border-slate-200 shrink-0">
+                    <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
                         Search
                     </Button>
                 </div>
+
                 <Button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="bg-black text-white hover:bg-slate-800 shrink-0 h-11 px-8 font-black uppercase tracking-widest text-[11px] flex items-center gap-2"
+                    className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-8 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 ml-auto"
                 >
-                    <Plus className="size-4" /> Create Header
+                    <Plus className="size-3.5" /> Create Header
                 </Button>
             </div>
 
