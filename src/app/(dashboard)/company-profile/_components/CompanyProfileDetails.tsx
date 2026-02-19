@@ -154,13 +154,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
-          <Link
-            href="/company-profile"
-            className="inline-flex items-center text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Profiles
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href="/company-profile">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Company Profile
+            </Link>
+          </Button>
           <PrimaryHeading>{profile?.name || "Company Details"}</PrimaryHeading>
         </div>
         <div className="flex flex-wrap gap-2">

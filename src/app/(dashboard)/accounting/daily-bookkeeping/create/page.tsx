@@ -65,9 +65,9 @@ function LedgerPreview({ entries }: { entries: { head: string; type: string; amo
 
 /* ─── Tab Types ──────────────────────────────────────────── */
 const tabs = [
-    { group: "Customer", items: [{ key: "custdue", label: "📋 Customer Due" }, { key: "receipt", label: "📥 Receipt" }] },
-    { group: "Supplier", items: [{ key: "suppdue", label: "📋 Supplier Due" }, { key: "payment", label: "📤 Payment" }] },
-    { group: "General", items: [{ key: "journal", label: "📓 Journal" }, { key: "contra", label: "↩ Contra" }] },
+    { group: "Customer", items: [{ key: "custdue", label: "Customer Due" }, { key: "receipt", label: "Receipt" }] },
+    { group: "Supplier", items: [{ key: "suppdue", label: "Supplier Due" }, { key: "payment", label: "Payment" }] },
+    { group: "General", items: [{ key: "journal", label: "Journal" }, { key: "contra", label: "Contra" }] },
 ];
 
 /* ─── Mock Data ───────────────────────────────────────────── */
@@ -140,11 +140,11 @@ export default function BookkeepingCreatePage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="space-y-2">
                     <Link
-                        href="/accounting/daily-bookkeeping"
+                        href="/order-management/orders/add-new-order"
                         className="inline-flex items-center text-sm text-muted-foreground hover:text-black transition-colors"
                     >
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Daily Bookkeeping
+                        Back to Order Page
                     </Link>
                     <PrimaryHeading className="!text-black">Create Entry</PrimaryHeading>
                 </div>

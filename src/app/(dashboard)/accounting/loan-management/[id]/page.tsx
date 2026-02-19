@@ -152,9 +152,9 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
                 {/* Toolbar */}
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/accounting/loan-management">
+                        <Link href="/order-management/orders/add-new-order">
                             <Button variant="outline">
-                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
+                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Order Page
                             </Button>
                         </Link>
                         <div className="flex items-center gap-3">
@@ -162,8 +162,8 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
                                 <Banknote className="size-5" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg text-slate-900 leading-tight">{loan.lender}</h3>
-                                <p className="text-xs text-muted-foreground">{loan.type.toUpperCase()} FACILITY</p>
+                                <h3 className="font-bold text-lg text-foreground leading-tight">{loan.lender}</h3>
+                                <p className="text-xs text-muted-foreground">{loan.type.toUpperCase()}</p>
                             </div>
                         </div>
                     </div>
