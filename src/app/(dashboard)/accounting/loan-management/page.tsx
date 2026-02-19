@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Box, Container, PrimaryHeading, PrimarySubHeading, ButtonPrimary, CustomModal } from "@/components/reusables";
+import { Container, CustomModal, InputField } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import StatsCard from "@/components/dashboard/StatsCard";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, History, Info, Banknote, Eye, UserPlus, FileDown, Calendar, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, Info, Banknote, Eye, FileDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ─── Mock ──────────────────────────────────────────────── */
@@ -76,33 +78,88 @@ const loans: Loan[] = [
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
 
-function StakeholderFormModal({ open, onClose }: { open: boolean, onClose: () => void }) {
+const initialFormData = {
+    lenderName: "",
+    lenderType: "",
+    interestRate: "",
+    principal: "",
+};
+
+function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const [formData, setFormData] = useState(initialFormData);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const resetForm = () => setFormData(initialFormData);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onClose();
+        resetForm();
+    };
+
     return (
-        <CustomModal open={open} onOpenChange={(v) => !v && onClose()} title="Add New Stakeholder / Lender" maxWidth="600px">
-            <div className="space-y-4 pt-2 font-outfit">
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lender Name</label>
-                    <input type="text" className="form-input" placeholder="e.g. Brac Bank" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Lender Type</label>
-                        <select className="form-input"><option>Bank</option><option>Director</option><option>Personal</option></select>
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => {
+                if (!val) { onClose(); resetForm(); }
+            }}
+            title="Add New Stakeholder / Lender"
+            maxWidth="600px"
+        >
+            <form onSubmit={handleSubmit} className="space-y-1">
+                <InputField
+                    label="Lender Name"
+                    name="lenderName"
+                    value={formData.lenderName}
+                    onChange={handleChange}
+                    placeholder="e.g. Brac Bank"
+                    required
+                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+                    <div className="mb-4">
+                        <Label htmlFor="lenderType">Lender Type</Label>
+                        <select
+                            id="lenderType"
+                            name="lenderType"
+                            value={formData.lenderType}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, lenderType: e.target.value }))}
+                            className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
+                        >
+                            <option value="">Select Type</option>
+                            <option value="bank">Bank</option>
+                            <option value="director">Director</option>
+                            <option value="personal">Personal</option>
+                        </select>
                     </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Interest Rate (%)</label>
-                        <input type="text" className="form-input" placeholder="0.00" />
-                    </div>
+                    <InputField
+                        label="Interest Rate (%)"
+                        name="interestRate"
+                        value={formData.interestRate}
+                        onChange={handleChange}
+                        placeholder="0.00"
+                    />
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Initial Principal (৳)</label>
-                    <input type="text" className="form-input" placeholder="0.00" />
-                </div>
+                <InputField
+                    label="Initial Principal (৳)"
+                    name="principal"
+                    value={formData.principal}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                    required
+                />
                 <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={onClose} className="font-bold">Cancel</Button>
-                    <ButtonPrimary onClick={onClose} className="font-bold">Save Stakeholder</ButtonPrimary>
+                    <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                        Save Stakeholder
+                    </Button>
                 </div>
-            </div>
+            </form>
         </CustomModal>
     );
 }
@@ -112,48 +169,50 @@ export default function LoanManagementPage() {
     const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
 
     const selectedLoan = loans.find(l => l.id === selectedLoanId);
 
     const listColumns = useMemo(() => [
         {
-            header: "Lender Details",
+            header: "Lender",
             accessor: (row: Loan) => (
-                <div className="py-2">
-                    <div className="font-bold text-sm text-slate-900 leading-tight">{row.lender}</div>
-                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-widest font-bold mt-0.5">{row.type} · since {row.startDate}</div>
-                </div>
+                <div className="font-semibold text-foreground">{row.lender}</div>
             )
         },
         {
+            header: "Type",
+            accessor: (row: Loan) => (
+                <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600">
+                    {row.type.toUpperCase()}
+                </span>
+            ),
+        },
+        {
             header: "Principal",
-            className: "text-right",
-            accessor: (row: Loan) => <span className="font-mono text-sm text-slate-600 font-bold">{fmt(row.principal)}</span>
+            accessor: (row: Loan) => fmt(row.principal),
         },
         {
             header: "Repaid",
-            className: "text-right",
-            accessor: (row: Loan) => <span className="font-mono text-sm text-emerald-600 font-bold">{fmt(row.paid)}</span>
+            accessor: (row: Loan) => fmt(row.paid),
         },
         {
             header: "Outstanding",
-            className: "text-right",
-            accessor: (row: Loan) => <span className="font-mono text-sm font-black text-red-600">{fmt(row.outstanding)}</span>
+            accessor: (row: Loan) => fmt(row.outstanding),
         },
         {
             header: "Status",
             accessor: (row: Loan) => (
                 <span className={cn(
-                    "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em]",
-                    row.status === "settled" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-amber-50 text-amber-600 border border-amber-100"
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    row.status === "settled" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
                 )}>
-                    {row.status}
+                    {row.status.toUpperCase()}
                 </span>
             )
         },
         {
             header: "Action",
-            className: "text-right",
             accessor: (row: Loan) => (
                 <Button
                     variant="ghost"
@@ -173,157 +232,145 @@ export default function LoanManagementPage() {
     const detailColumns = useMemo(() => [
         {
             header: "#",
-            accessor: (row: ScheduleItem) => <span className="font-mono text-slate-400 font-bold">{row.no}</span>
+            accessor: (row: ScheduleItem) => row.no,
         },
         {
             header: "Due Date",
-            accessor: (row: ScheduleItem) => <span className="text-slate-600 font-medium">{row.date}</span>
+            accessor: (row: ScheduleItem) => row.date,
         },
         {
             header: "Principal",
-            className: "text-right",
-            accessor: (row: ScheduleItem) => <span className="font-mono text-slate-700 font-medium">{fmt(row.principal)}</span>
+            accessor: (row: ScheduleItem) => fmt(row.principal),
         },
         {
             header: "Interest",
-            className: "text-right",
-            accessor: (row: ScheduleItem) => <span className="font-mono text-slate-500">{row.interest > 0 ? fmt(row.interest) : "—"}</span>
+            accessor: (row: ScheduleItem) => row.interest > 0 ? fmt(row.interest) : "—",
         },
         {
             header: "Total",
-            className: "text-right",
-            accessor: (row: ScheduleItem) => <span className="font-mono font-black text-slate-900">{fmt(row.total)}</span>
+            accessor: (row: ScheduleItem) => fmt(row.total),
         },
         {
             header: "Balance",
-            className: "text-right",
-            accessor: (row: ScheduleItem) => <span className="font-mono font-black text-slate-400">{fmt(row.balance)}</span>
+            accessor: (row: ScheduleItem) => fmt(row.balance),
         },
         {
             header: "Status",
             accessor: (row: ScheduleItem) => (
                 <span className={cn(
-                    "inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-tight",
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                     row.status === "paid" ? "bg-emerald-50 text-emerald-600" :
                         row.status === "overdue" ? "bg-red-50 text-red-600" :
                             "bg-slate-100 text-slate-500"
                 )}>
-                    {row.status}
+                    {row.status.toUpperCase()}
                 </span>
             )
         }
     ], []);
 
     return (
-        <Container className="space-y-6 !p-0 pb-10 font-outfit">
-            <div className="flex justify-between items-start">
-                <Box>
-                    <PrimaryHeading>Loan Management</PrimaryHeading>
-                    <PrimarySubHeading>Lifecycle tracking for bank facilities, credit lines, and director loans</PrimarySubHeading>
-                </Box>
-                {viewMode === "details" && (
-                    <Button
-                        variant="outline"
-                        onClick={() => setViewMode("list")}
-                        className="mt-2 border-slate-200 font-bold text-slate-600 h-9"
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
-                    </Button>
-                )}
-            </div>
+        <Container className="pb-10">
+            <div className="space-y-4">
+                {/* Stats Cards */}
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <StatsCard title="Active Loans" value={loans.filter(l => l.status === "active").length} icon={Landmark} color="blue" />
+                    <StatsCard title="Total Principal" value="৳ 7,00,000" icon={Landmark} color="orange" />
+                    <StatsCard title="Settled Amount" value="৳ 2,00,383" icon={CheckCircle2} color="green" />
+                    <StatsCard title="Net Liability" value="৳ 4,99,617" icon={TrendingDown} color="red" />
+                </div>
 
-            {/* KPI Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatsCard title="Total Principal" value="৳ 7,00,000" icon={Landmark} color="blue" description="Gross debt facilities" />
-                <StatsCard title="Settled Amount" value="৳ 2,00,383" icon={CheckCircle2} color="green" description="Principal recovered" />
-                <StatsCard title="Net Liability" value="৳ 4,99,617" icon={TrendingDown} color="red" description="Active current debt" />
-            </div>
-
-            {viewMode === "list" ? (
-                <>
-                    {/* Standardized Toolbar - Matches Image Reference */}
-                    <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-                            <Input
-                                placeholder="Search by lender name or type..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
-                            />
-                            <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
-                                Search
-                            </Button>
+                {viewMode === "list" ? (
+                    <>
+                        {/* Toolbar */}
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                                <Input
+                                    placeholder="Search by lender name or type..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
+                                <Button variant="outline" onClick={() => { }}>
+                                    Search
+                                </Button>
+                            </div>
+                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                                <div className="w-full sm:max-w-[160px]">
+                                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="All Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="active">Active</SelectItem>
+                                            <SelectItem value="settled">Settled</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="flex w-full gap-2 sm:max-w-[260px]">
+                                    <Input type="date" />
+                                    <Input type="date" />
+                                </div>
+                                <Button
+                                    className="bg-black text-white hover:bg-black/90"
+                                    onClick={() => setIsAddModalOpen(true)}
+                                >
+                                    Add Stakeholder
+                                </Button>
+                            </div>
                         </div>
 
-                        <Button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-8 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 ml-auto"
-                        >
-                            <UserPlus className="size-3.5" /> Add Stakeholder
-                        </Button>
-                    </div>
-
-                    {/* Loan Table */}
-                    <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
+                        {/* Loan Table */}
                         <CustomTable
                             data={loans}
                             columns={listColumns}
-                            scrollAreaHeight="h-auto"
-                            rowClassName="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
+                            rowClassName="cursor-pointer"
+                            scrollAreaHeight="h-[calc(100vh-320px)]"
                         />
-                    </Box>
-                </>
-            ) : (
-                <div className="space-y-6 animate-in fade-in duration-500">
-                    {/* Detail Toolbar */}
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-                        <div className="flex items-center gap-4">
-                            <div className="size-12 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-xl">
-                                <Banknote className="size-6" />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-lg text-slate-900 leading-tight">{selectedLoan?.lender}</h3>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{selectedLoan?.type} FACILITY</p>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:w-auto">
-                            <div className="flex gap-2">
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-50 border-slate-200 font-medium w-[160px]" />
-                                </div>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                    <Input type="date" className="h-11 pl-10 bg-slate-50 border-slate-200 font-medium w-[160px]" />
-                                </div>
-                            </div>
-                            <Button className="bg-emerald-600 text-white hover:bg-emerald-700 h-11 px-6 font-black uppercase tracking-widest text-[11px] flex items-center gap-2">
-                                <FileDown className="size-4" /> Export Schedule
+                    </>
+                ) : (
+                    <div className="space-y-4 animate-in fade-in duration-500">
+                        {/* Back Button */}
+                        <div className="flex items-center">
+                            <Button
+                                variant="outline"
+                                onClick={() => setViewMode("list")}
+                            >
+                                <ArrowLeft className="mr-2 h-4 w-4" /> Back to List
                             </Button>
                         </div>
-                    </div>
 
-                    {/* Amortization Schedule Table */}
-                    <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
-                        <div className="bg-slate-900 px-6 py-3 flex justify-between items-center">
-                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Amortization Schedule</span>
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] font-black text-slate-500 uppercase">Interest Rate:</span>
-                                <span className="font-mono font-black text-amber-500 text-sm">{selectedLoan?.interestRate}% APR</span>
+                        {/* Detail Toolbar */}
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className="size-12 bg-slate-900 rounded-xl flex items-center justify-center text-white">
+                                    <Banknote className="size-6" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900 leading-tight">{selectedLoan?.lender}</h3>
+                                    <p className="text-xs text-muted-foreground">{selectedLoan?.type.toUpperCase()} FACILITY · {selectedLoan?.interestRate}% APR</p>
+                                </div>
+                            </div>
+                            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                                <div className="flex w-full gap-2 sm:max-w-[260px]">
+                                    <Input type="date" />
+                                    <Input type="date" />
+                                </div>
+                                <Button className="bg-black text-white hover:bg-black/90">
+                                    <FileDown className="size-4 mr-2" /> Export Schedule
+                                </Button>
                             </div>
                         </div>
+
+                        {/* Amortization Schedule Table */}
                         <CustomTable
                             data={selectedLoan?.schedule || []}
                             columns={detailColumns}
-                            scrollAreaHeight="h-auto"
-                            rowClassName="border-b border-slate-50 last:border-0"
+                            scrollAreaHeight="h-[calc(100vh-400px)]"
                         />
-                        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <Info className="size-3" /> Repayment plans are structured based on facility agreements
-                        </div>
-                    </Box>
-                </div>
-            )}
+                    </div>
+                )}
+            </div>
 
             <StakeholderFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
         </Container>

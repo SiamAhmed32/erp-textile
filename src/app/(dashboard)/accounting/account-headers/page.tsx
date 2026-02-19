@@ -1,13 +1,15 @@
 "use client";
 
-import StatsCard from "@/components/dashboard/StatsCard";
-import { Box, ButtonPrimary, Container, CustomModal, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
+import React, { useMemo, useState } from "react";
+import { Container, CustomModal, InputField } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
-import { Button } from "@/components/ui/button";
+import StatsCard from "@/components/dashboard/StatsCard";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Activity, Eye, Landmark, ListTree, PieChart, SquarePen, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Activity, Eye, Info, Landmark, ListTree, PieChart, Plus, SquarePen, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
 
 // Mock Data for Account Headers
 const mockHeaders = [
@@ -18,49 +20,109 @@ const mockHeaders = [
     { id: '4001', name: 'Office Rent', type: 'Expense', category: 'Operating', balance: 20000 },
 ];
 
-function HeaderFormModal({ open, onClose }: { open: boolean, onClose: () => void }) {
+const initialFormData = {
+    accountCode: "",
+    accountName: "",
+    accountType: "",
+    parentCategory: "",
+    openingBalance: "",
+};
+
+function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const [formData, setFormData] = useState(initialFormData);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const resetForm = () => setFormData(initialFormData);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onClose();
+        resetForm();
+    };
+
     return (
-        <CustomModal open={open} onOpenChange={(v) => !v && onClose()} title="Create Account Header" maxWidth="600px">
-            <div className="space-y-4 pt-2 font-outfit">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Account Code</label>
-                        <input type="text" className="form-input" placeholder="e.g. 1003" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Account Type</label>
-                        <select className="form-input">
-                            <option>Asset</option>
-                            <option>Liability</option>
-                            <option>Revenue</option>
-                            <option>Expense</option>
-                            <option>Equity</option>
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => {
+                if (!val) { onClose(); resetForm(); }
+            }}
+            title="Create Account Header"
+            maxWidth="600px"
+        >
+            <form onSubmit={handleSubmit} className="space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+                    <InputField
+                        label="Account Code"
+                        name="accountCode"
+                        value={formData.accountCode}
+                        onChange={handleChange}
+                        placeholder="e.g. 1003"
+                        required
+                    />
+                    <div className="mb-4">
+                        <Label htmlFor="accountType">Account Type <span className="text-red-400">*</span></Label>
+                        <select
+                            id="accountType"
+                            name="accountType"
+                            value={formData.accountType}
+                            onChange={(e) => setFormData((prev) => ({ ...prev, accountType: e.target.value }))}
+                            className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
+                            required
+                        >
+                            <option value="">Select Type</option>
+                            <option value="Asset">Asset</option>
+                            <option value="Liability">Liability</option>
+                            <option value="Revenue">Revenue</option>
+                            <option value="Expense">Expense</option>
+                            <option value="Equity">Equity</option>
                         </select>
                     </div>
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Account Name</label>
-                    <input type="text" className="form-input" placeholder="e.g. Petty Cash" />
-                </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Parent Category</label>
-                    <select className="form-input">
-                        <option>Current Asset</option>
-                        <option>Fixed Asset</option>
-                        <option>Current Liability</option>
-                        <option>Long Term Debt</option>
-                        <option>Operating Expense</option>
+                <InputField
+                    label="Account Name"
+                    name="accountName"
+                    value={formData.accountName}
+                    onChange={handleChange}
+                    placeholder="e.g. Petty Cash"
+                    required
+                />
+                <div className="mb-4">
+                    <Label htmlFor="parentCategory">Parent Category</Label>
+                    <select
+                        id="parentCategory"
+                        name="parentCategory"
+                        value={formData.parentCategory}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, parentCategory: e.target.value }))}
+                        className="font-primary input_field w-full h-[42px] px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg"
+                    >
+                        <option value="">Select Category</option>
+                        <option value="Current Asset">Current Asset</option>
+                        <option value="Fixed Asset">Fixed Asset</option>
+                        <option value="Current Liability">Current Liability</option>
+                        <option value="Long Term Debt">Long Term Debt</option>
+                        <option value="Operating Expense">Operating Expense</option>
                     </select>
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Opening Balance (৳)</label>
-                    <input type="text" className="form-input" placeholder="0.00" />
-                </div>
+                <InputField
+                    label="Opening Balance (৳)"
+                    name="openingBalance"
+                    value={formData.openingBalance}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                />
                 <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={onClose} className="font-bold">Cancel</Button>
-                    <ButtonPrimary onClick={onClose} className="font-bold">Save Header</ButtonPrimary>
+                    <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                        Save Header
+                    </Button>
                 </div>
-            </div>
+            </form>
         </CustomModal>
     );
 }
@@ -68,48 +130,45 @@ function HeaderFormModal({ open, onClose }: { open: boolean, onClose: () => void
 export default function AccountHeadersPage() {
     const [search, setSearch] = useState("");
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [typeFilter, setTypeFilter] = useState("all");
 
     const columns = useMemo(() => [
         {
             header: "Code",
-            accessor: (row: any) => <span className="font-mono text-xs font-bold text-slate-500">{row.id}</span>
+            accessor: (row: any) => row.id,
         },
         {
             header: "Account Name",
             accessor: (row: any) => (
-                <div className="py-2">
-                    <span className="font-bold text-slate-900">{row.name}</span>
-                </div>
+                <div className="font-semibold text-foreground">{row.name}</div>
             )
         },
         {
             header: "Type",
             accessor: (row: any) => (
                 <span className={cn(
-                    "inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-black uppercase tracking-tight",
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
                     row.type === "Asset" ? "bg-blue-50 text-blue-600" :
                         row.type === "Liability" ? "bg-purple-50 text-purple-600" :
                             row.type === "Revenue" ? "bg-emerald-50 text-emerald-600" :
                                 "bg-amber-50 text-amber-600"
                 )}>
-                    {row.type}
+                    {row.type.toUpperCase()}
                 </span>
             )
         },
         {
             header: "Category",
-            accessor: (row: any) => <span className="text-xs text-slate-500 font-medium">{row.category}</span>
+            accessor: (row: any) => row.category,
         },
         {
             header: "Balance",
-            className: "text-right",
-            accessor: (row: any) => <span className="font-mono font-black text-slate-900">৳ {row.balance.toLocaleString()}</span>
+            accessor: (row: any) => `৳ ${row.balance.toLocaleString()}`,
         },
         {
             header: "Actions",
-            className: "text-right w-32 pr-4",
             accessor: (row: any) => (
-                <div className="flex justify-end gap-1">
+                <div className="flex gap-1">
                     <Button size="icon" variant="ghost" className="h-8 w-8 text-slate-400 hover:text-black hover:bg-slate-100">
                         <Eye className="h-4 w-4" />
                     </Button>
@@ -125,55 +184,60 @@ export default function AccountHeadersPage() {
     ], []);
 
     return (
-        <Container className="space-y-6 !p-0 pb-10 font-outfit">
-            <Box>
-                <PrimaryHeading>Account Headers</PrimaryHeading>
-                <PrimarySubHeading>Definition and structure of the consolidated Chart of Accounts</PrimarySubHeading>
-            </Box>
-
-            {/* KPI Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <StatsCard title="Total Heads" value="38" icon={ListTree} color="blue" description="Active ledger accounts" />
-                <StatsCard title="Asset Accounts" value="12" icon={PieChart} color="green" description="Current & fixed assets" />
-                <StatsCard title="Liability" value="9" icon={Activity} color="orange" description="Current & long-term" />
-                <StatsCard title="Profit/Loss" value="৳ 14.2M" icon={Landmark} color="purple" description="Net retained earnings" />
-            </div>
-
-            {/* Standardized Toolbar - Matches Image Reference */}
-            <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-                    <Input
-                        placeholder="Search account name, code or category..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
-                    />
-                    <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
-                        Search
-                    </Button>
+        <Container className="pb-10">
+            <div className="space-y-4">
+                {/* Stats Cards */}
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <StatsCard title="Total Heads" value="38" icon={ListTree} color="blue" />
+                    <StatsCard title="Asset Accounts" value="12" icon={PieChart} color="green" />
+                    <StatsCard title="Liability" value="9" icon={Activity} color="orange" />
+                    <StatsCard title="Profit/Loss" value="৳ 14.2M" icon={Landmark} color="purple" />
                 </div>
 
-                <Button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-8 font-black uppercase tracking-widest text-[10px] flex items-center gap-2 ml-auto"
-                >
-                    <Plus className="size-3.5" /> Create Header
-                </Button>
-            </div>
+                {/* Toolbar */}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                        <Input
+                            placeholder="Search account name, code or category..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <Button variant="outline" onClick={() => { }}>
+                            Search
+                        </Button>
+                    </div>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                        <div className="w-full sm:max-w-[160px]">
+                            <Select value={typeFilter} onValueChange={setTypeFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Types" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Types</SelectItem>
+                                    <SelectItem value="asset">Asset</SelectItem>
+                                    <SelectItem value="liability">Liability</SelectItem>
+                                    <SelectItem value="revenue">Revenue</SelectItem>
+                                    <SelectItem value="expense">Expense</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            className="bg-black text-white hover:bg-black/90"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            Create Header
+                        </Button>
+                    </div>
+                </div>
 
-            {/* Ledger Table */}
-            <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
+                {/* Ledger Table */}
                 <CustomTable
                     data={mockHeaders}
                     columns={columns}
                     isLoading={false}
-                    scrollAreaHeight="h-auto"
-                    rowClassName="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors"
+                    scrollAreaHeight="h-[calc(100vh-320px)]"
                 />
-                <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">
-                    <Info className="size-3" /> System accounts are locked and cannot be deleted
-                </div>
-            </Box>
+            </div>
 
             <HeaderFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
         </Container>
