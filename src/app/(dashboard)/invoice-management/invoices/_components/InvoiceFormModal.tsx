@@ -3,24 +3,10 @@
 import React from "react";
 import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import {
-  useGetAllQuery,
-  useGetByIdQuery,
-  usePostMutation,
-  usePatchMutation,
-} from "@/store/services/commonApi";
-import {
-  InvoiceFormData,
-  InvoiceTerms,
-  OrderSummary,
-  InvoiceApiItem,
-} from "./types";
+import { useGetAllQuery, useGetByIdQuery, usePostMutation, usePatchMutation } from "@/store/services/commonApi";
+import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
-import {
-  normalizeInvoice,
-  toInvoiceFormData,
-  toInvoicePayload,
-} from "./helpers";
+import { normalizeInvoice, toInvoiceFormData, toInvoicePayload } from "./helpers";
 import InvoiceForm from "./InvoiceForm";
 import { toast } from "react-toastify";
 
@@ -45,14 +31,7 @@ const emptyInvoice: InvoiceFormData = {
   status: "DRAFT",
 };
 
-export function InvoiceFormModal({
-  open,
-  mode,
-  invoiceId,
-  duplicateId,
-  onClose,
-  onSuccess,
-}: Props) {
+export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, onSuccess }: Props) {
   const isCreate = mode === "create";
   const isDuplicate = !!duplicateId;
   const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
@@ -78,7 +57,7 @@ export function InvoiceFormModal({
       path: "invoices",
       id: invoiceId || duplicateId || "",
     },
-    { skip: (!isCreate && !invoiceId) || (isCreate && !isDuplicate) },
+    { skip: (!isCreate && !invoiceId) || (isCreate && !isDuplicate) }
   );
 
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
@@ -137,14 +116,16 @@ export function InvoiceFormModal({
         }).unwrap();
         toast.success("Invoice created successfully");
       } else {
+
         console.log("invoiceId", invoiceId);
         console.log("toInvoicePayload(draft)", toInvoicePayload(draft));
 
         await patchItem({
           path: `invoices/${invoiceId}`,
-          body: toInvoicePayload(draft),
+          body: toInvoicePayload(draft, true),
           invalidate: ["invoices"],
         }).unwrap();
+
         toast.success("Invoice updated successfully");
       }
 
@@ -164,16 +145,12 @@ export function InvoiceFormModal({
     }
   };
 
-  const title = isDuplicate
-    ? "Duplicate Invoice"
-    : isCreate
-      ? "Create Invoice"
-      : "Edit Invoice";
-  const description = isDuplicate
-    ? "Create a new Invoice based on an existing one."
-    : isCreate
-      ? "Create a new Invoice for an order with terms and conditions."
-      : "Update invoice information to keep records accurate and consistent.";
+  const title = isDuplicate ? "Duplicate Invoice" : isCreate ? "Create Invoice" : "Edit Invoice";
+  // const description = isDuplicate
+  //     ? "Create a new Invoice based on an existing one."
+  //     : isCreate
+  //         ? "Create a new Invoice for an order with terms and conditions."
+  //         : "Update invoice information to keep records accurate and consistent.";
 
   return (
     <CustomModal
@@ -183,7 +160,9 @@ export function InvoiceFormModal({
       maxWidth="800px"
       width="90vw"
     >
-      <p className="text-sm text-muted-foreground mb-6 -mt-2">{description}</p>
+      {/* <p className="text-sm text-muted-foreground mb-6 -mt-2">
+                {description}
+            </p> */}
 
       {loadingInvoice && !isCreate ? (
         <div className="py-8 text-center text-sm text-muted-foreground">
@@ -209,11 +188,7 @@ export function InvoiceFormModal({
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving
-                ? "Saving..."
-                : isCreate
-                  ? "Create Invoice"
-                  : "Save Changes"}
+              {saving ? "Saving..." : isCreate ? "Create Invoice" : "Save Changes"}
             </Button>
           </div>
         </>

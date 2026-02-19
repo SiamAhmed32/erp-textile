@@ -99,14 +99,9 @@ export const navMain = [
                 icon: LayoutDashboard,
             },
             {
-                title: "Customer Ledger",
-                url: "/accounting/customer-ledger",
-                icon: UserRound,
-            },
-            {
-                title: "Supplier Ledger",
-                url: "/accounting/supplier-ledger",
-                icon: Building,
+                title: "Daily Bookkeeping",
+                url: "/accounting/daily-bookkeeping",
+                icon: BookOpen,
             },
             {
                 title: "MOI (Cash Book)",
@@ -114,14 +109,14 @@ export const navMain = [
                 icon: ReceiptText,
             },
             {
-                title: "Daily Bookkeeping",
-                url: "/accounting/daily-bookkeeping",
-                icon: BookOpen,
-            },
-            {
                 title: "Loan Management",
                 url: "/accounting/loan-management",
                 icon: Wallet,
+            },
+            {
+                title: "Account Headers",
+                url: "/accounting/account-headers",
+                icon: FileText,
             },
         ],
     },

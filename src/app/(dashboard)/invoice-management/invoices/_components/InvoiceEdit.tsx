@@ -86,7 +86,7 @@ const InvoiceEdit = ({ id }: Props) => {
         try {
             await patchItem({
                 path: `invoices/${id}`,
-                body: toInvoicePayload(draft),
+                body: toInvoicePayload(draft, true),
                 invalidate: ["invoices"],
             }).unwrap();
             router.push(`/invoice-management/invoices/${id}`);

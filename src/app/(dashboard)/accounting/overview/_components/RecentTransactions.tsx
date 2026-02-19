@@ -1,61 +1,98 @@
 "use client";
 
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import React, { useMemo } from 'react';
+import CustomTable from "@/components/reusables/CustomTable";
 import { Transaction } from "./types";
-import { Flex, Box } from "@/components/reusables";
-import Link from 'next/link';
+import { cn } from "@/lib/utils";
+import { MoreHorizontal } from "lucide-react";
 
 interface RecentTransactionsProps {
     transactions: Transaction[];
 }
 
 const RecentTransactions = ({ transactions }: RecentTransactionsProps) => {
+
+    const columns = useMemo(
+        () => [
+            {
+                header: "Ref #",
+                accessor: (row: Transaction) => (
+                    <div className="font-mono text-xs text-muted-foreground">
+                        JE-2026-00{row.id}
+                    </div>
+                ),
+            },
+            {
+                header: "Type",
+                accessor: (row: Transaction) => (
+                    <span className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium uppercase",
+                        row.type === 'income' ? "bg-emerald-50 text-emerald-700" :
+                            row.type === 'expense' ? "bg-red-50 text-red-700" :
+                                "bg-indigo-50 text-indigo-700"
+                    )}>
+                        {row.type === 'income' ? 'Receipt' : row.type === 'expense' ? 'Payment' : 'Journal'}
+                    </span>
+                ),
+            },
+            {
+                header: "Party",
+                accessor: (row: Transaction) => (
+                    <div>
+                        <div className="font-semibold text-foreground text-sm uppercase">{row.category}</div>
+                        <div className="text-xs text-muted-foreground uppercase">General Ledger</div>
+                    </div>
+                ),
+            },
+            {
+                header: "Narration",
+                accessor: (row: Transaction) => (
+                    <div className="text-sm text-foreground max-w-[300px] truncate" title={row.description}>
+                        {row.description}
+                    </div>
+                ),
+            },
+            {
+                header: "Amount",
+                accessor: (row: Transaction) => (
+                    <div className={cn(
+                        "font-mono font-bold",
+                        row.amount > 0 ? "text-emerald-600" : "text-red-600"
+                    )}>
+                        ৳ {Math.abs(row.amount).toLocaleString()}
+                    </div>
+                ),
+            },
+            {
+                header: "Action",
+                className: "text-right",
+                accessor: (row: Transaction) => (
+                    <div className="flex justify-end">
+                        <button className="p-1 rounded-md hover:bg-muted transition-colors">
+                            <MoreHorizontal className="size-4 text-muted-foreground" />
+                        </button>
+                    </div>
+                ),
+            },
+        ],
+        []
+    );
+
     return (
-        <Card className="border-none shadow-sm flex-1">
-            <CardContent className="p-6">
-                <Flex className="justify-between items-center mb-6">
-                    <h3 className="text-lg font-bold text-secondary">Recent Transactions</h3>
-                    <Link href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View All</Link>
-                </Flex>
-
-                <div className="space-y-4">
-                    {transactions.map((t) => {
-                        const isIncome = t.type === 'income';
-                        const isExpense = t.type === 'expense';
-
-                        return (
-                            <Flex key={t.id} className="items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border border-transparent hover:border-slate-100">
-                                <Flex className="items-center gap-4">
-                                    <Box className={`p-2 rounded-full ${isIncome ? 'bg-green-50 text-green-600' :
-                                            isExpense ? 'bg-red-50 text-red-600' :
-                                                'bg-slate-50 text-slate-400'
-                                        }`}>
-                                        {isIncome ? <TrendingUp className="h-4 w-4" /> :
-                                            isExpense ? <TrendingDown className="h-4 w-4" /> :
-                                                <Minus className="h-4 w-4" />}
-                                    </Box>
-                                    <Box>
-                                        <p className="text-sm font-bold text-secondary leading-tight">{t.description}</p>
-                                        <p className="text-xs text-muted-foreground">{t.category}</p>
-                                    </Box>
-                                </Flex>
-                                <Box className="text-right">
-                                    <p className={`text-sm font-bold ${isIncome ? 'text-green-600' :
-                                            isExpense ? 'text-red-500' :
-                                                'text-secondary'
-                                        }`}>
-                                        {t.amount > 0 ? `+${t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </p>
-                                </Box>
-                            </Flex>
-                        );
-                    })}
-                </div>
-            </CardContent>
-        </Card>
+        <CustomTable
+            data={transactions}
+            columns={columns}
+            isLoading={false}
+            pagination={{
+                currentPage: 1,
+                totalPages: 1,
+                onPageChange: () => { },
+            }}
+            // Simple list, no sorting/filtering needed for "Recent" widget usually, or add if needed
+            scrollAreaHeight="h-auto"
+            rowClassName="cursor-pointer hover:bg-muted/50 transition-colors"
+        />
     );
 };
 
-export default RecentTransactions;
+export default React.memo(RecentTransactions);

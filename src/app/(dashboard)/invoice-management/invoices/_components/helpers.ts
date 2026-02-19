@@ -39,13 +39,20 @@ export const toInvoiceFormData = (invoice: Invoice): InvoiceFormData => ({
     status: coerceStatus(invoice.status),
 });
 
-export const toInvoicePayload = (data: InvoiceFormData) => ({
-    piNumber: data.piNumber,
-    date: data.date,
-    orderId: data.orderId,
-    invoiceTermsId: data.invoiceTermsId,
-    status: coerceStatus(data.status),
-});
+export const toInvoicePayload = (data: InvoiceFormData, isUpdate = false) => {
+    const payload: any = {
+        piNumber: data.piNumber,
+        date: data.date ? new Date(data.date).toISOString() : data.date,
+        invoiceTermsId: data.invoiceTermsId,
+        status: coerceStatus(data.status),
+    };
+
+    if (!isUpdate) {
+        payload.orderId = data.orderId;
+    }
+
+    return payload;
+};
 
 export const formatDate = (value?: string | null) => {
     if (!value) return "-";

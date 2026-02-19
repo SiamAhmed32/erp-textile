@@ -18,8 +18,8 @@ const InvoicePage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editInvoiceId, setEditInvoiceId] = useState<string | null>(null);
   const [duplicateInvoiceId, setDuplicateInvoiceId] = useState<string | null>(
@@ -47,8 +47,8 @@ const InvoicePage = () => {
     filters: {
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
-      ...(dateFrom ? { dateFrom } : {}),
-      ...(dateTo ? { dateTo } : {}),
+      ...(startDate ? { startDate } : {}),
+      ...(endDate ? { endDate } : {}),
     },
   });
   const invoices = useMemo(
@@ -148,15 +148,15 @@ const InvoicePage = () => {
         search={search}
         statusFilter={statusFilter}
         typeFilter={typeFilter}
-        dateFrom={dateFrom}
-        dateTo={dateTo}
+        startDate={startDate}
+        endDate={endDate}
         counts={counts}
         onSearchChange={setSearch}
         onSearchSubmit={handleSearchSubmit}
         onStatusFilterChange={setStatusFilter}
         onTypeFilterChange={setTypeFilter}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
         onPageChange={setPage}
         onAddInvoice={() => setIsCreateModalOpen(true)}
         onRowClick={handleRowClick}
