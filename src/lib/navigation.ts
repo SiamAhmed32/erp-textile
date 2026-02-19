@@ -12,7 +12,6 @@ import {
     BookOpen,
     Wallet,
     Contact,
-    UserRound,
     Building,
 } from "lucide-react";
 
@@ -93,11 +92,7 @@ export const navMain = [
                 url: "/accounting/overview",
                 icon: LayoutDashboard,
             },
-            {
-                title: "Customer Ledger",
-                url: "/accounting/customer-ledger",
-                icon: UserRound,
-            },
+
             {
                 title: "Supplier Ledger",
                 url: "/accounting/supplier-ledger",

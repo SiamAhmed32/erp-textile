@@ -1,14 +1,15 @@
 "use client";
 
 import StatsCard from "@/components/dashboard/StatsCard";
-import { Box, ButtonPrimary, Container, CustomModal, PrimaryHeading, PrimarySubHeading } from "@/components/reusables";
+import { Container, CustomModal, InputField } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { AlertCircle, ArrowUpCircle, Building, UserPlus } from "lucide-react";
-import { useMemo, useState } from "react";
+import { AlertCircle, ArrowUpCircle, Building } from "lucide-react";
+import React, { useMemo, useState } from "react";
 
 /* ─── Mock Data ───────────────────────────────────────────── */
 interface Transaction {
@@ -68,37 +69,97 @@ const suppliers: SupplierRow[] = [
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
 
-function SupplierFormModal({ open, onClose }: { open: boolean, onClose: () => void }) {
+const initialFormData = {
+    supplierName: "",
+    supplierCode: "",
+    email: "",
+    openingLiability: "",
+    address: "",
+};
+
+function SupplierFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+    const [formData, setFormData] = useState(initialFormData);
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const resetForm = () => setFormData(initialFormData);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // TODO: API call to create supplier
+        onClose();
+        resetForm();
+    };
+
     return (
-        <CustomModal open={open} onOpenChange={(v) => !v && onClose()} title="Add New Supplier" maxWidth="600px">
-            <div className="space-y-4 pt-2 font-outfit">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Supplier Name</label>
-                        <input type="text" className="form-input" placeholder="e.g. Karim Traders" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Supplier Code</label>
-                        <input type="text" className="form-input" placeholder="e.g. SUPP-004" />
-                    </div>
+        <CustomModal
+            open={open}
+            onOpenChange={(val) => {
+                if (!val) {
+                    onClose();
+                    resetForm();
+                }
+            }}
+            title="Add New Supplier"
+            maxWidth="600px"
+        >
+            <form onSubmit={handleSubmit} className="space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <InputField
+                        label="Supplier Name"
+                        name="supplierName"
+                        value={formData.supplierName}
+                        onChange={handleChange}
+                        placeholder="e.g. Karim Traders"
+                        required
+                    />
+                    <InputField
+                        label="Supplier Code"
+                        name="supplierCode"
+                        value={formData.supplierCode}
+                        onChange={handleChange}
+                        placeholder="e.g. SUPP-004"
+                        required
+                    />
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email Address</label>
-                    <input type="email" className="form-input" placeholder="vendor@example.com" />
+                <InputField
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="vendor@example.com"
+                />
+                <InputField
+                    label="Opening Liability (৳)"
+                    name="openingLiability"
+                    value={formData.openingLiability}
+                    onChange={handleChange}
+                    placeholder="0.00"
+                />
+                <div className="mb-4">
+                    <Label htmlFor="address">Company Details / Address</Label>
+                    <textarea
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+                        placeholder="Supplier office address..."
+                        className="font-primary input_field w-full px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg min-h-[80px]"
+                    />
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Opening Liability (৳)</label>
-                    <input type="text" className="form-input" placeholder="0.00" />
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                        Create Supplier
+                    </Button>
                 </div>
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Company Details / Address</label>
-                    <textarea className="form-input min-h-[80px]" placeholder="Supplier office address..." />
-                </div>
-                <div className="flex justify-end gap-3 pt-4">
-                    <Button variant="outline" onClick={onClose} className="font-bold">Cancel</Button>
-                    <ButtonPrimary onClick={onClose} className="font-bold">Create Supplier</ButtonPrimary>
-                </div>
-            </div>
+            </form>
         </CustomModal>
     );
 }
@@ -113,37 +174,35 @@ export default function SupplierLedgerPage() {
         {
             header: "Supplier",
             accessor: (row: SupplierRow) => (
-                <div className="py-2">
-                    <div className="font-bold text-sm text-slate-900 leading-tight">{row.name}</div>
-                    <div className="text-[10px] text-slate-400 font-mono uppercase tracking-widest font-bold mt-0.5">{row.code}</div>
-                </div>
+                <div className="font-semibold text-foreground">{row.name}</div>
             )
         },
         {
+            header: "Code",
+            accessor: (row: SupplierRow) => row.code,
+        },
+        {
             header: "Due Raised",
-            className: "text-right",
-            accessor: (row: SupplierRow) => <span className="font-mono text-sm text-amber-600 font-bold">{fmt(row.raised)}</span>
+            accessor: (row: SupplierRow) => fmt(row.raised),
         },
         {
             header: "Paid",
-            className: "text-right",
-            accessor: (row: SupplierRow) => <span className="font-mono text-sm text-emerald-600 font-bold">{fmt(row.paid)}</span>
+            accessor: (row: SupplierRow) => fmt(row.paid),
         },
         {
             header: "Outstanding",
-            className: "text-right",
-            accessor: (row: SupplierRow) => <span className="font-mono text-sm font-black text-red-600">{fmt(row.outstanding)}</span>
+            accessor: (row: SupplierRow) => fmt(row.outstanding),
         },
         {
             header: "Status",
             accessor: (row: SupplierRow) => (
                 <span className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.1em]",
-                    row.status === "settled" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                        row.status === "overdue" ? "bg-red-50 text-red-600 border border-red-100" :
-                            "bg-amber-50 text-amber-600 border border-amber-100"
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                    row.status === "settled" ? "bg-emerald-50 text-emerald-600" :
+                        row.status === "overdue" ? "bg-red-50 text-red-600" :
+                            "bg-amber-50 text-amber-600"
                 )}>
-                    {row.status}
+                    {row.status.toUpperCase()}
                 </span>
             )
         }
@@ -202,80 +261,65 @@ export default function SupplierLedgerPage() {
     };
 
     return (
-        <Container className="space-y-6 !p-0 pb-10 font-outfit">
-            <Box>
-                <PrimaryHeading>Supplier Ledger</PrimaryHeading>
-                <PrimarySubHeading>Consolidated financial view of supplier accounts and payment records</PrimarySubHeading>
-            </Box>
-
-            {/* KPI Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatsCard title="Total Due Raised" value="৳ 68,500" icon={Building} color="orange" description="Gross billed amount" />
-                <StatsCard title="Amount Paid" value="৳ 36,500" icon={ArrowUpCircle} color="green" description="Total settled payments" />
-                <StatsCard title="Outstanding" value="৳ 32,000" icon={AlertCircle} color="red" description="Total current payable" />
-            </div>
-
-            {/* Standardized Toolbar - Matching Image Reference */}
-            <div className="flex flex-wrap items-center gap-2 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <div className="flex items-center gap-2 flex-1 min-w-[300px]">
-                    <Input
-                        placeholder="Search PI number, order, terms..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="bg-white border-slate-200 focus:bg-white transition-all font-medium h-10 flex-1"
-                    />
-                    <Button variant="outline" className="h-10 px-6 font-bold text-slate-700 bg-white border-slate-200 hover:bg-slate-50 shrink-0">
-                        Search
-                    </Button>
+        <Container className="pb-10">
+            <div className="space-y-4">
+                {/* Stats Cards - 4 column grid matching InvoicesTable */}
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    <StatsCard title="Total Suppliers" value={suppliers.length} icon={Building} color="blue" />
+                    <StatsCard title="Total Due Raised" value="৳ 68,500" icon={Building} color="orange" />
+                    <StatsCard title="Amount Paid" value="৳ 36,500" icon={ArrowUpCircle} color="green" />
+                    <StatsCard title="Outstanding" value="৳ 32,000" icon={AlertCircle} color="red" />
                 </div>
 
-                <div className="flex items-center gap-2 ml-auto">
-                    <Select defaultValue="all">
-                        <SelectTrigger className="w-[130px] h-10 bg-white border-slate-200 font-bold text-slate-600">
-                            <SelectValue placeholder="All Types" />
-                        </SelectTrigger>
-                        <SelectContent className="font-outfit">
-                            <SelectItem value="all">All Types</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-[130px] h-10 bg-white border-slate-200 font-bold text-slate-600">
-                            <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent className="font-outfit">
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="active">Active</SelectItem>
-                            <SelectItem value="settled">Settled</SelectItem>
-                            <SelectItem value="overdue">Overdue</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <div className="flex items-center gap-1">
-                        <Input type="date" className="h-10 w-[130px] bg-white border-slate-200 font-medium text-xs" />
-                        <Input type="date" className="h-10 w-[130px] bg-white border-slate-200 font-medium text-xs" />
+                {/* Toolbar - matching InvoicesTable layout */}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                        <Input
+                            placeholder="Search supplier name, code..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                        <Button variant="outline" onClick={() => { }}>
+                            Search
+                        </Button>
                     </div>
-
-                    <Button
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="bg-black text-white hover:bg-slate-800 shrink-0 h-10 px-6 font-black uppercase tracking-widest text-[10px] flex items-center gap-1.5"
-                    >
-                        <UserPlus className="size-3.5" /> Add Supplier
-                    </Button>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                        <div className="w-full sm:max-w-[160px]">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="settled">Settled</SelectItem>
+                                    <SelectItem value="overdue">Overdue</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex w-full gap-2 sm:max-w-[260px]">
+                            <Input type="date" />
+                            <Input type="date" />
+                        </div>
+                        <Button
+                            className="bg-black text-white hover:bg-black/90"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            Add Supplier
+                        </Button>
+                    </div>
                 </div>
-            </div>
 
-            {/* Supplier Table - Premium Look */}
-            <Box className="bg-white border-2 border-slate-100 rounded-2xl shadow-sm overflow-hidden p-0">
+                {/* Supplier Table */}
                 <CustomTable
                     data={suppliers}
                     columns={columns}
                     onRowClick={(row) => setExpanded(expanded === row.code ? null : row.code)}
-                    scrollAreaHeight="h-auto"
-                    rowClassName="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 cursor-pointer transition-colors"
+                    rowClassName="cursor-pointer"
+                    scrollAreaHeight="h-[calc(100vh-320px)]"
                 />
                 {suppliers.map(s => expanded === s.code && <div key={`exp-${s.code}`}>{renderExpandedRow(s)}</div>)}
-            </Box>
+            </div>
 
             <SupplierFormModal open={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} />
         </Container>
