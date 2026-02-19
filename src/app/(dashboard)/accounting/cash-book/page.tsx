@@ -16,16 +16,16 @@ interface EmployeeIOU {
     id: string;
     name: string;
     designation: string;
-    totalIssued: number;
-    totalReturned: number;
-    outstanding: number;
+    totalIssuedAmount: number;
+    totalReturnedAmount: number;
+    outstandingAmount: number;
     lastTransaction: string;
 }
 
 const employees: EmployeeIOU[] = [
-    { id: "1", name: "Salim Ahmed", designation: "Production Manager", totalIssued: 15000, totalReturned: 5000, outstanding: 10000, lastTransaction: "17 Feb 2026" },
-    { id: "2", name: "Kamal Hossain", designation: "Executive (Admin)", totalIssued: 8000, totalReturned: 8000, outstanding: 0, lastTransaction: "16 Feb 2026" },
-    { id: "3", name: "Rina Begum", designation: "Support Staff", totalIssued: 5000, totalReturned: 0, outstanding: 5000, lastTransaction: "18 Feb 2026" },
+    { id: "1", name: "Salim Ahmed", designation: "Production Manager", totalIssuedAmount: 15000, totalReturnedAmount: 5000, outstandingAmount: 10000, lastTransaction: "17 Feb 2026" },
+    { id: "2", name: "Kamal Hossain", designation: "Executive (Admin)", totalIssuedAmount: 8000, totalReturnedAmount: 8000, outstandingAmount: 0, lastTransaction: "16 Feb 2026" },
+    { id: "3", name: "Rina Begum", designation: "Support Staff", totalIssuedAmount: 5000, totalReturnedAmount: 0, outstandingAmount: 5000, lastTransaction: "18 Feb 2026" },
 ];
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
@@ -34,13 +34,13 @@ const initialFormData = {
     employeeName: "",
     designation: "",
     employeeId: "",
-    openingBalance: "",
+    openingAmount: "",
 };
 
 function EmployeeFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [formData, setFormData] = useState(initialFormData);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -89,9 +89,9 @@ function EmployeeFormModal({ open, onClose }: { open: boolean; onClose: () => vo
                     />
                 </div>
                 <InputField
-                    label="Opening Advance Balance (৳)"
-                    name="openingBalance"
-                    value={formData.openingBalance}
+                    label="Opening Advance Amount (৳)"
+                    name="openingAmount"
+                    value={formData.openingAmount}
                     onChange={handleChange}
                     placeholder="0.00"
                 />
@@ -125,15 +125,15 @@ export default function CashBookPage() {
         },
         {
             header: "Total Advance",
-            accessor: (row: EmployeeIOU) => fmt(row.totalIssued),
+            accessor: (row: EmployeeIOU) => fmt(row.totalIssuedAmount),
         },
         {
             header: "Settled",
-            accessor: (row: EmployeeIOU) => fmt(row.totalReturned),
+            accessor: (row: EmployeeIOU) => fmt(row.totalReturnedAmount),
         },
         {
             header: "Current IOU",
-            accessor: (row: EmployeeIOU) => fmt(row.outstanding),
+            accessor: (row: EmployeeIOU) => fmt(row.outstandingAmount),
         },
         {
             header: "Last Activity",
@@ -162,8 +162,8 @@ export default function CashBookPage() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <StatsCard title="Total Employees" value={employees.length} icon={Wallet} color="blue" />
                     <StatsCard title="Total Advanced" value="৳ 28,000" icon={Wallet} color="orange" />
-                    <StatsCard title="Settled to Date" value="৳ 13,000" icon={CheckCircle2} color="green" />
-                    <StatsCard title="Net Outstanding" value="৳ 15,000" icon={AlertCircle} color="red" />
+                    <StatsCard title="Settled Amount" value="৳ 13,000" icon={CheckCircle2} color="green" />
+                    <StatsCard title="Outstanding Amount" value="৳ 15,000" icon={AlertCircle} color="red" />
                 </div>
 
                 {/* Toolbar */}

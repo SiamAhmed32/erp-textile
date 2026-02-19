@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Container } from "@/components/reusables";
-import CustomTable from "@/components/reusables/CustomTable";
 import StatsCard from "@/components/dashboard/StatsCard";
-import { Input } from "@/components/ui/input";
+import { Container, CustomModal } from "@/components/reusables";
+import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, SquarePen, Trash2, BookOpen, Receipt, History, Plus, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { CustomModal } from "@/components/reusables";
+import { BookOpen, Eye, History, Receipt } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 const mockEntries = [
     { id: 'JE-2024-001', date: '18 Feb 2026', type: 'Customer Due', party: 'Rahim Corp', amount: 75000, narration: 'Sold goods on credit', status: 'Posted' },
     { id: 'JE-2024-002', date: '17 Feb 2026', type: 'Expense', party: 'Office Expense', amount: 5000, narration: 'Monthly office rent', status: 'Posted' },
     { id: 'JE-2024-003', date: '16 Feb 2026', type: 'Receipt', party: 'Karim Traders', amount: 30000, narration: 'Payment received', status: 'Posted' },
 ];
+
+import { Separator } from "@/components/ui/separator";
 
 function JournalEntryDetailsModal({ open, onClose, entry }: { open: boolean; onClose: () => void; entry: any }) {
     if (!entry) return null;
@@ -28,44 +28,55 @@ function JournalEntryDetailsModal({ open, onClose, entry }: { open: boolean; onC
             title="Journal Entry Details"
             maxWidth="600px"
         >
-            <div className="space-y-4 py-2">
-                <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+            <div className="space-y-6 pt-2">
+                {/* ID and Date section */}
+                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Entry ID</p>
-                        <p className="text-base font-black text-slate-900">{entry.id}</p>
+                        <p className="text-xs font-medium uppercase text-muted-foreground">Voucher ID</p>
+                        <p className="text-sm font-semibold text-slate-900">{entry.id}</p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Date</p>
-                        <p className="text-sm font-bold text-slate-700">{entry.date}</p>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-6">
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Type</p>
-                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-600 uppercase">
+                        <p className="text-xs font-medium uppercase text-muted-foreground">Posting Date</p>
+                        <p className="text-sm font-semibold text-slate-900">{entry.date}</p>
+                    </div>
+                    <div>
+                        <p className="text-xs font-medium uppercase text-muted-foreground">Transaction Type</p>
+                        <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-600">
                             {entry.type}
                         </span>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Party / Head</p>
-                        <p className="text-sm font-bold text-slate-900">{entry.party}</p>
+                        <p className="text-xs font-medium uppercase text-muted-foreground">Party / Ledger Head</p>
+                        <p className="text-sm font-semibold text-slate-900">{entry.party}</p>
                     </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Narration</p>
-                    <p className="text-sm text-slate-600 italic">"{entry.narration}"</p>
+                <Separator />
+
+                {/* Narration Box */}
+                <div>
+                    <p className="text-xs font-medium uppercase text-muted-foreground mb-1">Narration / Memo</p>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                        {entry.narration || "—"}
+                    </p>
                 </div>
 
-                <div className="flex justify-between items-center pt-2">
+                <Separator />
+
+                {/* Footer section with highlighted amount */}
+                <div className="flex flex-col sm:flex-row justify-between items-end bg-white pt-2 gap-4">
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount</p>
-                        <p className="text-2xl font-black text-secondary">৳ {entry.amount.toLocaleString()}</p>
+                        <p className="text-xs font-medium uppercase text-muted-foreground mb-1">Total Transaction Value</p>
+                        <div className="flex items-baseline gap-1.5">
+                            <span className="text-2xl font-black text-secondary">৳ {entry.amount.toLocaleString()}</span>
+                            <span className="text-xs font-bold text-slate-400">BDT</span>
+                        </div>
                     </div>
-                    <Button onClick={onClose} className="bg-secondary text-white">
-                        Close
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Button onClick={onClose} className="flex-1 sm:flex-none h-10 px-8 bg-black text-white hover:bg-black/90 font-bold">
+                            Close
+                        </Button>
+                    </div>
                 </div>
             </div>
         </CustomModal>

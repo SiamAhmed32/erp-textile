@@ -7,10 +7,13 @@ type InputFieldProps = {
 	name: string;
 	type?: string;
 	value: string;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 	placeholder?: string;
 	error?: string;
 	required?: boolean;
+	disabled?: boolean;
+	readOnly?: boolean;
+	className?: string;
 };
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -22,6 +25,9 @@ const InputField: React.FC<InputFieldProps> = ({
 	placeholder,
 	error,
 	required = false,
+	disabled = false,
+	readOnly = false,
+	className,
 }) => {
 	/////////////////////////  this will be in parent component
 
@@ -50,9 +56,10 @@ const InputField: React.FC<InputFieldProps> = ({
 				onChange={onChange}
 				placeholder={placeholder}
 				required={required}
-				className={`font-primary input_field w-full px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition ${
-					error ? 'border-red-400' : 'border-borderBg'
-				}`}
+				disabled={disabled}
+				readOnly={readOnly}
+				className={`${className} font-primary input_field w-full px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition ${error ? 'border-red-400' : 'border-borderBg'
+					}`}
 			/>
 			{/* <IoSearchOutline className='absolute top-[50%] -translate-y-[50%] right-4 text-borderBg text-2xl' /> */}
 			{/* </div> */}

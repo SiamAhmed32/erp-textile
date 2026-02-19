@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, Info, Banknote, Eye, FileDown, X } from "lucide-react";
+import { Landmark, CheckCircle2, TrendingDown, ArrowLeft, Info, Banknote, Eye, FileDown, X, Search, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { SelectBox } from "@/components/reusables";
@@ -17,7 +17,7 @@ import { SelectBox } from "@/components/reusables";
 interface ScheduleItem {
     no: number;
     date: string;
-    principal: number;
+    principalAmount: number;
     interest: number;
     total: number;
     balance: number;
@@ -29,9 +29,9 @@ interface Loan {
     lender: string;
     type: "bank" | "director" | "personal";
     interestRate: number;
-    principal: number;
-    paid: number;
-    outstanding: number;
+    principalAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
     startDate: string;
     status: "active" | "settled";
     schedule: ScheduleItem[];
@@ -43,18 +43,18 @@ const loans: Loan[] = [
         lender: "National Bank Limited",
         type: "bank",
         interestRate: 9.5,
-        principal: 500000,
-        paid: 133716,
-        outstanding: 366284,
+        principalAmount: 500000,
+        paidAmount: 133716,
+        outstandingAmount: 366284,
         startDate: "Jan 2025",
         status: "active",
         schedule: [
-            { no: 1, date: "Mar 2025", principal: 10000, interest: 3958, total: 13958, balance: 490000, status: "paid" },
-            { no: 2, date: "Jun 2025", principal: 10000, interest: 3879, total: 13879, balance: 480000, status: "paid" },
-            { no: 3, date: "Sep 2025", principal: 10000, interest: 3800, total: 13800, balance: 470000, status: "paid" },
-            { no: 4, date: "Dec 2025", principal: 10000, interest: 3721, total: 13721, balance: 460000, status: "paid" },
-            { no: 5, date: "Mar 2026", principal: 10000, interest: 3642, total: 13642, balance: 450000, status: "upcoming" },
-            { no: 6, date: "Jun 2026", principal: 10000, interest: 3563, total: 13563, balance: 440000, status: "upcoming" },
+            { no: 1, date: "Mar 2025", principalAmount: 10000, interest: 3958, total: 13958, balance: 490000, status: "paid" },
+            { no: 2, date: "Jun 2025", principalAmount: 10000, interest: 3879, total: 13879, balance: 480000, status: "paid" },
+            { no: 3, date: "Sep 2025", principalAmount: 10000, interest: 3800, total: 13800, balance: 470000, status: "paid" },
+            { no: 4, date: "Dec 2025", principalAmount: 10000, interest: 3721, total: 13721, balance: 460000, status: "paid" },
+            { no: 5, date: "Mar 2026", principalAmount: 10000, interest: 3642, total: 13642, balance: 450000, status: "upcoming" },
+            { no: 6, date: "Jun 2026", principalAmount: 10000, interest: 3563, total: 13563, balance: 440000, status: "upcoming" },
         ],
     },
     {
@@ -62,18 +62,18 @@ const loans: Loan[] = [
         lender: "Mr. Rahman (Director)",
         type: "director",
         interestRate: 0,
-        principal: 200000,
-        paid: 66667,
-        outstanding: 133333,
+        principalAmount: 200000,
+        paidAmount: 66667,
+        outstandingAmount: 133333,
         startDate: "Jul 2025",
         status: "active",
         schedule: [
-            { no: 1, date: "Oct 2025", principal: 33333, interest: 0, total: 33333, balance: 166667, status: "paid" },
-            { no: 2, date: "Jan 2026", principal: 33334, interest: 0, total: 33334, balance: 133333, status: "paid" },
-            { no: 3, date: "Apr 2026", principal: 33333, interest: 0, total: 33333, balance: 100000, status: "upcoming" },
-            { no: 4, date: "Jul 2026", principal: 33333, interest: 0, total: 33333, balance: 66667, status: "upcoming" },
-            { no: 5, date: "Oct 2026", principal: 33334, interest: 0, total: 33334, balance: 33333, status: "upcoming" },
-            { no: 6, date: "Jan 2027", principal: 33333, interest: 0, total: 33333, balance: 0, status: "upcoming" },
+            { no: 1, date: "Oct 2025", principalAmount: 33333, interest: 0, total: 33333, balance: 166667, status: "paid" },
+            { no: 2, date: "Jan 2026", principalAmount: 33334, interest: 0, total: 33334, balance: 133333, status: "paid" },
+            { no: 3, date: "Apr 2026", principalAmount: 33333, interest: 0, total: 33333, balance: 100000, status: "upcoming" },
+            { no: 4, date: "Jul 2026", principalAmount: 33333, interest: 0, total: 33333, balance: 66667, status: "upcoming" },
+            { no: 5, date: "Oct 2026", principalAmount: 33334, interest: 0, total: 33334, balance: 33333, status: "upcoming" },
+            { no: 6, date: "Jan 2027", principalAmount: 33333, interest: 0, total: 33333, balance: 0, status: "upcoming" },
         ],
     },
 ];
@@ -90,12 +90,12 @@ const initialFormData = {
 function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [formData, setFormData] = useState(initialFormData);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -174,6 +174,16 @@ export default function LoanManagementPage() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
+    const filteredLoans = useMemo(() => {
+        return loans.filter(l => {
+            const matchesSearch =
+                l.lender.toLowerCase().includes(search.toLowerCase()) ||
+                l.type.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = statusFilter === "all" || l.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [search, statusFilter]);
+
     const selectedLoan = loans.find(l => l.id === selectedLoanId);
 
     const listColumns = useMemo(() => [
@@ -193,15 +203,15 @@ export default function LoanManagementPage() {
         },
         {
             header: "Principal",
-            accessor: (row: Loan) => fmt(row.principal),
+            accessor: (row: Loan) => fmt(row.principalAmount),
         },
         {
             header: "Repaid",
-            accessor: (row: Loan) => fmt(row.paid),
+            accessor: (row: Loan) => fmt(row.paidAmount),
         },
         {
             header: "Outstanding",
-            accessor: (row: Loan) => fmt(row.outstanding),
+            accessor: (row: Loan) => fmt(row.outstandingAmount),
         },
         {
             header: "Status",
@@ -241,7 +251,7 @@ export default function LoanManagementPage() {
         },
         {
             header: "Principal",
-            accessor: (row: ScheduleItem) => fmt(row.principal),
+            accessor: (row: ScheduleItem) => fmt(row.principalAmount),
         },
         {
             header: "Interest",
@@ -276,14 +286,52 @@ export default function LoanManagementPage() {
                 {/* Stats Cards */}
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <StatsCard title="Active Loans" value={loans.filter(l => l.status === "active").length} icon={Landmark} color="blue" />
-                    <StatsCard title="Total Principal" value="৳ 7,00,000" icon={Landmark} color="orange" />
+                    <StatsCard title="Total Principal Amount" value="৳ 7,00,000" icon={Landmark} color="orange" />
                     <StatsCard title="Settled Amount" value="৳ 2,00,383" icon={CheckCircle2} color="green" />
                     <StatsCard title="Net Liability" value="৳ 4,99,617" icon={TrendingDown} color="red" />
                 </div>
 
+                {/* Toolbar */}
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                        <div className="relative w-full">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                            <Input
+                                placeholder="Search lender name or type..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-10"
+                            />
+                        </div>
+                        <Button variant="outline">
+                            Search
+                        </Button>
+                    </div>
+                    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+                        <div className="w-full sm:max-w-[160px]">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="All Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Status</SelectItem>
+                                    <SelectItem value="active">Active</SelectItem>
+                                    <SelectItem value="settled">Settled</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <Button
+                            className="bg-black text-white hover:bg-black/90 flex items-center gap-2"
+                            onClick={() => setIsAddModalOpen(true)}
+                        >
+                            <Plus className="h-4 w-4" /> New Stakeholder
+                        </Button>
+                    </div>
+                </div>
+
                 {/* Loan Table */}
                 <CustomTable
-                    data={loans}
+                    data={filteredLoans}
                     columns={listColumns}
                     scrollAreaHeight="h-[calc(100vh-320px)]"
                 />

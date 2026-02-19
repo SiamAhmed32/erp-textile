@@ -32,8 +32,8 @@ export interface Loan {
     id: string;
     name: string;
     type: string;
-    outstanding: number;
-    total: number;
+    outstandingAmount: number;
+    totalAmount: number;
     color: string;
 }
 
@@ -168,16 +168,16 @@ export const mockActiveLoans: Loan[] = [
         id: "L1",
         name: "National Bank Limited",
         type: "bank",
-        outstanding: 366284.01,
-        total: 500000,
+        outstandingAmount: 366284.01,
+        totalAmount: 500000,
         color: "bg-indigo-500"
     },
     {
         id: "L2",
         name: "Mr. Rahman (Director)",
         type: "director",
-        outstanding: 133333.32,
-        total: 200000,
+        outstandingAmount: 133333.32,
+        totalAmount: 200000,
         color: "bg-indigo-400"
     }
 ];

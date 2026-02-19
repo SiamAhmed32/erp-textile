@@ -14,11 +14,11 @@ import { SelectBox } from "@/components/reusables";
 
 // Mock Data for Account Headers
 const mockHeaders = [
-    { id: '1001', name: 'Cash in Hand', type: 'Asset', category: 'Current Asset', balance: 150000 },
-    { id: '1002', name: 'Bank Asia', type: 'Asset', category: 'Bank', balance: 2500000 },
-    { id: '2001', name: 'Accounts Payable', type: 'Liability', category: 'Current Liability', balance: 50000 },
-    { id: '3001', name: 'Sales Revenue', type: 'Revenue', category: 'Operating', balance: 4500000 },
-    { id: '4001', name: 'Office Rent', type: 'Expense', category: 'Operating', balance: 20000 },
+    { id: '1001', name: 'Cash in Hand', type: 'Asset', category: 'Current Asset', balanceAmount: 150000 },
+    { id: '1002', name: 'Bank Asia', type: 'Asset', category: 'Bank', balanceAmount: 2500000 },
+    { id: '2001', name: 'Accounts Payable', type: 'Liability', category: 'Current Liability', balanceAmount: 50000 },
+    { id: '3001', name: 'Sales Revenue', type: 'Revenue', category: 'Operating', balanceAmount: 4500000 },
+    { id: '4001', name: 'Office Rent', type: 'Expense', category: 'Operating', balanceAmount: 20000 },
 ];
 
 const initialFormData = {
@@ -26,13 +26,13 @@ const initialFormData = {
     accountName: "",
     accountType: "",
     parentCategory: "",
-    openingBalance: "",
+    openingAmount: "",
 };
 
 function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [formData, setFormData] = useState(initialFormData);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -106,9 +106,9 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
                     ]}
                 />
                 <InputField
-                    label="Opening Balance (৳)"
-                    name="openingBalance"
-                    value={formData.openingBalance}
+                    label="Opening Amount (৳)"
+                    name="openingAmount"
+                    value={formData.openingAmount}
                     onChange={handleChange}
                     placeholder="0.00"
                 />
@@ -156,7 +156,7 @@ function HeaderDetailsModal({ open, onClose, header }: { open: boolean; onClose:
                 </div>
                 <div className="pt-4 border-t border-slate-100">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Balance</p>
-                    <p className="text-xl font-black text-secondary">৳ {header.balance.toLocaleString()}</p>
+                    <p className="text-xl font-black text-secondary">৳ {header.balanceAmount.toLocaleString()}</p>
                 </div>
                 <div className="flex justify-end pt-2">
                     <Button onClick={onClose} className="bg-secondary text-white">
@@ -208,7 +208,7 @@ export default function AccountHeadersPage() {
         },
         {
             header: "Balance",
-            accessor: (row: any) => `৳ ${row.balance.toLocaleString()}`,
+            accessor: (row: any) => `৳ ${row.balanceAmount.toLocaleString()}`,
         },
         {
             header: "Actions",
