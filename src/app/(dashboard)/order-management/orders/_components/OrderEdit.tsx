@@ -1,182 +1,113 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { toast } from "react-toastify";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
+import { Container, Flex } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
-  useGetAllQuery,
   useGetByIdQuery,
+  useGetAllQuery,
   usePatchMutation,
   usePutMutation,
 } from "@/store/services/commonApi";
-import {
-  Order,
-  OrderApiItem,
-  OrderFormData,
-  Buyer,
-  CompanyProfile,
-} from "./types";
-import {
-  normalizeOrder,
-  toOrderFormData,
-  toOrderUpdatePayload,
-} from "./helpers";
-import OrderForm from "./OrderForm";
 import { OrderValidation, toFieldErrors } from "./validation";
+import { OrderFormData, Order, Buyer, CompanyProfile } from "./types";
+import { toOrderFormData, toOrderUpdatePayload } from "./helpers";
+import OrderForm from "./OrderForm";
+import { toast } from "react-toastify";
 
 type Props = {
   id: string;
 };
 
-const emptyOrder: OrderFormData = {
-  orderNumber: "",
-  orderDate: "",
-  remarks: "",
-  productType: "FABRIC",
-  buyerId: "",
-  companyProfileId: "",
-  status: "DRAFT",
-  deliveryDate: "",
-  orderItems: {},
-};
-
-const setNestedValue = (obj: any, path: string, value: any) => {
-  const keys = path.split(".");
-  const last = keys.pop();
-  let current = obj;
-  keys.forEach((key) => {
-    if (!current[key]) current[key] = {};
-    current = current[key];
-  });
-  if (last) current[last] = value;
-};
-
 const OrderEdit = ({ id }: Props) => {
   const router = useRouter();
-  const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [draft, setDraft] = useState<OrderFormData | null>(null);
+  const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [originalStatus, setOriginalStatus] =
-    React.useState<OrderFormData["status"]>("DRAFT");
+    useState<OrderFormData["status"]>("DRAFT");
+
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
 
-  const { data: buyersPayload, error: buyersError } = useGetAllQuery({
+  const { data: orderPayload, isFetching: loadingOrder } = useGetByIdQuery({
+    path: "orders",
+    id,
+  });
+
+  const { data: buyersPayload } = useGetAllQuery({
     path: "buyers",
     page: 1,
     limit: 100,
   });
-  const { data: companiesPayload, error: companiesError } = useGetAllQuery({
+  const { data: companiesPayload } = useGetAllQuery({
     path: "company-profiles",
     page: 1,
     limit: 100,
   });
-  const {
-    data: orderPayload,
-    isFetching: loading,
-    error: orderError,
-  } = useGetByIdQuery({
-    path: "orders",
-    id,
-  });
+
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const companies = ((companiesPayload as any)?.data || []) as CompanyProfile[];
 
-  React.useEffect(() => {
-    const item = (orderPayload as any)?.data as OrderApiItem | undefined;
-    if (!item) return;
-    const normalized = normalizeOrder(item);
-    const form = toOrderFormData(normalized);
-    setDraft(form);
-    setOriginalStatus(form.status);
-  }, [orderPayload]);
+  const order = (orderPayload as any)?.data as Order | undefined;
 
-  React.useEffect(() => {
-    const parsed = (buyersError || companiesError || orderError) as any;
-    if (!parsed) return;
-    const message =
-      parsed?.data?.error?.message ||
-      parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load order";
-    console.error("Load Order Options Error:", message);
-  }, [buyersError, companiesError, orderError]);
-
-  const handleChange = (field: keyof OrderFormData, value: any) => {
-    setDraft((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  };
-
-  const handleNestedChange = (path: string, value: any) => {
-    setDraft((prev) => {
-      const next = { ...prev, orderItems: { ...prev.orderItems } };
-      setNestedValue(next, path, value);
-      return next;
-    });
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[path];
-      return next;
-    });
-  };
-
-  const handleValidateStep = (stepIndex: number) => {
-    // We use .create for step validation to ensure completeness even during edits
-    const schemaResult = OrderValidation.create.safeParse(draft);
-    if (schemaResult.success) {
-      setErrors({});
-      return true;
+  useEffect(() => {
+    if (order && !draft) {
+      const formData = toOrderFormData(order);
+      setDraft(formData);
+      setOriginalStatus(formData.status);
     }
+  }, [order, draft]);
 
-    const allErrors = toFieldErrors(schemaResult.error.issues);
-    const stepErrors: Record<string, string> = {};
-
-    if (stepIndex === 0) {
-      const fields = [
-        "orderNumber",
-        "orderDate",
-        "buyerId",
-        "companyProfileId",
-        "productType",
-      ];
-      fields.forEach((f) => {
-        if (allErrors[f]) stepErrors[f] = allErrors[f];
+  const handleChange = useCallback(
+    (field: keyof OrderFormData, value: any) => {
+      if (!draft) return;
+      setDraft((prev: any) => ({ ...prev, [field]: value }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
       });
-    } else if (stepIndex === 1) {
-      Object.keys(allErrors).forEach((key) => {
-        if (key.startsWith("orderItems")) stepErrors[key] = allErrors[key];
-      });
-    } else if (stepIndex === 2) {
-      if (allErrors["deliveryDate"])
-        stepErrors["deliveryDate"] = allErrors["deliveryDate"];
-    }
+    },
+    [draft],
+  );
 
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...stepErrors }));
-      toast.error("Please fill in the required fills");
-      return false;
-    }
-    return true;
-  };
+  const handleNestedChange = useCallback(
+    (path: string, value: any) => {
+      if (!draft) return;
+      setDraft((prev) => {
+        if (!prev) return prev;
+        const next = JSON.parse(JSON.stringify(prev));
+        const keys = path.split(".");
+        let obj = next;
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!obj[keys[i]]) obj[keys[i]] = {};
+          obj = obj[keys[i]];
+        }
+        obj[keys[keys.length - 1]] = value;
+        return next;
+      });
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[path];
+        return next;
+      });
+    },
+    [draft],
+  );
 
   const handleSave = async () => {
-    const schemaResult = OrderValidation.update.safeParse(draft);
-    if (!schemaResult.success) {
-      const nextErrors = toFieldErrors(schemaResult.error.issues);
+    if (!draft) return;
+
+    const payload = toOrderUpdatePayload(draft);
+    const result = OrderValidation.update.safeParse(payload);
+
+    if (!result.success) {
+      const nextErrors = toFieldErrors(result.error.issues);
       setErrors(nextErrors);
 
       // --- Teleport to Error Logic ---
@@ -190,13 +121,15 @@ const OrderEdit = ({ id }: Props) => {
       ];
 
       if (basicFields.some((f) => firstErrorKey.startsWith(f))) {
-        setActiveStep(0);
-      } else if (firstErrorKey.startsWith("orderItems")) {
-        setActiveStep(1);
-      } else if (firstErrorKey.startsWith("deliveryDate")) {
-        setActiveStep(2);
+        setActiveTab("basic");
+      } else if (
+        firstErrorKey.startsWith("orderItems") ||
+        firstErrorKey.startsWith("deliveryDate")
+      ) {
+        setActiveTab("details");
       }
 
+      toast.error("Please fix the validation errors");
       return;
     }
     setErrors({});
@@ -205,10 +138,11 @@ const OrderEdit = ({ id }: Props) => {
     try {
       await patchItem({
         path: `orders/${id}`,
-        body: toOrderUpdatePayload(schemaResult.data as any),
+        body: payload,
         invalidate: ["orders"],
       }).unwrap();
 
+      // Separate status update if changed
       if (draft.status !== originalStatus) {
         await putItem({
           path: `orders/${id}/status`,
@@ -217,62 +151,79 @@ const OrderEdit = ({ id }: Props) => {
         }).unwrap();
       }
 
+      toast.success("Order Updated Successfully");
       router.push(`/order-management/orders/${id}`);
     } catch (err: any) {
-      const message =
-        err?.data?.error?.message ||
-        err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save order";
-      console.error("Save Order Error:", message);
+      const msg =
+        err?.data?.message || err?.message || "Failed to update order";
+      console.error("Update Order Error:", msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
+  if (loadingOrder || !draft) {
+    return (
+      <Container className="pt-10">
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 animate-pulse">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+            Loading Order...
+          </p>
+        </div>
+      </Container>
+    );
+  }
+
   return (
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <Button variant="outline" asChild>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" asChild>
             <Link href={`/order-management/orders/${id}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Order Details
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+              Edit Order
+            </h1>
+            <p className="text-sm text-slate-500">
+              Update order information and production details
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild disabled={saving}>
             <Link href={`/order-management/orders/${id}`}>Cancel</Link>
           </Button>
           <Button
-            className="bg-black text-white hover:bg-black/90"
+            className="bg-black text-white hover:bg-black/90 shadow-lg"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving Changes..." : "Update Order"}
           </Button>
         </div>
       </Flex>
-      {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
-          Loading order...
-        </PrimaryText>
-      )}
 
-      <OrderForm
-        data={draft}
-        buyers={buyers}
-        companies={companies}
-        activeStep={activeStep}
-        onStepChange={setActiveStep}
-        onChange={handleChange}
-        onNestedChange={handleNestedChange}
-        onValidateStep={handleValidateStep}
-        errors={errors}
-        disableProductType
-      />
+      <div className="mt-8">
+        <OrderForm
+          data={draft}
+          buyers={buyers}
+          companies={companies}
+          onChange={handleChange}
+          onNestedChange={handleNestedChange}
+          errors={errors}
+          isEdit={true}
+          disableProductType={true}
+          onSave={handleSave}
+          saving={saving}
+          activeTab={activeTab}
+          onTabChange={setActiveTab as any}
+        />
+      </div>
     </Container>
   );
 };

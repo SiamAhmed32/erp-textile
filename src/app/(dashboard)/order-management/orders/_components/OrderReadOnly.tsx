@@ -11,7 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
-import { FileText, User, Package, List, ScrollText, Building2 } from "lucide-react";
+import {
+  FileText,
+  User,
+  Package,
+  List,
+  ScrollText,
+  Building2,
+} from "lucide-react";
 
 type Props = {
   order: Order;
@@ -31,46 +38,102 @@ const OrderReadOnly = ({ order }: Props) => {
   const renderFabricTable = () => {
     const rows = fabricItem?.fabricItemData || [];
     if (!rows.length) return null;
-    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
+
+    // totalAmount might be a string or number in the API
+    const totalAmount = rows.reduce(
+      (sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0),
+      0,
+    );
+
     return (
       <div className="rounded-md border border-slate-200 overflow-hidden">
         <Table className="border-collapse">
           <TableHeader>
             <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Style No</TableHead>
-              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Description</TableHead>
-              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Width</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Color</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Yds)</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
-              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">
+                Style No
+              </TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">
+                Description
+              </TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">
+                Width
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Color
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Net Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Gross Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Qty (Yds)
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Unit Price
+              </TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">
+                Total
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((row: any, index: number) => (
-              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+              <TableRow
+                key={index}
+                className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50"
+              >
                 {index === 0 && (
                   <>
-                    <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{fabricItem?.styleNo || "-"}</TableCell>
-                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r border-slate-200 py-3">{fabricItem?.discription || "-"}</TableCell>
-                    <TableCell rowSpan={rows.length} className="text-center align-middle border-r border-slate-200 py-3">{fabricItem?.width || "-"}</TableCell>
+                    <TableCell
+                      rowSpan={rows.length}
+                      className="text-center align-middle font-medium border-r border-slate-200 py-3"
+                    >
+                      {fabricItem?.styleNo || "-"}
+                    </TableCell>
+                    <TableCell
+                      rowSpan={rows.length}
+                      className="text-center align-middle border-r border-slate-200 py-3"
+                    >
+                      {fabricItem?.discription || "-"}
+                    </TableCell>
+                    <TableCell
+                      rowSpan={rows.length}
+                      className="text-center align-middle border-r border-slate-200 py-3"
+                    >
+                      {fabricItem?.width || "-"}
+                    </TableCell>
                   </>
                 )}
-                <TableCell className="border-r border-slate-200 py-2">{row.color || "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.quantityYds ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.color || "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.netWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.grossWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.quantityYds ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.unitPrice ?? "-"}
+                </TableCell>
                 <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
           <tfoot className="bg-slate-50 border-t-2 border-slate-200">
             <TableRow className="hover:bg-slate-50">
-              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
-              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">
+                Total Amount:
+              </TableCell>
+              <TableCell className="font-bold py-3">
+                {totalAmount.toFixed(2)}
+              </TableCell>
             </TableRow>
           </tfoot>
         </Table>
@@ -81,42 +144,85 @@ const OrderReadOnly = ({ order }: Props) => {
   const renderLabelTable = () => {
     const rows = labelItem?.labelItemData || [];
     if (!rows.length) return null;
-    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
+    const totalAmount = rows.reduce(
+      (sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0),
+      0,
+    );
     return (
       <div className="rounded-md border border-slate-200 overflow-hidden">
         <Table className="border-collapse">
           <TableHeader>
             <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Style No</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Color</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Dzn)</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty (Pcs)</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
-              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">
+                Style No
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Color
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Net Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Gross Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Qty (Dzn)
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Qty (Pcs)
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Unit Price
+              </TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">
+                Total
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((row: any, index: number) => (
-              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+              <TableRow
+                key={index}
+                className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50"
+              >
                 {index === 0 && (
-                  <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{labelItem?.styleNo || "-"}</TableCell>
+                  <TableCell
+                    rowSpan={rows.length}
+                    className="text-center align-middle font-medium border-r border-slate-200 py-3"
+                  >
+                    {labelItem?.styleNo || "-"}
+                  </TableCell>
                 )}
-                <TableCell className="border-r border-slate-200 py-2">{row.color || "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.quantityDzn ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.quantityPcs ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.color || "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.netWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.grossWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.quantityDzn ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.quantityPcs ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.unitPrice ?? "-"}
+                </TableCell>
                 <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
           <tfoot className="bg-slate-50 border-t-2 border-slate-200">
             <TableRow className="hover:bg-slate-50">
-              <TableCell colSpan={7} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
-              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+              <TableCell colSpan={7} className="text-right font-bold py-3 pr-4">
+                Total Amount:
+              </TableCell>
+              <TableCell className="font-bold py-3">
+                {totalAmount.toFixed(2)}
+              </TableCell>
             </TableRow>
           </tfoot>
         </Table>
@@ -127,44 +233,91 @@ const OrderReadOnly = ({ order }: Props) => {
   const renderCartonTable = () => {
     const rows = cartonItem?.cartonItemData || [];
     if (!rows.length) return null;
-    const totalAmount = rows.reduce((sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0), 0);
+    const totalAmount = rows.reduce(
+      (sum: number, row: any) => sum + (parseFloat(row.totalAmount) || 0),
+      0,
+    );
     return (
       <div className="rounded-md border border-slate-200 overflow-hidden">
         <Table className="border-collapse">
           <TableHeader>
             <TableRow className="bg-slate-50 border-b border-slate-200 hover:bg-slate-50">
-              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">Order No</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Measurement</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Ply</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Qty</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Net Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Gross Weight</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit</TableHead>
-              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">Unit Price</TableHead>
-              <TableHead className="font-bold text-slate-700 h-10">Total</TableHead>
+              <TableHead className="text-center border-r border-slate-200 font-bold text-slate-700 h-10">
+                Order No
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Measurement
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Ply
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Qty
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Net Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Gross Weight
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Unit
+              </TableHead>
+              <TableHead className="border-r border-slate-200 font-bold text-slate-700 h-10">
+                Unit Price
+              </TableHead>
+              <TableHead className="font-bold text-slate-700 h-10">
+                Total
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((row: any, index: number) => (
-              <TableRow key={index} className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50">
+              <TableRow
+                key={index}
+                className="border-b border-slate-200 last:border-0 hover:bg-slate-50/50"
+              >
                 {index === 0 && (
-                  <TableCell rowSpan={rows.length} className="text-center align-middle font-medium border-r border-slate-200 py-3">{cartonItem?.orderNo || "-"}</TableCell>
+                  <TableCell
+                    rowSpan={rows.length}
+                    className="text-center align-middle font-medium border-r border-slate-200 py-3"
+                  >
+                    {cartonItem?.orderNo || "-"}
+                  </TableCell>
                 )}
-                <TableCell className="border-r border-slate-200 py-2">{row.cartonMeasurement || "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.cartonPly || "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.cartonQty ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.netWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.grossWeight ?? "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.unit || "-"}</TableCell>
-                <TableCell className="border-r border-slate-200 py-2">{row.unitPrice ?? "-"}</TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.cartonMeasurement || "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.cartonPly || "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.cartonQty ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.netWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.grossWeight ?? "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.unit || "-"}
+                </TableCell>
+                <TableCell className="border-r border-slate-200 py-2">
+                  {row.unitPrice ?? "-"}
+                </TableCell>
                 <TableCell className="py-2">{row.totalAmount ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
           <tfoot className="bg-slate-50 border-t-2 border-slate-200">
             <TableRow className="hover:bg-slate-50">
-              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">Total Amount:</TableCell>
-              <TableCell className="font-bold py-3">{totalAmount.toFixed(2)}</TableCell>
+              <TableCell colSpan={8} className="text-right font-bold py-3 pr-4">
+                Total Amount:
+              </TableCell>
+              <TableCell className="font-bold py-3">
+                {totalAmount.toFixed(2)}
+              </TableCell>
             </TableRow>
           </tfoot>
         </Table>
@@ -188,7 +341,9 @@ const OrderReadOnly = ({ order }: Props) => {
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Status</p>
-            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(order.status)}`}>
+            <span
+              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(order.status)}`}
+            >
               {order.status}
             </span>
           </div>
@@ -259,15 +414,21 @@ const OrderReadOnly = ({ order }: Props) => {
           </div>
           <div className="md:col-span-2 lg:col-span-3">
             <p className="text-xs text-muted-foreground">Address</p>
-            <p className="font-medium">{order.companyProfile?.address || "-"}</p>
+            <p className="font-medium">
+              {order.companyProfile?.address || "-"}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Bank Name</p>
-            <p className="font-medium">{order.companyProfile?.bankName || "-"}</p>
+            <p className="font-medium">
+              {order.companyProfile?.bankName || "-"}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">A/C Number</p>
-            <p className="font-medium">{order.companyProfile?.bankAccountNumber || "-"}</p>
+            <p className="font-medium">
+              {order.companyProfile?.bankAccountNumber || "-"}
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -304,4 +465,3 @@ const OrderReadOnly = ({ order }: Props) => {
 };
 
 export default OrderReadOnly;
-

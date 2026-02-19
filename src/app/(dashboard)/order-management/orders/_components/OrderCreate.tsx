@@ -1,31 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
+import { Container, Flex } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
   useGetByIdQuery,
   usePostMutation,
 } from "@/store/services/commonApi";
-import {
-  Order,
-  OrderApiItem,
-  OrderFormData,
-  Buyer,
-  CompanyProfile,
-} from "./types";
-import { normalizeOrder, toOrderFormData, toOrderPayload } from "./helpers";
-import OrderForm from "./OrderForm";
 import { OrderValidation, toFieldErrors } from "./validation";
+import { OrderFormData, Buyer, CompanyProfile, Order } from "./types";
+import { toOrderPayload, toOrderFormData, normalizeOrder } from "./helpers";
+import OrderForm from "./OrderForm";
 import { toast } from "react-toastify";
 
 const emptyOrder: OrderFormData = {
@@ -40,86 +29,71 @@ const emptyOrder: OrderFormData = {
   orderItems: {},
 };
 
-const setNestedValue = (obj: any, path: string, value: any) => {
-  const keys = path.split(".");
-  const last = keys.pop();
-  let current = obj;
-  keys.forEach((key) => {
-    if (!current[key]) current[key] = {};
-    current = current[key];
-  });
-  if (last) current[last] = value;
-};
-
 type Props = {
   duplicateId?: string;
 };
 
 const OrderCreate = ({ duplicateId }: Props) => {
   const router = useRouter();
-
-  const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [draft, setDraft] = useState<OrderFormData>(emptyOrder);
+  const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [postItem] = usePostMutation();
 
-  const { data: buyersPayload, error: buyersError } = useGetAllQuery({
+  // Fetch buyers and companies
+  const { data: buyersPayload } = useGetAllQuery({
     path: "buyers",
     page: 1,
     limit: 100,
   });
-  const { data: companiesPayload, error: companiesError } = useGetAllQuery({
+  const { data: companiesPayload } = useGetAllQuery({
     path: "company-profiles",
     page: 1,
     limit: 100,
   });
-  const { data: duplicatePayload, error: duplicateError } = useGetByIdQuery(
-    {
-      path: "orders",
-      id: duplicateId || "",
-    },
-    { skip: !duplicateId },
-  );
 
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const companies = ((companiesPayload as any)?.data || []) as CompanyProfile[];
 
-  React.useEffect(() => {
-    if (!duplicateId) return;
-    const item = (duplicatePayload as any)?.data as OrderApiItem | undefined;
-    if (!item) return;
-    const normalized = normalizeOrder(item);
-    const form = toOrderFormData(normalized);
-    form.orderNumber = "";
-    form.status = "DRAFT";
-    setDraft(form);
-  }, [duplicatePayload, duplicateId]);
+  // Duplicate order support
+  const { data: duplicatePayload } = useGetByIdQuery(
+    { path: "orders", id: duplicateId! },
+    { skip: !duplicateId },
+  );
 
-  React.useEffect(() => {
-    const parsed = (buyersError || companiesError || duplicateError) as any;
-    if (!parsed) return;
-    const message =
-      parsed?.data?.error?.message ||
-      parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load options";
-    console.error("Load Options Error:", message);
-  }, [buyersError, companiesError, duplicateError]);
+  useEffect(() => {
+    if (duplicateId && duplicatePayload) {
+      const order = (duplicatePayload as any)?.data as Order;
+      if (order) {
+        const normalized = normalizeOrder(order as any);
+        const formData = toOrderFormData(normalized);
+        formData.orderNumber = ""; // Clear order number for duplicate
+        formData.status = "DRAFT";
+        setDraft(formData);
+      }
+    }
+  }, [duplicateId, duplicatePayload]);
 
-  const handleChange = (field: keyof OrderFormData, value: any) => {
+  const handleChange = useCallback((field: keyof OrderFormData, value: any) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
       const next = { ...prev };
       delete next[field];
       return next;
     });
-  };
+  }, []);
 
-  const handleNestedChange = (path: string, value: any) => {
+  const handleNestedChange = useCallback((path: string, value: any) => {
     setDraft((prev) => {
-      const next = { ...prev, orderItems: { ...prev.orderItems } };
-      setNestedValue(next, path, value);
+      const next = JSON.parse(JSON.stringify(prev));
+      const keys = path.split(".");
+      let obj = next;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!obj[keys[i]]) obj[keys[i]] = {};
+        obj = obj[keys[i]];
+      }
+      obj[keys[keys.length - 1]] = value;
       return next;
     });
     setErrors((prev) => {
@@ -127,53 +101,14 @@ const OrderCreate = ({ duplicateId }: Props) => {
       delete next[path];
       return next;
     });
-  };
-
-  const handleValidateStep = (stepIndex: number) => {
-    const schemaResult = OrderValidation.create.safeParse(draft);
-    if (schemaResult.success) {
-      setErrors({});
-      return true;
-    }
-
-    const allErrors = toFieldErrors(schemaResult.error.issues);
-    const stepErrors: Record<string, string> = {};
-
-    if (stepIndex === 0) {
-      const fields = [
-        "orderNumber",
-        "orderDate",
-        "buyerId",
-        "companyProfileId",
-        "productType",
-      ];
-      fields.forEach((f) => {
-        if (allErrors[f]) stepErrors[f] = allErrors[f];
-      });
-    } else if (stepIndex === 1) {
-      Object.keys(allErrors).forEach((key) => {
-        if (key.startsWith("orderItems")) stepErrors[key] = allErrors[key];
-      });
-    } else if (stepIndex === 2) {
-      if (allErrors["deliveryDate"])
-        stepErrors["deliveryDate"] = allErrors["deliveryDate"];
-    }
-
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...stepErrors }));
-      toast.error("Please fill in the required fills");
-      return false;
-    }
-    return true;
-  };
+  }, []);
 
   const handleSave = async () => {
-    const isUpdate = !!draft.id;
-    const schema = isUpdate ? OrderValidation.update : OrderValidation.create;
-    const schemaResult = schema.safeParse(draft);
+    const payload = toOrderPayload(draft);
+    const result = OrderValidation.create.safeParse(payload);
 
-    if (!schemaResult.success) {
-      const nextErrors = toFieldErrors(schemaResult.error.issues);
+    if (!result.success) {
+      const nextErrors = toFieldErrors(result.error.issues);
       setErrors(nextErrors);
 
       // --- Teleport to Error Logic ---
@@ -187,42 +122,37 @@ const OrderCreate = ({ duplicateId }: Props) => {
       ];
 
       if (basicFields.some((f) => firstErrorKey.startsWith(f))) {
-        setActiveStep(0);
-      } else if (firstErrorKey.startsWith("orderItems")) {
-        setActiveStep(1);
-      } else if (firstErrorKey.startsWith("deliveryDate")) {
-        setActiveStep(2);
+        setActiveTab("basic");
+      } else if (
+        firstErrorKey.startsWith("orderItems") ||
+        firstErrorKey.startsWith("deliveryDate")
+      ) {
+        setActiveTab("details");
       }
 
-      console.log("Validation errors:", nextErrors);
-      toast.error("Please fill in the required fills");
+      toast.error("Please fill in the required fields");
       return;
     }
     setErrors({});
 
     setSaving(true);
     try {
-      const payload = (await postItem({
+      const res = await postItem({
         path: "orders",
-        body: toOrderPayload(schemaResult.data as any),
+        body: toOrderPayload(result.data as any),
         invalidate: ["orders"],
-      }).unwrap()) as any;
-      const item = (payload?.data || payload) as OrderApiItem;
-      const normalized = item ? normalizeOrder(item) : null;
-      if (normalized?.id) {
-        router.push(`/order-management/orders/${normalized.id}`);
-      } else {
-        router.push(`/order-management/orders`);
-      }
+      }).unwrap();
+
+      toast.success("Order Created Successfully");
+      const id = (res as any)?.data?.id || (res as any)?.id;
+      router.push(
+        id ? `/order-management/orders/${id}` : "/order-management/orders",
+      );
     } catch (err: any) {
-      const message =
-        err?.data?.error?.message ||
-        err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to create order";
-      console.error("Create Order Error:", message);
-      toast.error(message);
+      const msg =
+        err?.data?.message || err?.message || "Failed to create order";
+      console.error("Create Order Error:", msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -231,40 +161,50 @@ const OrderCreate = ({ duplicateId }: Props) => {
   return (
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <Button variant="outline" asChild>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="icon" asChild>
             <Link href="/order-management/orders">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Orders
+              <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Create New Order
+            </h1>
+            <p className="text-sm text-slate-500">
+              Configure a new production order
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild disabled={saving}>
             <Link href="/order-management/orders">Cancel</Link>
           </Button>
           <Button
-            className="bg-black text-white hover:bg-black/90"
+            className="bg-black text-white hover:bg-black/90 shadow-lg"
             onClick={handleSave}
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save Order"}
+            {saving ? "Creating..." : "Save Order"}
           </Button>
         </div>
       </Flex>
 
-      <OrderForm
-        data={draft}
-        buyers={buyers}
-        companies={companies}
-        activeStep={activeStep}
-        onStepChange={setActiveStep}
-        onChange={handleChange}
-        onNestedChange={handleNestedChange}
-        onValidateStep={handleValidateStep}
-        errors={errors}
-        disableStatus={true}
-      />
+      <div className="mt-8">
+        <OrderForm
+          data={draft}
+          buyers={buyers}
+          companies={companies}
+          onChange={handleChange}
+          onNestedChange={handleNestedChange}
+          errors={errors}
+          onSave={handleSave}
+          saving={saving}
+          activeTab={activeTab}
+          onTabChange={setActiveTab as any}
+          disableStatus
+        />
+      </div>
     </Container>
   );
 };

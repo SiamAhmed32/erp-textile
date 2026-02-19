@@ -167,38 +167,38 @@ const LCForm = ({
         onValueChange={(v: string) => setActiveTab(v as TabKey)}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-5 h-16 p-1 bg-slate-100/80 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-sm overflow-x-auto whitespace-nowrap">
+        <TabsList className="tab-modern-pills">
           <TabsTrigger
             value="general"
-            className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md gap-2"
+            className="tab-modern-pill data-[state=active]:gap-3 gap-2"
           >
             <Info className="size-4" />
             <span className="hidden sm:inline">General & PI</span>
           </TabsTrigger>
           <TabsTrigger
             value="export"
-            className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md gap-2"
+            className="tab-modern-pill data-[state=active]:gap-3 gap-2"
           >
             <Globe className="size-4" />
             <span className="hidden sm:inline">Export Details</span>
           </TabsTrigger>
           <TabsTrigger
             value="boe"
-            className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md gap-2"
+            className="tab-modern-pill data-[state=active]:gap-3 gap-2"
           >
             <Banknote className="size-4" />
             <span className="hidden sm:inline">Bill of Exchange</span>
           </TabsTrigger>
           <TabsTrigger
             value="delivery"
-            className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md gap-2"
+            className="tab-modern-pill data-[state=active]:gap-3 gap-2"
           >
             <Truck className="size-4" />
             <span className="hidden sm:inline">Challan Info</span>
           </TabsTrigger>
           <TabsTrigger
             value="remarks"
-            className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md gap-2"
+            className="tab-modern-pill data-[state=active]:gap-3 gap-2"
           >
             <ClipboardList className="size-4" />
             <span className="hidden sm:inline">Certificates</span>

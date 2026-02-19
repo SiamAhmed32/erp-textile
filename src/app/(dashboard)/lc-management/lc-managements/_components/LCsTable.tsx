@@ -109,7 +109,7 @@ const LCsTable = ({
         ),
       },
       {
-        header: "Invoice No",
+        header: "PI No",
         accessor: (row: LCManagement) => (
           <span className="text-xs">{row.invoice?.piNumber || "-"}</span>
         ),

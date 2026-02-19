@@ -21,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-primaryBg text-primaryText antialiased`}>
+      <body
+        className={`${inter.className} bg-primaryBg text-primaryText antialiased`}
+      >
         <ReduxProvider>
           {children}
           <ToastContainer position="top-right" autoClose={1000} />

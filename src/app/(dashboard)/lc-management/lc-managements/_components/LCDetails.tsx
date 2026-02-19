@@ -34,6 +34,7 @@ import {
   exportCertificateOfOriginPdf,
   exportBillOfExchangePdf,
 } from "./lcPdf";
+import { normalizeLCItems } from "./utils";
 
 type Props = {
   id: string;
@@ -54,7 +55,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
 
   const lc = (lcPayload as any)?.data as LCManagement | undefined;
 
-  // Supplementary fetch for detailed invoice to get buyer info if not in LC payload
+  // 2. Fetch full Invoice to get orderId
   const { data: invoicePayload } = useGetByIdQuery(
     {
       path: "invoices",
@@ -65,17 +66,38 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
 
   const fullInvoice = (invoicePayload as any)?.data;
 
-  // Enrich LC object with full invoice/order/buyer if missing
+  // 3. Fetch full Order to get companyProfile and detailed buyer
+  const { data: orderPayload } = useGetByIdQuery(
+    {
+      path: "orders",
+      id: fullInvoice?.orderId,
+    },
+    { skip: !fullInvoice?.orderId },
+  );
+
+  const fullOrder = (orderPayload as any)?.data;
+
+  // Enrich LC object with full invoice and deep order (company/buyer) relations
   const enrichedLc = React.useMemo(() => {
     if (!lc) return undefined;
-    const newLc = { ...lc };
-    if (!newLc.invoice && fullInvoice) {
-      newLc.invoice = fullInvoice;
-    } else if (newLc.invoice && !newLc.invoice.order && fullInvoice?.order) {
-      newLc.invoice.order = fullInvoice.order;
+
+    // Deep clone to safely merge
+    const newLc = JSON.parse(JSON.stringify(lc));
+
+    if (fullInvoice) {
+      newLc.invoice = { ...newLc.invoice, ...fullInvoice };
     }
+
+    // Merge the full order into the invoice
+    if (fullOrder && newLc.invoice) {
+      newLc.invoice.order = {
+        ...(newLc.invoice.order || {}),
+        ...fullOrder,
+      };
+    }
+
     return newLc;
-  }, [lc, fullInvoice]);
+  }, [lc, fullInvoice, fullOrder]);
 
   React.useEffect(() => {
     const error = lcError as any;
@@ -88,7 +110,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
   }, [lcError]);
 
   const handleExport = React.useCallback(
-    (type: string) => {
+    (type: string, date?: string) => {
       if (!lc) return;
       switch (type) {
         case "commercial-invoice":
@@ -98,10 +120,10 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
           exportDeliveryChallanPdf(enrichedLc!);
           break;
         case "beneficiary-certificate":
-          exportBeneficiaryCertificatePdf(enrichedLc!);
+          exportBeneficiaryCertificatePdf(enrichedLc!, date);
           break;
         case "certificate-of-origin":
-          exportCertificateOfOriginPdf(enrichedLc!);
+          exportCertificateOfOriginPdf(enrichedLc!, date);
           break;
         case "bill-of-exchange":
           exportBillOfExchangePdf(enrichedLc!);
@@ -116,6 +138,11 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
     exportTriggered.current = true;
     handleExport("commercial-invoice");
   }, [enrichedLc, shouldExport, handleExport]);
+
+  const normalizedItems = React.useMemo(() => {
+    if (!enrichedLc) return [];
+    return normalizeLCItems(enrichedLc);
+  }, [enrichedLc]);
 
   return (
     <Container className="pb-10 pt-6">
@@ -143,7 +170,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
                   className="gap-2 border-slate-200 hover:bg-slate-50"
                 >
                   <Download className="h-4 w-4" />
-                  Export
+                  Quick Export
                   <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
@@ -152,7 +179,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
                 className="w-60 rounded-xl shadow-2xl border-slate-100"
               >
                 <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-400 font-black">
-                  Download Document
+                  Direct Download
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -216,7 +243,11 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
 
       {enrichedLc && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          <LCReadOnly lc={enrichedLc} />
+          <LCReadOnly
+            lc={enrichedLc}
+            items={normalizedItems}
+            onExport={handleExport}
+          />
         </div>
       )}
     </Container>

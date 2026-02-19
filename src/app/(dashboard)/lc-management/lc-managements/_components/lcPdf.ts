@@ -63,12 +63,15 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
   doc.text("For Account & Risk of Messers", margin + 2, y + 2);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(10);
+  doc.setFontSize(10.5);
   doc.text((buyer?.name || "N/A").toUpperCase(), margin + 2, y + 8);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
-  const addrLines = doc.splitTextToSize(buyer?.address || "", midX - margin - 6);
+  const buyerAddr = buyer?.address || "";
+  const buyerLoc = buyer?.location || "";
+  const displayAddr = [buyerAddr, buyerLoc].filter(Boolean).join(", ");
+  const addrLines = doc.splitTextToSize(displayAddr, midX - margin - 6);
   doc.text(addrLines, margin + 2, y + 13);
 
   // Right column - Invoice info
@@ -296,15 +299,19 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   // ── Company Header ──
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.text(company?.name || "Company Name", pw / 2, y, { align: "center" });
+  doc.text((company?.name || "Company Name").toUpperCase(), pw / 2, y, { align: "center" });
 
   y += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
-  const companyAddr = company?.address || "Export Oriented Garments Accessories & Packaging Industry";
-  const addrLines = doc.splitTextToSize(companyAddr, pw - margin * 2);
-  doc.text(addrLines, pw / 2, y, { align: "center" });
-  y += (addrLines.length * 4);
+  const companyAddr = company?.address || "";
+  if (companyAddr) {
+    const addrLines = doc.splitTextToSize(companyAddr, pw - margin * 2);
+    doc.text(addrLines, pw / 2, y, { align: "center" });
+    y += (addrLines.length * 4);
+  } else {
+    y += 4;
+  }
 
   y += 4;
   doc.setFont("helvetica", "bold");
@@ -324,12 +331,12 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   doc.setFont("helvetica", "bold");
   doc.text("Challan No:", lx, y);
   doc.setFont("helvetica", "normal");
-  doc.text(lc.challanNo || "-", lvx, y);
+  doc.text((lc.challanNo || "-").toString().trim(), lvx, y);
 
   doc.setFont("helvetica", "bold");
   doc.text("L/C No:", lx, y + 6);
   doc.setFont("helvetica", "normal");
-  doc.text(invoice?.piNumber || "-", lvx, y + 6);
+  doc.text(lc.exportLcNo || "-", lvx, y + 6);
 
   doc.setFont("helvetica", "bold");
   doc.text("B/B L/C No:", lx, y + 12);
@@ -349,19 +356,26 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   doc.setFont("helvetica", "normal");
   doc.text(invoice?.piNumber || "-", rvx, y + 6);
 
-  // ── Consignee ──
+  // ── Buyer Information ──
   y += 22;
   doc.setFont("helvetica", "bold");
-  doc.text("Consignee:", lx, y);
+  doc.setFontSize(9);
+  doc.text("Buyer Name :", lx, y);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text((buyer?.name || "N/A").toUpperCase(), lx, y + 6);
+  const buyerName = (buyer?.name || "N/A").toUpperCase();
+  doc.text(buyerName, lx + 24, y);
+
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(8.5);
   const buyerAddr = buyer?.address || "";
-  if (buyerAddr) {
-    const addrLines = doc.splitTextToSize(buyerAddr, pw / 2 - margin);
-    doc.text(addrLines, lx, y + 11);
+  const buyerLoc = buyer?.location || "";
+  const displayAddr = [buyerAddr, buyerLoc].filter(Boolean).join(", ");
+  
+  if (displayAddr) {
+    const addrLines = doc.splitTextToSize(displayAddr, pw - margin * 2 - 20);
+    doc.text(addrLines, lx, y + 6);
+    y += (addrLines.length * 4);
   }
 
   y += 14;
@@ -478,20 +492,20 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
    3. BENEFICIARY CERTIFICATE
    ═══════════════════════════════════════════════════ */
 
-export const exportBeneficiaryCertificatePdf = (lc: LCManagement) => {
-  generateCertificatePdf(lc, "Beneficiary Certificate");
+export const exportBeneficiaryCertificatePdf = (lc: LCManagement, date?: string) => {
+  generateCertificatePdf(lc, "Beneficiary Certificate", date);
 };
 
 /* ═══════════════════════════════════════════════════
    4. CERTIFICATE OF ORIGIN
    ═══════════════════════════════════════════════════ */
 
-export const exportCertificateOfOriginPdf = (lc: LCManagement) => {
-  generateCertificatePdf(lc, "Certificate of Origin");
+export const exportCertificateOfOriginPdf = (lc: LCManagement, date?: string) => {
+  generateCertificatePdf(lc, "Certificate of Origin", date);
 };
 
 /* ─── shared certificate generator ─── */
-const generateCertificatePdf = (lc: LCManagement, title: string) => {
+const generateCertificatePdf = (lc: LCManagement, title: string, date?: string) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -506,7 +520,7 @@ const generateCertificatePdf = (lc: LCManagement, title: string) => {
   // ── Date ──
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Date : ${fmt(lc.dateOfOpening)}`, margin + 2, y);
+  doc.text(`Date : ${fmt(date || lc.dateOfOpening)}`, margin + 2, y);
 
   // ── Title ──
   y += 18;
@@ -588,9 +602,9 @@ const generateCertificatePdf = (lc: LCManagement, title: string) => {
     },
     columnStyles: {
       0: { cellWidth: 20, halign: "left" },
-      1: { cellWidth: 40, halign: "left" },
+      1: { cellWidth: 38, halign: "left" },
       2: { cellWidth: 14, halign: "center" },
-      3: { cellWidth: 18, halign: "center" },
+      3: { cellWidth: 16, halign: "center" },
       4: { cellWidth: 28, halign: "center" },
       5: { cellWidth: 28, halign: "center" },
       6: { cellWidth: 38, halign: "right" },
@@ -621,7 +635,7 @@ const generateCertificatePdf = (lc: LCManagement, title: string) => {
   doc.setFontSize(8);
   doc.text("Authorised Signature", margin + 2, sigY + 5);
   doc.setFont("helvetica", "bolditalic");
-  doc.text(`For ${company?.name || "Company"} .`, margin + 2, sigY + 10);
+  doc.text(`For ${company?.name || "Company"}.`, margin + 2, sigY + 10);
 
   const safeName = title.replace(/\s+/g, "_");
   doc.save(`${safeName}_${lc.bblcNumber}.pdf`);
@@ -657,19 +671,14 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     // ── Title ──
     doc.setFont("times", "bold");
     doc.setFontSize(22);
-    doc.text("BILL OF EXCHANGE", pw / 2, y, { align: "center" });
-
-    // ── Copy number (large bold) ──
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(40);
-    doc.text(String(copyNum), pw / 2, y + 8, { align: "center" });
+    doc.text(`BILL OF EXCHANGE - ${copyNum}`, pw / 2, y, { align: "center" });
 
     // ── Left: amount + LC number ──
     y += 14;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.text(`FOR ${amountStr}`, margin + 2, y);
-    doc.text(invoice?.piNumber || "", margin + 2, y + 5);
+    doc.text(`P.I No: ${invoice?.piNumber || "-"}`, margin + 2, y + 5);
 
     // ── Right: date + location ──
     doc.text(boeDate, pw - margin - 2, y, { align: "right" });
@@ -680,8 +689,8 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     const bodyText =
-      `AT 120 SIGHT ${ordinal} of Exchange ( ${otherOrdinal} of the same tenor and date being unpaid) ` +
-      `pay to the order of ${lc.lcIssueBankName} ,${lc.lcIssueBankBranch},${location},Bangladesh ` +
+      `AT 120 SIGHT ${ordinal} of Exchange (${otherOrdinal} of the same tenor and date being unpaid) ` +
+      `pay to the order of ${lc.lcIssueBankName}, ${lc.lcIssueBankBranch}, ${location}, Bangladesh ` +
       `the sum of`;
     const bodyLines = doc.splitTextToSize(bodyText, pw - margin * 2 - 4);
     doc.text(bodyLines, pw / 2, y, { align: "center", maxWidth: pw - margin * 2 });
@@ -705,7 +714,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.text(valueLine, pw / 2, y, { align: "center" });
 
     y += 5;
-    const issuedLine = `ISSUED BY: ${lc.lcIssueBankName.toUpperCase()} ${lc.lcIssueBankBranch}, Bangladesh.`;
+    const issuedLine = `ISSUED BY: ${lc.lcIssueBankName.toUpperCase()}, ${lc.lcIssueBankBranch}, Bangladesh.`;
     doc.text(issuedLine, pw / 2, y, { align: "center" });
 
     y += 5;
@@ -725,7 +734,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.setFont("helvetica", "normal");
     doc.text("TO :", margin + 2, y + 4);
     doc.text(lc.lcIssueBankBranch, margin + 12, y + 4);
-    doc.text(`${location},Bangladesh.`, margin + 12, y + 8);
+    doc.text(`${location}, Bangladesh.`, margin + 12, y + 8);
 
     // ── Signature (right) ──
     const sigX = pw - margin - 55;
@@ -734,7 +743,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.setFontSize(8);
     doc.text("Authorised Signature", sigX + 8, y + 2);
     doc.setFont("helvetica", "bolditalic");
-    doc.text(`For ${company?.name || "Company"} .`, sigX + 8, y + 7);
+    doc.text(`For ${company?.name || "Company"}.`, sigX + 8, y + 7);
 
     return y + 15;
   };
@@ -756,23 +765,3 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
   doc.save(`Bill_of_Exchange_${lc.bblcNumber}.pdf`);
 };
 
-/* ═══════════════════════════════════════════════════
-   6. EXPORTER CERTIFICATE (used by CertificatesTable)
-   ═══════════════════════════════════════════════════ */
-
-export const exportExporterCertificate = (
-  lc: LCManagement,
-  type: "beneficiary" | "origin",
-  dateStr?: string,
-) => {
-  const title =
-    type === "beneficiary" ? "Beneficiary Certificate" : "Certificate of Origin";
-
-  // If a custom date is provided, temporarily override dateOfOpening for the cert date line
-  if (dateStr) {
-    const overriddenLc = { ...lc, dateOfOpening: new Date(dateStr).toISOString() };
-    generateCertificatePdf(overriddenLc, title);
-  } else {
-    generateCertificatePdf(lc, title);
-  }
-};
