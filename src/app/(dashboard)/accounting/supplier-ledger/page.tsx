@@ -24,9 +24,9 @@ interface Transaction {
 interface SupplierRow {
     name: string;
     code: string;
-    raised: number;
-    paid: number;
-    outstanding: number;
+    raisedAmount: number;
+    paidAmount: number;
+    outstandingAmount: number;
     status: "settled" | "active" | "overdue";
     transactions: Transaction[];
 }
@@ -35,9 +35,9 @@ const suppliers: SupplierRow[] = [
     {
         name: "Karim Traders",
         code: "SUPP-001",
-        raised: 32500,
-        paid: 20000,
-        outstanding: 12500,
+        raisedAmount: 32500,
+        paidAmount: 20000,
+        outstandingAmount: 12500,
         status: "active",
         transactions: [
             { ref: "JE-039", date: "17 Feb 2026", type: "Supplier Due", amount: 32500, balance: 32500, narration: "Purchased raw materials on credit" },
@@ -47,9 +47,9 @@ const suppliers: SupplierRow[] = [
     {
         name: "National Supply Co",
         code: "SUPP-002",
-        raised: 36000,
-        paid: 16500,
-        outstanding: 19500,
+        raisedAmount: 36000,
+        paidAmount: 16500,
+        outstandingAmount: 19500,
         status: "overdue",
         transactions: [
             { ref: "JE-032", date: "10 Feb 2026", type: "Supplier Due", amount: 36000, balance: 36000, narration: "Machinery spare parts" },
@@ -59,9 +59,9 @@ const suppliers: SupplierRow[] = [
     {
         name: "Delta Imports",
         code: "SUPP-003",
-        raised: 0,
-        paid: 0,
-        outstanding: 0,
+        raisedAmount: 0,
+        paidAmount: 0,
+        outstandingAmount: 0,
         status: "settled",
         transactions: [],
     },
@@ -80,7 +80,7 @@ const initialFormData = {
 function SupplierFormModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [formData, setFormData] = useState(initialFormData);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -183,15 +183,15 @@ export default function SupplierLedgerPage() {
         },
         {
             header: "Due Raised",
-            accessor: (row: SupplierRow) => fmt(row.raised),
+            accessor: (row: SupplierRow) => fmt(row.raisedAmount),
         },
         {
             header: "Paid",
-            accessor: (row: SupplierRow) => fmt(row.paid),
+            accessor: (row: SupplierRow) => fmt(row.paidAmount),
         },
         {
             header: "Outstanding",
-            accessor: (row: SupplierRow) => fmt(row.outstanding),
+            accessor: (row: SupplierRow) => fmt(row.outstandingAmount),
         },
         {
             header: "Status",
@@ -267,8 +267,8 @@ export default function SupplierLedgerPage() {
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <StatsCard title="Total Suppliers" value={suppliers.length} icon={Building} color="blue" />
                     <StatsCard title="Total Due Raised" value="৳ 68,500" icon={Building} color="orange" />
-                    <StatsCard title="Amount Paid" value="৳ 36,500" icon={ArrowUpCircle} color="green" />
-                    <StatsCard title="Outstanding" value="৳ 32,000" icon={AlertCircle} color="red" />
+                    <StatsCard title="Paid Amount" value="৳ 36,500" icon={ArrowUpCircle} color="green" />
+                    <StatsCard title="Outstanding Amount" value="৳ 32,000" icon={AlertCircle} color="red" />
                 </div>
 
                 {/* Toolbar - matching InvoicesTable layout */}

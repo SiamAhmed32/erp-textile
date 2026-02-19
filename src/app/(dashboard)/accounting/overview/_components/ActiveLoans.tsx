@@ -21,7 +21,7 @@ const ActiveLoans = ({ loans }: ActiveLoansProps) => {
 
                 <div className="space-y-6">
                     {loans.map((loan) => {
-                        const percentage = (loan.outstanding / loan.total) * 100;
+                        const percentage = (loan.outstandingAmount / loan.totalAmount) * 100;
                         return (
                             <div key={loan.id} className="space-y-2">
                                 <Flex className="justify-between items-end">
@@ -31,10 +31,10 @@ const ActiveLoans = ({ loans }: ActiveLoansProps) => {
                                     </Box>
                                     <Box className="text-right">
                                         <p className="text-sm font-bold text-secondary">
-                                            ${loan.outstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                            ${loan.outstandingAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                         </p>
                                         <p className="text-[10px] text-muted-foreground">
-                                            of ${loan.total.toLocaleString()}
+                                            of ${loan.totalAmount.toLocaleString()}
                                         </p>
                                     </Box>
                                 </Flex>
