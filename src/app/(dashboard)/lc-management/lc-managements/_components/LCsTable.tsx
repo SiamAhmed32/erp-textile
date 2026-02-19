@@ -79,6 +79,16 @@ const LCsTable = ({
         ),
       },
       {
+        header: "Buyer",
+        accessor: (row: LCManagement) => (
+          <div className="flex flex-col">
+            <span className="font-semibold text-slate-900 uppercase tracking-tight text-[11px]">
+              {row.invoice?.order?.buyer?.name || "N/A"}
+            </span>
+          </div>
+        ),
+      },
+      {
         header: "Amount",
         accessor: (row: LCManagement) => (
           <span className="font-semibold">

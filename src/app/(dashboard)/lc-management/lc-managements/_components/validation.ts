@@ -44,6 +44,13 @@ export const lcSchema = z.object({
   contactNo: z.string().min(5, "Contact No is required"),
 
   invoiceId: z.string().uuid("Please select an invoice"),
+
+  billOfExchangeRemarkClient: z.string().optional(),
+  billOfExchangeDateClient: z.string().optional(),
+  billOfExchangeLocationClient: z.string().optional(),
+  billOfExchangeRemarkBank: z.string().optional(),
+  billOfExchangeDateBank: z.string().optional(),
+  billOfExchangeLocationBank: z.string().optional(),
 });
 
 export type LCFormData = z.infer<typeof lcSchema>;

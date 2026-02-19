@@ -137,6 +137,13 @@ const OrdersTable = ({
   const columns = useMemo(
     () => [
       {
+        header: "Date",
+        className: "px-4 ",
+        accessor: (row: Order) => (
+          <div className="whitespace-nowrap">{formatDate(row.orderDate)}</div>
+        ),
+      },
+      {
         header: "Order",
         className: "",
         accessor: (row: Order) => (
@@ -147,9 +154,8 @@ const OrdersTable = ({
           </div>
         ),
       },
-
       {
-        header: "Client",
+        header: "Buyer",
         className: " ",
         accessor: (row: Order) => (
           <div className="">
@@ -159,14 +165,6 @@ const OrdersTable = ({
           </div>
         ),
       },
-      {
-        header: "Date",
-        className: "px-4 ",
-        accessor: (row: Order) => (
-          <div className="whitespace-nowrap">{formatDate(row.orderDate)}</div>
-        ),
-      },
-
       {
         header: "Type",
         className: "",

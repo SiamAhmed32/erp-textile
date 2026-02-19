@@ -35,6 +35,12 @@ const emptyLC: LCFormData = {
   driverName: "",
   contactNo: "",
   invoiceId: "",
+  billOfExchangeRemarkClient: "",
+  billOfExchangeDateClient: "",
+  billOfExchangeLocationClient: "",
+  billOfExchangeRemarkBank: "",
+  billOfExchangeDateBank: "",
+  billOfExchangeLocationBank: "",
 };
 
 const LCCreate = () => {
@@ -123,6 +129,14 @@ const LCCreate = () => {
         issueDate: new Date(draft.issueDate).toISOString(),
         expiryDate: new Date(draft.expiryDate).toISOString(),
         exportLcDate: new Date(draft.exportLcDate).toISOString(),
+        billOfExchangeDateClient: draft.billOfExchangeDateClient
+          ? new Date(draft.billOfExchangeDateClient).toISOString()
+          : undefined,
+        billOfExchangeDateBank: draft.billOfExchangeDateBank
+          ? new Date(draft.billOfExchangeDateBank).toISOString()
+          : undefined,
+        billOfExchangeRemarkClient: draft.billOfExchangeRemarkClient || "",
+        billOfExchangeRemarkBank: draft.billOfExchangeRemarkBank || "",
       };
 
       const result = await postItem({
@@ -183,6 +197,8 @@ const LCCreate = () => {
           invoices={invoices}
           onChange={handleChange}
           errors={errors}
+          onSave={handleSave}
+          saving={saving}
         />
       </div>
     </Container>

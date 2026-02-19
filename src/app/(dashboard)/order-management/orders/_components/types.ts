@@ -118,6 +118,14 @@ export type Order = {
     orderItems?: OrderItem | OrderItem[];
     isInvoice?: boolean;
     isLc?: boolean;
+    invoices?: {
+        id: string;
+        piNumber: string;
+        lcManagement?: {
+            id: string;
+            bblcNumber: string;
+        } | null;
+    } | null;
 };
 
 export type OrderApiItem = Partial<Order>;

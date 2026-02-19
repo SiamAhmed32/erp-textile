@@ -65,7 +65,27 @@ const CertificatesTable = ({
     triggerGetDetails,
     { data: fullLCResponse, isFetching: loadingDetails },
   ] = useLazyGetByIdQuery();
-  const fullLC = (fullLCResponse as any)?.data as LCManagement | undefined;
+  const [
+    triggerGetInvoice,
+    { data: fullInvoiceResponse, isFetching: loadingInvoice },
+  ] = useLazyGetByIdQuery();
+
+  const lcFromApi = (fullLCResponse as any)?.data as LCManagement | undefined;
+  const invoiceFromApi = (fullInvoiceResponse as any)?.data;
+
+  const fullLC = useMemo(() => {
+    if (!lcFromApi) return undefined;
+    const enriched = { ...lcFromApi };
+    if (invoiceFromApi) {
+      if (!enriched.invoice) enriched.invoice = invoiceFromApi;
+      else if (!enriched.invoice.order && invoiceFromApi.order) {
+        enriched.invoice = { ...enriched.invoice, order: invoiceFromApi.order };
+      }
+    }
+    return enriched;
+  }, [lcFromApi, invoiceFromApi]);
+
+  const isDataLoading = loadingDetails || loadingInvoice;
 
   const handleOpenDialog = async (
     lcId: string,
@@ -74,10 +94,18 @@ const CertificatesTable = ({
     setCertType(type);
     setIsDialogOpen(true);
     try {
-      await triggerGetDetails({
+      const lcRes = await triggerGetDetails({
         path: "lc-managements",
         id: lcId,
       }).unwrap();
+
+      const lcData = (lcRes as any)?.data;
+      if (lcData?.invoiceId) {
+        await triggerGetInvoice({
+          path: "invoices",
+          id: lcData.invoiceId,
+        }).unwrap();
+      }
     } catch (err) {
       toast.error("Failed to fetch full LC details");
       setIsDialogOpen(false);
@@ -142,7 +170,7 @@ const CertificatesTable = ({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 w-full border-blue-100 text-blue-700 hover:bg-blue-50 font-bold text-xs"
+                className="h-8 w-full border-blue-100 text-black hover:bg-blue-50 font-bold text-xs"
               >
                 Create Certificate
                 <ChevronDown className="ml-2 h-4 w-4" />
@@ -207,7 +235,7 @@ const CertificatesTable = ({
             </DialogTitle>
           </DialogHeader>
 
-          {loadingDetails ? (
+          {isDataLoading ? (
             <div className="flex flex-col items-center justify-center py-10 space-y-4">
               <Loader2 className="h-10 w-10 text-blue-600 animate-spin" />
               <p className="text-sm font-medium text-slate-500 italic">
@@ -290,7 +318,7 @@ const CertificatesTable = ({
             <Button
               className="bg-black text-white hover:bg-black/90 shadow-lg px-8 transition-all hover:scale-[1.02] active:scale-[0.98]"
               onClick={handleGenerate}
-              disabled={loadingDetails || !fullLC}
+              disabled={isDataLoading || !fullLC}
             >
               <Printer className="mr-2 h-4 w-4" />
               Generate & Print

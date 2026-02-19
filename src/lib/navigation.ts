@@ -57,11 +57,11 @@ export const navMain = [
                 url: "/order-management/orders",
                 icon: ClipboardList,
             },
-            {
-                title: "Order Delivered",
-                url: "/order-management/delivered",
-                icon: Truck,
-            },
+            // {
+            //     title: "Order Delivered",
+            //     url: "/order-management/delivered",
+            //     icon: Truck,
+            // },
         ],
     },
     {

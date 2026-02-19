@@ -24,6 +24,12 @@ export type LCManagement = {
   vehicleNo: string;
   driverName: string;
   contactNo: string;
+  billOfExchangeRemarkClient?: string;
+  billOfExchangeDateClient?: string;
+  billOfExchangeLocationClient?: string;
+  billOfExchangeRemarkBank?: string;
+  billOfExchangeDateBank?: string;
+  billOfExchangeLocationBank?: string;
   userId: string;
   user?: User;
   invoiceId: string;
@@ -54,6 +60,12 @@ export type CreateLCManagementInput = {
   vehicleNo: string;
   driverName: string;
   contactNo: string;
+  billOfExchangeRemarkClient?: string;
+  billOfExchangeDateClient?: string;
+  billOfExchangeLocationClient?: string;
+  billOfExchangeRemarkBank?: string;
+  billOfExchangeDateBank?: string;
+  billOfExchangeLocationBank?: string;
   invoiceId: string;
 };
 

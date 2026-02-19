@@ -34,6 +34,9 @@ export const normalizeOrder = (item: OrderApiItem): Order => ({
     user: item.user ?? null,
     companyProfile: item.companyProfile ?? null,
     orderItems: item.orderItems ?? [],
+    isInvoice: item.isInvoice ?? !!item.invoices,
+    isLc: item.isLc ?? !!item.invoices?.lcManagement,
+    invoices: item.invoices ?? null,
 });
 
 export const formatDate = (value?: string | null) => {

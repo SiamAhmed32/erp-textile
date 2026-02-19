@@ -139,8 +139,8 @@
   --animate-collapsible-down: collapsible-down 0.2s ease-out;
   --animate-collapsible-up: collapsible-up 0.2s ease-out;
 
-  --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05),
-  0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-premium:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
 }
 
 body {
@@ -201,5 +201,18 @@ body {
 
   button {
     @apply cursor-pointer;
+  }
+
+  /* Hide scrollbar for sidebar components */
+  [data-sidebar="content"]::-webkit-scrollbar,
+  [data-sidebar="sidebar"]::-webkit-scrollbar,
+  [data-sidebar="menu-sub"]::-webkit-scrollbar {
+    display: none;
+  }
+  [data-sidebar="content"],
+  [data-sidebar="sidebar"],
+  [data-sidebar="menu-sub"] {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }

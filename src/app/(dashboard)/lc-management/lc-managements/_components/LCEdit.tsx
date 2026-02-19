@@ -70,6 +70,12 @@ const LCEdit = ({ id }: Props) => {
         driverName: lc.driverName || "",
         contactNo: lc.contactNo || "",
         invoiceId: lc.invoiceId,
+        billOfExchangeRemarkClient: lc.billOfExchangeRemarkClient || "",
+        billOfExchangeDateClient: lc.billOfExchangeDateClient || "",
+        billOfExchangeLocationClient: lc.billOfExchangeLocationClient || "",
+        billOfExchangeRemarkBank: lc.billOfExchangeRemarkBank || "",
+        billOfExchangeDateBank: lc.billOfExchangeDateBank || "",
+        billOfExchangeLocationBank: lc.billOfExchangeLocationBank || "",
       });
     }
   }, [lc]);
@@ -103,6 +109,14 @@ const LCEdit = ({ id }: Props) => {
         exportLcDate: draft.exportLcDate
           ? new Date(draft.exportLcDate).toISOString()
           : undefined,
+        billOfExchangeDateClient: draft.billOfExchangeDateClient
+          ? new Date(draft.billOfExchangeDateClient).toISOString()
+          : undefined,
+        billOfExchangeDateBank: draft.billOfExchangeDateBank
+          ? new Date(draft.billOfExchangeDateBank).toISOString()
+          : undefined,
+        billOfExchangeRemarkClient: draft.billOfExchangeRemarkClient || "",
+        billOfExchangeRemarkBank: draft.billOfExchangeRemarkBank || "",
       };
 
       await patchItem({
@@ -169,6 +183,8 @@ const LCEdit = ({ id }: Props) => {
           onChange={handleChange}
           errors={errors}
           isEdit={true}
+          onSave={handleSave}
+          saving={saving}
         />
       </div>
     </Container>

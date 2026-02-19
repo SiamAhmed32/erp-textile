@@ -2,16 +2,17 @@
 
 import React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Download,
-  Pencil,
   ChevronDown,
-  FileCheck,
   FileText,
-  Eye,
-  LayoutDashboard,
+  FileCheck,
+  Pencil,
+  Truck,
+  Receipt,
+  Banknote,
+  Shield,
+  Download,
 } from "lucide-react";
 import { Container, Flex } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,13 @@ import {
 import { useGetByIdQuery } from "@/store/services/commonApi";
 import { LCManagement } from "./types";
 import LCReadOnly from "./LCReadOnly";
-import LCDocumentView from "./LCDocumentView";
-import { exportLCToPdf, exportExporterCertificate } from "./lcPdf";
+import {
+  exportCommercialInvoicePdf,
+  exportDeliveryChallanPdf,
+  exportBeneficiaryCertificatePdf,
+  exportCertificateOfOriginPdf,
+  exportBillOfExchangePdf,
+} from "./lcPdf";
 
 type Props = {
   id: string;
@@ -35,11 +41,7 @@ type Props = {
 };
 
 const LCDetails = ({ id, shouldExport = false }: Props) => {
-  const router = useRouter();
   const exportTriggered = React.useRef(false);
-  const [viewMode, setViewMode] = React.useState<"dashboard" | "document">(
-    "dashboard",
-  );
 
   const {
     data: lcPayload,
@@ -52,6 +54,29 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
 
   const lc = (lcPayload as any)?.data as LCManagement | undefined;
 
+  // Supplementary fetch for detailed invoice to get buyer info if not in LC payload
+  const { data: invoicePayload } = useGetByIdQuery(
+    {
+      path: "invoices",
+      id: lc?.invoiceId,
+    },
+    { skip: !lc?.invoiceId },
+  );
+
+  const fullInvoice = (invoicePayload as any)?.data;
+
+  // Enrich LC object with full invoice/order/buyer if missing
+  const enrichedLc = React.useMemo(() => {
+    if (!lc) return undefined;
+    const newLc = { ...lc };
+    if (!newLc.invoice && fullInvoice) {
+      newLc.invoice = fullInvoice;
+    } else if (newLc.invoice && !newLc.invoice.order && fullInvoice?.order) {
+      newLc.invoice.order = fullInvoice.order;
+    }
+    return newLc;
+  }, [lc, fullInvoice]);
+
   React.useEffect(() => {
     const error = lcError as any;
     if (error) {
@@ -62,16 +87,35 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
     }
   }, [lcError]);
 
-  const handleExportPdf = React.useCallback(() => {
-    if (!lc) return;
-    exportLCToPdf(lc);
-  }, [lc]);
+  const handleExport = React.useCallback(
+    (type: string) => {
+      if (!lc) return;
+      switch (type) {
+        case "commercial-invoice":
+          exportCommercialInvoicePdf(enrichedLc!);
+          break;
+        case "delivery-challan":
+          exportDeliveryChallanPdf(enrichedLc!);
+          break;
+        case "beneficiary-certificate":
+          exportBeneficiaryCertificatePdf(enrichedLc!);
+          break;
+        case "certificate-of-origin":
+          exportCertificateOfOriginPdf(enrichedLc!);
+          break;
+        case "bill-of-exchange":
+          exportBillOfExchangePdf(enrichedLc!);
+          break;
+      }
+    },
+    [enrichedLc, lc],
+  );
 
   React.useEffect(() => {
-    if (!shouldExport || !lc || exportTriggered.current) return;
+    if (!shouldExport || !enrichedLc || exportTriggered.current) return;
     exportTriggered.current = true;
-    handleExportPdf();
-  }, [lc, shouldExport, handleExportPdf]);
+    handleExport("commercial-invoice");
+  }, [enrichedLc, shouldExport, handleExport]);
 
   return (
     <Container className="pb-10 pt-6">
@@ -90,63 +134,63 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <div className="bg-slate-200/50 p-1 rounded-lg flex mr-2 border border-slate-200">
-            <Button
-              variant={viewMode === "dashboard" ? "secondary" : "ghost"}
-              size="sm"
-              className={`h-8 px-3 transition-all ${viewMode === "dashboard" ? "bg-black text-white shadow-md hover:bg-black/90" : "text-slate-600 hover:bg-slate-300/50"}`}
-              onClick={() => setViewMode("dashboard")}
-            >
-              <LayoutDashboard className="mr-2 h-3.5 w-3.5" />
-              Dashboard
-            </Button>
-            <Button
-              variant={viewMode === "document" ? "secondary" : "ghost"}
-              size="sm"
-              className={`h-8 px-3 transition-all ${viewMode === "document" ? "bg-black text-white shadow-md hover:bg-black/90" : "text-slate-600 hover:bg-slate-300/50"}`}
-              onClick={() => setViewMode("document")}
-            >
-              <Eye className="mr-2 h-3.5 w-3.5" />
-              Document
-            </Button>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportPdf}
-            disabled={!lc}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            BBLC PDF
-          </Button>
-
           {lc && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                  className="gap-2 border-slate-200 hover:bg-slate-50"
                 >
-                  Certificates
-                  <ChevronDown className="ml-2 h-4 w-4" />
+                  <Download className="h-4 w-4" />
+                  Export
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Export Certificates</DropdownMenuLabel>
+              <DropdownMenuContent
+                align="end"
+                className="w-60 rounded-xl shadow-2xl border-slate-100"
+              >
+                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-slate-400 font-black">
+                  Download Document
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => exportExporterCertificate(lc, "beneficiary")}
+                  className="rounded-lg my-0.5 gap-3 focus:bg-blue-50"
+                  onClick={() => handleExport("commercial-invoice")}
                 >
-                  <FileText className="mr-2 h-4 w-4 text-blue-500" />
+                  <Receipt className="h-4 w-4 text-blue-500" />
+                  Commercial Invoice
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="rounded-lg my-0.5 gap-3 focus:bg-amber-50"
+                  onClick={() => handleExport("delivery-challan")}
+                >
+                  <Truck className="h-4 w-4 text-amber-500" />
+                  Delivery Challan
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="rounded-lg my-0.5 gap-3 focus:bg-emerald-50"
+                  onClick={() => handleExport("beneficiary-certificate")}
+                >
+                  <FileText className="h-4 w-4 text-emerald-500" />
                   Beneficiary Certificate
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => exportExporterCertificate(lc, "origin")}
+                  className="rounded-lg my-0.5 gap-3 focus:bg-orange-50"
+                  onClick={() => handleExport("certificate-of-origin")}
                 >
-                  <FileCheck className="mr-2 h-4 w-4 text-orange-500" />
+                  <FileCheck className="h-4 w-4 text-orange-500" />
                   Certificate of Origin
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="rounded-lg my-0.5 gap-3 focus:bg-violet-50"
+                  onClick={() => handleExport("bill-of-exchange")}
+                >
+                  <Banknote className="h-4 w-4 text-violet-500" />
+                  Bill of Exchange
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -155,28 +199,24 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
           <Button variant="outline" size="sm" asChild disabled={!lc}>
             <Link href={`/lc-management/lc-managements/${id}/edit`}>
               <Pencil className="mr-2 h-4 w-4" />
-              Edit
+              Edit LC
             </Link>
           </Button>
         </div>
       </Flex>
 
       {loading && (
-        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-          <div className="h-10 w-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm font-medium text-slate-500">
-            Retrieving LC Record...
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 animate-pulse">
+          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
+            Loading LC Data...
           </p>
         </div>
       )}
 
-      {lc && (
+      {enrichedLc && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-          {viewMode === "dashboard" ? (
-            <LCReadOnly lc={lc} />
-          ) : (
-            <LCDocumentView lc={lc} />
-          )}
+          <LCReadOnly lc={enrichedLc} />
         </div>
       )}
     </Container>
