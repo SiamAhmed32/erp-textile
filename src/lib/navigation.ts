@@ -8,11 +8,12 @@ import {
     Truck,
     Calculator,
     LayoutDashboard,
-    UserRound,
-    Building,
     ReceiptText,
     BookOpen,
     Wallet,
+    UserRound,
+    Building,
+    History,
 } from "lucide-react";
 
 export const navMain = [
@@ -91,6 +92,16 @@ export const navMain = [
                 title: "Overview",
                 url: "/accounting/overview",
                 icon: LayoutDashboard,
+            },
+            {
+                title: "Customer Ledger",
+                url: "/accounting/customer-ledger",
+                icon: UserRound,
+            },
+            {
+                title: "Supplier Ledger",
+                url: "/accounting/supplier-ledger",
+                icon: Building,
             },
             {
                 title: "Daily Bookkeeping",
