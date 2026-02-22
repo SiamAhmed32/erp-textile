@@ -175,9 +175,16 @@ export default function ProfilePage() {
     if (!file) return;
 
     setSelectedFile(file);
+    if (!(file instanceof Blob)) return;
 
     // Create local preview
     const objectUrl = URL.createObjectURL(file);
+
+    // Cleanup previous URL if any
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
     setPreviewUrl(objectUrl);
 
     // Clean up memory when component unmounts or url changes

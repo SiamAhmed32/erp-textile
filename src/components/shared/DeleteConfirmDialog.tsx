@@ -1,25 +1,31 @@
-import React from "react"
+import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 type Props = {
-  open: boolean
-  title: string
-  description: string
-  onCancel: () => void
-  onConfirm: () => void
-}
+  open: boolean;
+  title: string;
+  description: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+};
 
-export function DeleteConfirmDialog({ open, title, description, onCancel, onConfirm }: Props) {
+export function DeleteConfirmDialog({
+  open,
+  title,
+  description,
+  onCancel,
+  onConfirm,
+}: Props) {
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onCancel()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px] w-[calc(100%-2rem)] mx-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -34,5 +40,5 @@ export function DeleteConfirmDialog({ open, title, description, onCancel, onConf
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

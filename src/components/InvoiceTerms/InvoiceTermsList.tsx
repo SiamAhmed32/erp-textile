@@ -106,8 +106,8 @@ export function InvoiceTermsList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full max-w-sm items-center gap-2">
           <Input
             placeholder="Search by name, payment, or delivery terms"
             value={search}
@@ -116,14 +116,6 @@ export function InvoiceTermsList({
           <Button variant="outline" className="shrink-0">
             <Search className="mr-2 h-4 w-4" />
             Search
-          </Button>
-        </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onCreate}
-          >
-            Add Terms
           </Button>
         </div>
       </div>

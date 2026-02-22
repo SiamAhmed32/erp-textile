@@ -1,38 +1,45 @@
-import React from "react"
+import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { BuyerFormData } from "./types"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { BuyerFormData } from "./types";
 
-export type BuyerFormMode = "create" | "edit"
+export type BuyerFormMode = "create" | "edit";
 
 type Props = {
-  open: boolean
-  mode: BuyerFormMode
-  data: BuyerFormData
-  onClose: () => void
-  onChange: (field: keyof BuyerFormData, value: string) => void
-  onSubmit: () => void
-}
+  open: boolean;
+  mode: BuyerFormMode;
+  data: BuyerFormData;
+  onClose: () => void;
+  onChange: (field: keyof BuyerFormData, value: string) => void;
+  onSubmit: () => void;
+};
 
-export function BuyerForm({ open, mode, data, onClose, onChange, onSubmit }: Props) {
-  const isCreate = mode === "create"
-  const title = isCreate ? "Add New Buyer" : "Edit Buyer Profile"
+export function BuyerForm({
+  open,
+  mode,
+  data,
+  onClose,
+  onChange,
+  onSubmit,
+}: Props) {
+  const isCreate = mode === "create";
+  const title = isCreate ? "Add New Buyer" : "Edit Buyer Profile";
   const description = isCreate
     ? "Create a buyer profile to track orders, communication, and compliance."
-    : "Update buyer information to keep records accurate and consistent."
+    : "Update buyer information to keep records accurate and consistent.";
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="sm:max-w-[425px] w-[calc(100%-2rem)] mx-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -97,10 +104,12 @@ export function BuyerForm({ open, mode, data, onClose, onChange, onSubmit }: Pro
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={onSubmit}>{isCreate ? "Create Buyer" : "Save Changes"}</Button>
+            <Button onClick={onSubmit}>
+              {isCreate ? "Create Buyer" : "Save Changes"}
+            </Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

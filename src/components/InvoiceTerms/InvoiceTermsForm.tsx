@@ -1,42 +1,50 @@
-import React from "react"
+import React from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { InvoiceTermsErrors, InvoiceTermsFormData } from "./types"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { InvoiceTermsErrors, InvoiceTermsFormData } from "./types";
 
-export type InvoiceTermsFormMode = "create" | "edit"
+export type InvoiceTermsFormMode = "create" | "edit";
 
 type Props = {
-  open: boolean
-  mode: InvoiceTermsFormMode
-  data: InvoiceTermsFormData
-  errors: InvoiceTermsErrors
-  onClose: () => void
-  onChange: (field: keyof InvoiceTermsFormData, value: string) => void
-  onSubmit: () => void
-}
+  open: boolean;
+  mode: InvoiceTermsFormMode;
+  data: InvoiceTermsFormData;
+  errors: InvoiceTermsErrors;
+  onClose: () => void;
+  onChange: (field: keyof InvoiceTermsFormData, value: string) => void;
+  onSubmit: () => void;
+};
 
-export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, onSubmit }: Props) {
-  const isCreate = mode === "create"
-  const title = isCreate ? "Create Invoice Terms" : "Edit Invoice Terms"
+export function InvoiceTermsForm({
+  open,
+  mode,
+  data,
+  errors,
+  onClose,
+  onChange,
+  onSubmit,
+}: Props) {
+  const isCreate = mode === "create";
+  const title = isCreate ? "Create Invoice Terms" : "Edit Invoice Terms";
   const description = isCreate
     ? "Define a reusable template for payment, delivery, and banking details."
-    : "Update this template to keep invoice terms consistent across buyers."
+    : "Update this template to keep invoice terms consistent across buyers.";
 
   const fieldClass = (key: keyof InvoiceTermsFormData) =>
-    errors[key] ? "border-destructive focus-visible:ring-destructive/40" : ""
+    errors[key] ? "border-destructive focus-visible:ring-destructive/40" : "";
 
   return (
     <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-[425px] md:max-w-2xl w-[calc(100%-2rem)] mx-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
@@ -52,7 +60,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="Standard LC 90 Days"
               className={fieldClass("name")}
             />
-            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="payment">Payment Terms</Label>
@@ -63,7 +73,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="TT 30 Days"
               className={fieldClass("payment")}
             />
-            {errors.payment && <p className="text-xs text-destructive">{errors.payment}</p>}
+            {errors.payment && (
+              <p className="text-xs text-destructive">{errors.payment}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="delivery">Delivery Terms</Label>
@@ -74,7 +86,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="FOB Chittagong"
               className={fieldClass("delivery")}
             />
-            {errors.delivery && <p className="text-xs text-destructive">{errors.delivery}</p>}
+            {errors.delivery && (
+              <p className="text-xs text-destructive">{errors.delivery}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="advisingBank">Advising Bank</Label>
@@ -85,7 +99,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="HSBC Bangladesh"
               className={fieldClass("advisingBank")}
             />
-            {errors.advisingBank && <p className="text-xs text-destructive">{errors.advisingBank}</p>}
+            {errors.advisingBank && (
+              <p className="text-xs text-destructive">{errors.advisingBank}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="negotiation">Negotiation</Label>
@@ -96,7 +112,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="By sight"
               className={fieldClass("negotiation")}
             />
-            {errors.negotiation && <p className="text-xs text-destructive">{errors.negotiation}</p>}
+            {errors.negotiation && (
+              <p className="text-xs text-destructive">{errors.negotiation}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="origin">Origin</Label>
@@ -107,7 +125,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="Bangladesh"
               className={fieldClass("origin")}
             />
-            {errors.origin && <p className="text-xs text-destructive">{errors.origin}</p>}
+            {errors.origin && (
+              <p className="text-xs text-destructive">{errors.origin}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="swiftCode">SWIFT Code</Label>
@@ -118,7 +138,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="HSBCBDDH"
               className={fieldClass("swiftCode")}
             />
-            {errors.swiftCode && <p className="text-xs text-destructive">{errors.swiftCode}</p>}
+            {errors.swiftCode && (
+              <p className="text-xs text-destructive">{errors.swiftCode}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="binNo">BIN</Label>
@@ -129,7 +151,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="123456789"
               className={fieldClass("binNo")}
             />
-            {errors.binNo && <p className="text-xs text-destructive">{errors.binNo}</p>}
+            {errors.binNo && (
+              <p className="text-xs text-destructive">{errors.binNo}</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="hsCode">H.S. Code</Label>
@@ -140,7 +164,9 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
               placeholder="610910"
               className={fieldClass("hsCode")}
             />
-            {errors.hsCode && <p className="text-xs text-destructive">{errors.hsCode}</p>}
+            {errors.hsCode && (
+              <p className="text-xs text-destructive">{errors.hsCode}</p>
+            )}
           </div>
         </div>
 
@@ -158,9 +184,11 @@ export function InvoiceTermsForm({ open, mode, data, errors, onClose, onChange, 
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={onSubmit}>{isCreate ? "Create" : "Save Changes"}</Button>
+          <Button onClick={onSubmit}>
+            {isCreate ? "Create" : "Save Changes"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

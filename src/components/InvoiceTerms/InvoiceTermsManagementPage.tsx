@@ -1,12 +1,9 @@
 "use client";
 
 import React from "react";
-import {
-  Container,
-  PrimaryHeading,
-  PrimaryText,
-  SectionGap,
-} from "@/components/reusables";
+import { Container, PageHeader, SectionGap } from "@/components/reusables";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   InvoiceTerms,
   InvoiceTermsErrors,
@@ -208,15 +205,22 @@ export function InvoiceTermsManagementPage() {
 
   return (
     <Container className="py-8">
-      {/* <div className="space-y-2">
-        <PrimaryHeading>Invoice Terms</PrimaryHeading>
-        <PrimaryText className="text-muted-foreground">
-          Create and manage reusable invoice terms for consistent commercial
-          documents.
-        </PrimaryText>
-      </div>
-
-      <SectionGap /> */}
+      <PageHeader
+        title="Invoice Terms"
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/" },
+          { label: "Invoice Terms" },
+        ]}
+        actions={
+          <Button
+            className="bg-black text-white hover:bg-black/90 shadow-sm"
+            onClick={handleCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Terms
+          </Button>
+        }
+      />
 
       <InvoiceTermsList
         terms={terms}

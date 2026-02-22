@@ -4,8 +4,13 @@ import { notify } from "@/lib/notifications";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex } from "@/components/reusables";
+import {
+  Container,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetByIdQuery,
@@ -16,6 +21,7 @@ import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { LCManagement } from "./types";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 type Props = {
   id: string;
@@ -23,13 +29,33 @@ type Props = {
 
 const LCEdit = ({ id }: Props) => {
   const router = useRouter();
-  const [draft, setDraft] = React.useState<LCFormData | null>(null);
+  const [baseFormData, setBaseFormData] = React.useState<LCFormData | null>(
+    null,
+  );
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<LCFormData | null>({
+    key: `lc_edit_${id}`,
+    defaultValue: null,
+  });
+
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof LCFormData, string>>
   >({});
 
   const [patchItem] = usePatchMutation();
+
+  const isDirty = React.useMemo(() => {
+    if (!draft || !baseFormData) return false;
+    return JSON.stringify(draft) !== JSON.stringify(baseFormData);
+  }, [draft, baseFormData]);
 
   const { data: lcPayload, isFetching: loadingLC } = useGetByIdQuery({
     path: "lc-managements",
@@ -47,7 +73,7 @@ const LCEdit = ({ id }: Props) => {
 
   React.useEffect(() => {
     if (lc) {
-      setDraft({
+      const formData = {
         bblcNumber: lc.bblcNumber,
         dateOfOpening: lc.dateOfOpening,
         notifyParty: lc.notifyParty || "",
@@ -76,13 +102,19 @@ const LCEdit = ({ id }: Props) => {
         billOfExchangeRemarkBank: lc.billOfExchangeRemarkBank || "",
         billOfExchangeDateBank: lc.billOfExchangeDateBank || "",
         billOfExchangeLocationBank: lc.billOfExchangeLocationBank || "",
-      });
+      };
+      setBaseFormData(formData);
+
+      if (draft === null) {
+        setDraft(formData);
+      }
     }
-  }, [lc]);
+  }, [lc, draft, setDraft]);
 
   const handleChange = (field: keyof LCFormData, value: any) => {
     if (draft) {
       setDraft((prev: any) => ({ ...prev, [field]: value }));
+      setHasInteracted(true);
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
@@ -125,6 +157,8 @@ const LCEdit = ({ id }: Props) => {
         invalidate: ["lc-managements"],
       }).unwrap();
 
+      clearDraft();
+
       notify.success("BBLC Updated Successfully");
       router.push(`/lc-management/lc-managements/${id}`);
     } catch (err: any) {
@@ -148,34 +182,29 @@ const LCEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/lc-management/lc-managements/${id}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Edit BBLC</h1>
-            <p className="text-sm text-muted-foreground">
-              Update Letter of Credit information
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild disabled={saving}>
-            <Link href={`/lc-management/lc-managements/${id}`}>Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-lg"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving Changes..." : "Update BBLC"}
-          </Button>
-        </div>
-      </Flex>
+      <NavigationGuard isDirty={isDirty} />
+
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+        title="Unsaved Changes Found"
+        description="We found an unsaved draft of your edits for this LC. Would you like to restore them?"
+      />
+
+      <FormHeader
+        title={`Edit BBLC: ${lc?.bblcNumber || ""}`}
+        backHref={`/lc-management/lc-managements/${id}`}
+        breadcrumbItems={[
+          { label: "LC Management", href: "/lc-management/lc-managements" },
+          { label: "BBLC List", href: "/lc-management/lc-managements" },
+          {
+            label: lc?.bblcNumber || "LC",
+            href: `/lc-management/lc-managements/${id}`,
+          },
+          { label: "Edit" },
+        ]}
+      />
 
       <div className="mt-8">
         <LCForm
@@ -188,6 +217,14 @@ const LCEdit = ({ id }: Props) => {
           saving={saving}
         />
       </div>
+
+      <FormFooter
+        cancelHref={`/lc-management/lc-managements/${id}`}
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Update BBLC"
+        trustText="Financial data is secured and encrypted."
+      />
     </Container>
   );
 };

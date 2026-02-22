@@ -4,7 +4,13 @@ import { notify } from "@/lib/notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Container, FormHeader, FormFooter } from "@/components/reusables";
+import {
+  Container,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetByIdQuery,
@@ -16,6 +22,7 @@ import { OrderValidation, toFieldErrors } from "./validation";
 import { OrderFormData, Order, Buyer, CompanyProfile } from "./types";
 import { toOrderFormData, toOrderUpdatePayload } from "./helpers";
 import OrderForm from "./OrderForm";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 type Props = {
   id: string;
@@ -23,7 +30,20 @@ type Props = {
 
 const OrderEdit = ({ id }: Props) => {
   const router = useRouter();
-  const [draft, setDraft] = useState<OrderFormData | null>(null);
+  const [baseFormData, setBaseFormData] = useState<OrderFormData | null>(null);
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<OrderFormData | null>({
+    key: `order_edit_${id}`,
+    defaultValue: null,
+  });
+
   const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,6 +52,11 @@ const OrderEdit = ({ id }: Props) => {
 
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
+
+  const isDirty = React.useMemo(() => {
+    if (!draft || !baseFormData) return false;
+    return JSON.stringify(draft) !== JSON.stringify(baseFormData);
+  }, [draft, baseFormData]);
 
   const { data: orderPayload, isFetching: loadingOrder } = useGetByIdQuery({
     path: "orders",
@@ -55,24 +80,30 @@ const OrderEdit = ({ id }: Props) => {
   const order = (orderPayload as any)?.data as Order | undefined;
 
   useEffect(() => {
-    if (order && !draft) {
+    if (order) {
       const formData = toOrderFormData(order);
-      setDraft(formData);
+      setBaseFormData(formData);
       setOriginalStatus(formData.status);
+
+      // Only set initial draft if currently null
+      if (draft === null) {
+        setDraft(formData);
+      }
     }
-  }, [order, draft]);
+  }, [order, draft, setDraft]);
 
   const handleChange = useCallback(
     (field: keyof OrderFormData, value: any) => {
       if (!draft) return;
       setDraft((prev: any) => ({ ...prev, [field]: value }));
+      setHasInteracted(true);
       setErrors((prev) => {
         const next = { ...prev };
         delete next[field];
         return next;
       });
     },
-    [draft],
+    [draft, setDraft, setHasInteracted],
   );
 
   const handleNestedChange = useCallback(
@@ -90,13 +121,14 @@ const OrderEdit = ({ id }: Props) => {
         obj[keys[keys.length - 1]] = value;
         return next;
       });
+      setHasInteracted(true);
       setErrors((prev) => {
         const next = { ...prev };
         delete next[path];
         return next;
       });
     },
-    [draft],
+    [draft, setDraft, setHasInteracted],
   );
 
   const handleSave = async () => {
@@ -150,6 +182,8 @@ const OrderEdit = ({ id }: Props) => {
         }).unwrap();
       }
 
+      clearDraft();
+
       notify.success("Order Updated Successfully");
       router.push(`/order-management/orders/${id}`);
     } catch (err: any) {
@@ -198,6 +232,16 @@ const OrderEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
+      <NavigationGuard isDirty={isDirty} />
+
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+        title="Unsaved Changes Found"
+        description="We found an unsaved draft of your edits for this order. Would you like to restore them?"
+      />
+
       <FormHeader
         title={`Edit Order: ${order?.orderNumber || ""}`}
         backHref={`/order-management/orders/${id}`}

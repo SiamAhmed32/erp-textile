@@ -4,7 +4,13 @@ import { notify } from "@/lib/notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Container, FormHeader, FormFooter } from "@/components/reusables";
+import {
+  Container,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
@@ -15,6 +21,7 @@ import { OrderValidation, toFieldErrors } from "./validation";
 import { OrderFormData, Buyer, CompanyProfile, Order } from "./types";
 import { toOrderPayload, toOrderFormData, normalizeOrder } from "./helpers";
 import OrderForm from "./OrderForm";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -34,11 +41,27 @@ type Props = {
 
 const OrderCreate = ({ duplicateId }: Props) => {
   const router = useRouter();
-  const [draft, setDraft] = useState<OrderFormData>(emptyOrder);
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<OrderFormData>({
+    key: "order_create",
+    defaultValue: emptyOrder,
+  });
+
   const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [postItem] = usePostMutation();
+
+  const isDirty = React.useMemo(() => {
+    return JSON.stringify(draft) !== JSON.stringify(emptyOrder);
+  }, [draft]);
 
   // Fetch buyers and companies
   const { data: buyersPayload } = useGetAllQuery({
@@ -70,37 +93,46 @@ const OrderCreate = ({ duplicateId }: Props) => {
         formData.orderNumber = ""; // Clear order number for duplicate
         formData.status = "DRAFT";
         setDraft(formData);
+        setHasInteracted(true);
       }
     }
-  }, [duplicateId, duplicatePayload]);
+  }, [duplicateId, duplicatePayload, setDraft, setHasInteracted]);
 
-  const handleChange = useCallback((field: keyof OrderFormData, value: any) => {
-    setDraft((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  }, []);
+  const handleChange = useCallback(
+    (field: keyof OrderFormData, value: any) => {
+      setDraft((prev) => ({ ...prev, [field]: value }));
+      setHasInteracted(true);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    },
+    [setDraft, setHasInteracted],
+  );
 
-  const handleNestedChange = useCallback((path: string, value: any) => {
-    setDraft((prev) => {
-      const next = JSON.parse(JSON.stringify(prev));
-      const keys = path.split(".");
-      let obj = next;
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!obj[keys[i]]) obj[keys[i]] = {};
-        obj = obj[keys[i]];
-      }
-      obj[keys[keys.length - 1]] = value;
-      return next;
-    });
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[path];
-      return next;
-    });
-  }, []);
+  const handleNestedChange = useCallback(
+    (path: string, value: any) => {
+      setDraft((prev) => {
+        const next = JSON.parse(JSON.stringify(prev));
+        const keys = path.split(".");
+        let obj = next;
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!obj[keys[i]]) obj[keys[i]] = {};
+          obj = obj[keys[i]];
+        }
+        obj[keys[keys.length - 1]] = value;
+        return next;
+      });
+      setHasInteracted(true);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[path];
+        return next;
+      });
+    },
+    [setDraft, setHasInteracted],
+  );
 
   const handleSave = async () => {
     const payload = toOrderPayload(draft);
@@ -142,6 +174,8 @@ const OrderCreate = ({ duplicateId }: Props) => {
         invalidate: ["orders"],
       }).unwrap();
 
+      clearDraft();
+
       notify.success("Order Created Successfully");
       const id = (res as any)?.data?.id || (res as any)?.id;
       router.push(
@@ -179,6 +213,14 @@ const OrderCreate = ({ duplicateId }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
+      <NavigationGuard isDirty={isDirty} />
+
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+      />
+
       <FormHeader
         title="Create New Order"
         backHref="/order-management/orders"

@@ -91,7 +91,7 @@ const ForgotPasswordModal = ({
         if (!val) resetState();
       }}
     >
-      <DialogContent className="sm:max-w-[425px] py-21 ">
+      <DialogContent className="sm:max-w-[425px] w-[calc(100%-2rem)] mx-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>
             {step === "EMAIL" && "Forgot Password"}
