@@ -158,7 +158,7 @@ function StakeholderFormModal({ open, onClose }: { open: boolean; onClose: () =>
                     <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
                         Cancel
                     </Button>
-                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                    <Button type="submit" className="px-8 bg-black text-white hover:bg-black/90">
                         Save Stakeholder
                     </Button>
                 </div>

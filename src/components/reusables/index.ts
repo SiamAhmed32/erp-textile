@@ -26,3 +26,6 @@ export { default as PriceText } from './PriceText';
 export { default as PrimaryText } from './PrimaryText';
 export { default as SectionTitle } from './SectionTitle';
 export { default as CustomModal } from './CustomModal';
+export { default as PageLoader } from './PageLoader';
+export { default as InPageLoader } from './InPageLoader';
+export { default as DetailsSkeleton } from './DetailsSkeleton';

@@ -12,7 +12,7 @@ import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
 import { PrimaryHeading, CustomModal } from "@/components/reusables";
 import { User } from "./types";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 
 const UsersPage = () => {
     const [search, setSearch] = useState("");
@@ -38,10 +38,10 @@ const UsersPage = () => {
         if (!deletingUser) return;
         try {
             await deleteUser({ id: deletingUser.id, body: { isDeleted: true } }).unwrap();
-            toast.success("User deleted successfully (soft delete)");
+            notify.success("User deleted successfully (soft delete)");
             setDeletingUser(null);
         } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to delete user");
+            notify.error(error?.data?.message || "Failed to delete user");
         }
     };
 

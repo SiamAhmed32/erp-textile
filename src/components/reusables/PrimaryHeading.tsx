@@ -1,14 +1,17 @@
-import React from 'react';
+import React from "react";
+import { cn } from "@/lib/utils";
 
 const PrimaryHeading = ({ className, children }: any) => {
-	// text shadow : 0 0 0.625rem rgba(0, 0, 0, 0.45);
-	return (
-		<h1
-			className={` text-secondary text-[1.5rem] sm:text-[2rem] lg:text-[2.5rem] font-semibold  ${className}`}
-		>
-			{children}
-		</h1>
-	);
+  return (
+    <h1
+      className={cn(
+        "text-2xl font-bold tracking-tight text-foreground",
+        className,
+      )}
+    >
+      {children}
+    </h1>
+  );
 };
 
 export default PrimaryHeading;

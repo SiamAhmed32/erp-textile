@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -15,7 +16,6 @@ import { OrderValidation, toFieldErrors } from "./validation";
 import { OrderFormData, Buyer, CompanyProfile, Order } from "./types";
 import { toOrderPayload, toOrderFormData, normalizeOrder } from "./helpers";
 import OrderForm from "./OrderForm";
-import { toast } from "react-toastify";
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -130,7 +130,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
         setActiveTab("details");
       }
 
-      toast.error("Please fill in the required fields");
+      notify.error("Please fill in the required fields");
       return;
     }
     setErrors({});
@@ -143,7 +143,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
         invalidate: ["orders"],
       }).unwrap();
 
-      toast.success("Order Created Successfully");
+      notify.success("Order Created Successfully");
       const id = (res as any)?.data?.id || (res as any)?.id;
       router.push(
         id ? `/order-management/orders/${id}` : "/order-management/orders",
@@ -152,7 +152,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
       const msg =
         err?.data?.message || err?.message || "Failed to create order";
       console.error("Create Order Error:", msg);
-      toast.error(msg);
+      notify.error(msg);
     } finally {
       setSaving(false);
     }
@@ -162,9 +162,10 @@ const OrderCreate = ({ duplicateId }: Props) => {
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/order-management/orders">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Link>
           </Button>
           <div>

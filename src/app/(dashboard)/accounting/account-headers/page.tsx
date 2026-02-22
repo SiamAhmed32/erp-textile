@@ -116,7 +116,7 @@ function HeaderFormModal({ open, onClose }: { open: boolean; onClose: () => void
                     <Button type="button" variant="outline" onClick={() => { onClose(); resetForm(); }}>
                         Cancel
                     </Button>
-                    <Button type="submit" className="px-8 bg-secondary hover:bg-secondary/90 text-white">
+                    <Button type="submit" className="px-8 bg-black text-white hover:bg-black/90">
                         Save Header
                     </Button>
                 </div>
@@ -159,7 +159,7 @@ function HeaderDetailsModal({ open, onClose, header }: { open: boolean; onClose:
                     <p className="text-xl font-black text-secondary">৳ {header.balanceAmount.toLocaleString()}</p>
                 </div>
                 <div className="flex justify-end pt-2">
-                    <Button onClick={onClose} className="bg-secondary text-white">
+                    <Button onClick={onClose} className="bg-black text-white hover:bg-black/90">
                         Close
                     </Button>
                 </div>

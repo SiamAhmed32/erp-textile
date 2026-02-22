@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
 import React from "react";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
@@ -8,7 +9,6 @@ import { toInvoicePayload } from "./helpers";
 import InvoiceForm from "./InvoiceForm";
 import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { toast } from "react-toastify";
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
 
@@ -69,7 +69,7 @@ const InvoiceCreateModal = ({ open, onOpenChange, onSuccess }: Props) => {
         invalidate: ["invoices"],
       }).unwrap();
 
-      toast.success("Invoice created successfully");
+      notify.success("Invoice created successfully");
       setDraft(emptyInvoice);
       if (onSuccess) onSuccess();
       onOpenChange(false);
@@ -80,42 +80,42 @@ const InvoiceCreateModal = ({ open, onOpenChange, onSuccess }: Props) => {
         err?.error ||
         err?.message ||
         "Failed to create invoice";
-      toast.error(message);
+      notify.error(message);
     } finally {
       setSaving(false);
     }
   };
 
-    return (
-        <CustomModal
-            open={open}
-            onOpenChange={onOpenChange}
-            title="Create Invoice"
-            maxWidth="900px"
-            width="90vw"
-        >
-            <InvoiceForm
-                data={draft}
-                orders={orders}
-                terms={terms}
-                onChange={handleChange}
-                errors={errors}
-            />
+  return (
+    <CustomModal
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Create Invoice"
+      maxWidth="900px"
+      width="90vw"
+    >
+      <InvoiceForm
+        data={draft}
+        orders={orders}
+        terms={terms}
+        onChange={handleChange}
+        errors={errors}
+      />
 
-            <div className="mt-6 flex justify-end gap-3">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancel
-                </Button>
-                <Button
-                    className="bg-black text-white hover:bg-black/90"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    {saving ? "Saving..." : "Save Invoice"}
-                </Button>
-            </div>
-        </CustomModal>
-    );
+      <div className="mt-6 flex justify-end gap-3">
+        <Button variant="outline" onClick={() => onOpenChange(false)}>
+          Cancel
+        </Button>
+        <Button
+          className="bg-black text-white hover:bg-black/90"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save Invoice"}
+        </Button>
+      </div>
+    </CustomModal>
+  );
 };
 
 export default InvoiceCreateModal;

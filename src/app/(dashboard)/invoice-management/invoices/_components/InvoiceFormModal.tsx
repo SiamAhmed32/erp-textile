@@ -1,14 +1,28 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
 import React from "react";
 import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { useGetAllQuery, useGetByIdQuery, usePostMutation, usePatchMutation } from "@/store/services/commonApi";
-import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
+import {
+  useGetAllQuery,
+  useGetByIdQuery,
+  usePostMutation,
+  usePatchMutation,
+} from "@/store/services/commonApi";
+import {
+  InvoiceFormData,
+  InvoiceTerms,
+  OrderSummary,
+  InvoiceApiItem,
+} from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
-import { normalizeInvoice, toInvoiceFormData, toInvoicePayload } from "./helpers";
+import {
+  normalizeInvoice,
+  toInvoiceFormData,
+  toInvoicePayload,
+} from "./helpers";
 import InvoiceForm from "./InvoiceForm";
-import { toast } from "react-toastify";
 
 export type InvoiceFormMode = "create" | "edit";
 
@@ -31,7 +45,14 @@ const emptyInvoice: InvoiceFormData = {
   status: "DRAFT",
 };
 
-export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, onSuccess }: Props) {
+export function InvoiceFormModal({
+  open,
+  mode,
+  invoiceId,
+  duplicateId,
+  onClose,
+  onSuccess,
+}: Props) {
   const isCreate = mode === "create";
   const isDuplicate = !!duplicateId;
   const [draft, setDraft] = React.useState<InvoiceFormData>(emptyInvoice);
@@ -57,7 +78,7 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
       path: "invoices",
       id: invoiceId || duplicateId || "",
     },
-    { skip: (!isCreate && !invoiceId) || (isCreate && !isDuplicate) }
+    { skip: (!isCreate && !invoiceId) || (isCreate && !isDuplicate) },
   );
 
   const orders = ((ordersPayload as any)?.data || []) as OrderSummary[];
@@ -114,9 +135,8 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
           body: toInvoicePayload(draft),
           invalidate: ["invoices"],
         }).unwrap();
-        toast.success("Invoice created successfully");
+        notify.success("Invoice created successfully");
       } else {
-
         console.log("invoiceId", invoiceId);
         console.log("toInvoicePayload(draft)", toInvoicePayload(draft));
 
@@ -126,7 +146,7 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
           invalidate: ["invoices"],
         }).unwrap();
 
-        toast.success("Invoice updated successfully");
+        notify.success("Invoice updated successfully");
       }
 
       setDraft(emptyInvoice);
@@ -139,13 +159,17 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
         err?.error ||
         err?.message ||
         `Failed to ${isCreate ? "create" : "update"} invoice`;
-      toast.error(message);
+      notify.error(message);
     } finally {
       setSaving(false);
     }
   };
 
-  const title = isDuplicate ? "Duplicate Invoice" : isCreate ? "Create Invoice" : "Edit Invoice";
+  const title = isDuplicate
+    ? "Duplicate Invoice"
+    : isCreate
+      ? "Create Invoice"
+      : "Edit Invoice";
   // const description = isDuplicate
   //     ? "Create a new Invoice based on an existing one."
   //     : isCreate
@@ -188,7 +212,11 @@ export function InvoiceFormModal({ open, mode, invoiceId, duplicateId, onClose, 
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving ? "Saving..." : isCreate ? "Create Invoice" : "Save Changes"}
+              {saving
+                ? "Saving..."
+                : isCreate
+                  ? "Create Invoice"
+                  : "Save Changes"}
             </Button>
           </div>
         </>

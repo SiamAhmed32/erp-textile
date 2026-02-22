@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
 import React from "react";
 import Link from "next/link";
@@ -10,7 +11,6 @@ import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
-import { toast } from "react-toastify";
 
 const emptyLC: LCFormData = {
   bblcNumber: "",
@@ -65,7 +65,7 @@ const LCCreate = () => {
     if (error) {
       const msg = error?.data?.message || "Failed to load invoices";
       console.error("Load Invoices Error:", msg);
-      toast.error(msg);
+      notify.error(msg);
     }
   }, [invoicesError]);
 
@@ -116,7 +116,7 @@ const LCCreate = () => {
       setErrors(nextErrors);
       // Log for debugging
       console.log("Validation Errors:", nextErrors);
-      toast.error("Please fill in the required fields");
+      notify.error("Please fill in the required fields");
       return;
     }
 
@@ -145,7 +145,7 @@ const LCCreate = () => {
         invalidate: ["lc-managements", "orders", "invoices"],
       }).unwrap();
 
-      toast.success("BBLC Created Successfully");
+      notify.success("BBLC Created Successfully");
       const id = (result as any)?.data?.id || (result as any)?.id;
       router.push(
         id
@@ -155,7 +155,7 @@ const LCCreate = () => {
     } catch (err: any) {
       const msg = err?.data?.message || err?.message || "Failed to create LC";
       console.error("Create LC Error:", msg);
-      toast.error(msg);
+      notify.error(msg);
     } finally {
       setSaving(false);
     }
@@ -165,9 +165,10 @@ const LCCreate = () => {
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href="/lc-management/lc-managements">
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Link>
           </Button>
           <div>

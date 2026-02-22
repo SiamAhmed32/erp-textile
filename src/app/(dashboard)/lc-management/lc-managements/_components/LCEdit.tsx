@@ -1,4 +1,5 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
 import React from "react";
 import Link from "next/link";
@@ -15,7 +16,6 @@ import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { LCManagement } from "./types";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
-import { toast } from "react-toastify";
 
 type Props = {
   id: string;
@@ -94,7 +94,7 @@ const LCEdit = ({ id }: Props) => {
     if (!schemaResult.success) {
       const nextErrors = toFieldErrors(schemaResult.error.issues) as any;
       setErrors(nextErrors);
-      toast.error("Please fill in the required fields");
+      notify.error("Please fill in the required fields");
       return;
     }
 
@@ -125,12 +125,12 @@ const LCEdit = ({ id }: Props) => {
         invalidate: ["lc-managements"],
       }).unwrap();
 
-      toast.success("BBLC Updated Successfully");
+      notify.success("BBLC Updated Successfully");
       router.push(`/lc-management/lc-managements/${id}`);
     } catch (err: any) {
       const msg = err?.data?.message || "Failed to update LC";
       console.error("Update LC Error:", msg);
-      toast.error(msg);
+      notify.error(msg);
     } finally {
       setSaving(false);
     }
@@ -150,9 +150,10 @@ const LCEdit = ({ id }: Props) => {
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/lc-management/lc-managements/${id}`}>
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Link>
           </Button>
           <div>

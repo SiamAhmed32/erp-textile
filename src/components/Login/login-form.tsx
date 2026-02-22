@@ -22,7 +22,7 @@ import { useLoginMutation } from "@/store/services/authApi";
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 import { useDispatch } from "react-redux";
 import { login as loginAction } from "@/store/slices/authSlice";
 import ForgotPasswordModal from "../auth/ForgotPasswordModal";
@@ -58,14 +58,14 @@ export function LoginForm({
         localStorage.setItem("user", encryptedUser);
       }
 
-      toast.success("Login successful");
+      notify.success("Login successful");
       router.push("/");
     } catch (err: any) {
       const errorMessage =
         err?.data?.error?.message ||
         "Login failed. Please check your credentials.";
 
-      toast.error(errorMessage);
+      notify.error(errorMessage);
     }
   };
   return (
@@ -131,10 +131,10 @@ export function LoginForm({
               <Field>
                 <Button
                   type="submit"
-                  className="cursor-pointer w-full bg-secondary"
-                  disabled={isLoading}
+                  className="w-full bg-black text-white hover:bg-black/90"
+                  isLoading={isLoading}
                 >
-                  {isLoading ? "Logging in..." : "Login"}
+                  Login
                 </Button>
               </Field>
             </FieldGroup>

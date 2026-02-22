@@ -283,131 +283,134 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
 
       {/* ═══════════ DOCUMENT TABS ═══════════ */}
       <Tabs defaultValue="commercial-invoice" className="w-full">
-        <div className="bg-white p-1.5 rounded-2xl border border-slate-100 flex justify-center mb-8 sticky top-2 z-50">
-          <TabsList className="bg-transparent gap-1 sm:gap-4 h-auto p-0 flex-wrap justify-center">
-            <TabsTrigger
-              value="commercial-invoice"
-              className="data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:shadow-none px-5 py-3 rounded-xl gap-2 transition-all font-bold text-[10px] uppercase tracking-widest border border-transparent data-[state=active]:border-blue-100"
-            >
-              <Receipt size={16} />{" "}
-              <span className="hidden sm:inline">Commercial Invoice</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="delivery-challan"
-              className="data-[state=active]:bg-amber-50 data-[state=active]:text-amber-700 data-[state=active]:shadow-none px-5 py-3 rounded-xl gap-2 transition-all font-bold text-[10px] uppercase tracking-widest border border-transparent data-[state=active]:border-amber-100"
-            >
-              <Truck size={16} />{" "}
-              <span className="hidden sm:inline">Delivery Challan</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="beneficiary-certificate"
-              className="data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 data-[state=active]:shadow-none px-5 py-3 rounded-xl gap-2 transition-all font-bold text-[10px] uppercase tracking-widest border border-transparent data-[state=active]:border-emerald-100"
-            >
-              <FileText size={16} />{" "}
-              <span className="hidden sm:inline">Beneficiary Cert.</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="certificate-of-origin"
-              className="data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:shadow-none px-5 py-3 rounded-xl gap-2 transition-all font-bold text-[10px] uppercase tracking-widest border border-transparent data-[state=active]:border-orange-100"
-            >
-              <FileCheck size={16} />{" "}
-              <span className="hidden sm:inline">Cert. of Origin</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="bill-of-exchange"
-              className="data-[state=active]:bg-violet-50 data-[state=active]:text-violet-700 data-[state=active]:shadow-none px-5 py-3 rounded-xl gap-2 transition-all font-bold text-[10px] uppercase tracking-widest border border-transparent data-[state=active]:border-violet-100"
-            >
-              <Banknote size={16} />{" "}
-              <span className="hidden sm:inline">Bill of Exchange</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+        <TabsList className="tab-premium-list mb-8 sticky top-2 z-50">
+          <TabsTrigger
+            value="commercial-invoice"
+            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
+          >
+            <Receipt size={16} />
+            <span className="hidden sm:inline">Commercial Invoice</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="delivery-challan"
+            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
+          >
+            <Truck size={16} />
+            <span className="hidden sm:inline">Delivery Challan</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="beneficiary-certificate"
+            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
+          >
+            <FileText size={16} />
+            <span className="hidden sm:inline">Beneficiary Cert.</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="certificate-of-origin"
+            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
+          >
+            <FileCheck size={16} />
+            <span className="hidden sm:inline">Cert. of Origin</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="bill-of-exchange"
+            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
+          >
+            <Banknote size={16} />
+            <span className="hidden sm:inline">Bill of Exchange</span>
+          </TabsTrigger>
+        </TabsList>
 
         {/* ─── TAB: Commercial Invoice ─── */}
         <TabsContent
           value="commercial-invoice"
-          className="space-y-6 focus-visible:outline-none"
+          className="focus-visible:outline-none"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <Card className="lg:col-span-8 border-slate-200 rounded-3xl overflow-hidden bg-white">
-              <CardContent className="p-8">
-                <SectionHeader
-                  icon={Receipt}
-                  title="Invoice Summary"
-                  colorClass="bg-blue-50 text-blue-600"
-                />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  <Field label="Invoice No (PI)" value={lc.invoice?.piNumber} />
-                  <Field
-                    label="Invoice Date"
-                    value={formatDate(lc.invoice?.date)}
-                  />
-                  <Field label="BBLC Number" value={lc.bblcNumber} />
-                  <Field
-                    label="Opening Date"
-                    value={formatDate(lc.dateOfOpening)}
-                  />
-                </div>
-                <Separator className="my-8 opacity-50" />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-                  <Field label="Export LC No" value={lc.exportLcNo} />
-                  <Field label="BIN Number" value={lc.binNo} />
-                  <Field label="HS Code" value={lc.hsCodeNo} />
-                  <Field label="Destination" value={lc.destination} />
-                </div>
-                <ItemsTable />
-                <div className="mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                    Total Amount in Words
-                  </p>
-                  <p className="text-sm font-bold text-slate-800 italic uppercase">
-                    US Dollar: {numberToWords(Number(lc.amount))} Only.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
-                <CardContent className="p-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <Card className="lg:col-span-8 border-slate-200 rounded-3xl overflow-hidden bg-white">
+                <CardContent className="p-8">
                   <SectionHeader
-                    icon={Building2}
-                    title="Entities & Logistics"
-                    colorClass="bg-indigo-50 text-indigo-600"
+                    icon={Receipt}
+                    title="Invoice Summary"
+                    colorClass="bg-blue-50 text-blue-600"
                   />
-                  <div className="space-y-6">
-                    <Field label="Buyer Identity">
-                      <p className="text-sm font-bold text-slate-800 leading-tight">
-                        {buyer?.name}
-                      </p>
-                      <p className="text-[11px] font-bold text-slate-500 mt-1.5 leading-relaxed">
-                        {buyer?.address}, {buyer?.location}
-                      </p>
-                    </Field>
-
-                    <Separator className="opacity-50" />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <Field label="Carrier" value={lc.carrier} />
-                      <Field label="Sales Term" value={lc.salesTerm} />
-                    </div>
-
-                    <Separator className="opacity-50" />
-
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                     <Field
-                      label="Notify Party"
-                      value={lc.notifyParty || "Same as Buyer"}
+                      label="Invoice No (PI)"
+                      value={lc.invoice?.piNumber}
                     />
+                    <Field
+                      label="Invoice Date"
+                      value={formatDate(lc.invoice?.date)}
+                    />
+                    <Field label="BBLC Number" value={lc.bblcNumber} />
+                    <Field
+                      label="Opening Date"
+                      value={formatDate(lc.dateOfOpening)}
+                    />
+                  </div>
+                  <Separator className="my-8 opacity-50" />
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <Field label="Export LC No" value={lc.exportLcNo} />
+                    <Field label="BIN Number" value={lc.binNo} />
+                    <Field label="HS Code" value={lc.hsCodeNo} />
+                    <Field label="Destination" value={lc.destination} />
+                  </div>
+                  <ItemsTable />
+                  <div className="mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                      Total Amount in Words
+                    </p>
+                    <p className="text-sm font-bold text-slate-800 italic uppercase">
+                      US Dollar: {numberToWords(Number(lc.amount))} Only.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Button
-                onClick={() => onExport("commercial-invoice")}
-                className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Download Commercial Invoice
-              </Button>
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
+                  <CardContent className="p-6">
+                    <SectionHeader
+                      icon={Building2}
+                      title="Entities & Logistics"
+                      colorClass="bg-indigo-50 text-indigo-600"
+                    />
+                    <div className="space-y-6">
+                      <Field label="Buyer Identity">
+                        <p className="text-sm font-bold text-slate-800 leading-tight">
+                          {buyer?.name}
+                        </p>
+                        <p className="text-[11px] font-bold text-slate-500 mt-1.5 leading-relaxed">
+                          {buyer?.address}, {buyer?.location}
+                        </p>
+                      </Field>
+
+                      <Separator className="opacity-50" />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <Field label="Carrier" value={lc.carrier} />
+                        <Field label="Sales Term" value={lc.salesTerm} />
+                      </div>
+
+                      <Separator className="opacity-50" />
+
+                      <Field
+                        label="Notify Party"
+                        value={lc.notifyParty || "Same as Buyer"}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Button
+                  onClick={() => onExport("commercial-invoice")}
+                  className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Download Commercial Invoice
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -415,94 +418,96 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
         {/* ─── TAB: Delivery Challan ─── */}
         <TabsContent
           value="delivery-challan"
-          className="space-y-6 focus-visible:outline-none"
+          className="focus-visible:outline-none"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
-              <CardContent className="p-8">
-                <SectionHeader
-                  icon={Truck}
-                  title="Challan Manifest"
-                  colorClass="bg-amber-50 text-amber-600"
-                />
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 bg-amber-50/30 p-6 rounded-2xl border border-amber-100/50 mb-8">
-                  <Field label="Challan Number" value={lc.challanNo} />
-                  <Field
-                    label="Transport Date"
-                    value={formatDate(lc.dateOfOpening)}
-                  />
-                  <Field label="Transport Mode" value={lc.transportMode} />
-                  <Field label="Carrier" value={lc.carrier} />
-                </div>
-                <ItemsTable showPrices={false} />
-                <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Field label="Vehicle No" value={lc.vehicleNo} />
-                  <Field label="Driver Name" value={lc.driverName} />
-                  <Field label="Contact No" value={lc.contactNo} />
-                  <Field label="Sales Term" value={lc.salesTerm} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
-                <CardContent className="p-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
+                <CardContent className="p-8">
                   <SectionHeader
-                    icon={Building2}
-                    title="Seller & Dispatch"
-                    colorClass="bg-slate-50 text-slate-600"
+                    icon={Truck}
+                    title="Challan Manifest"
+                    colorClass="bg-amber-50 text-amber-600"
                   />
-                  <div className="space-y-6">
-                    <Field label="Seller Identity">
-                      <p className="text-sm font-bold text-slate-800 leading-tight">
-                        {company?.name}
-                      </p>
-                      <p className="text-[11px] font-bold text-slate-500 mt-1.5 leading-relaxed">
-                        {company?.address}
-                      </p>
-                    </Field>
-                    <Separator className="opacity-50" />
-                    <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">
-                        Shipment Weight Profile
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-[9px] font-bold text-emerald-600 uppercase mb-1">
-                            Net Weight
-                          </p>
-                          <p className="text-xl font-bold text-slate-800">
-                            {(lc.invoice?.order?.orderItems as any)?.[0]
-                              ?.fabricItem?.totalNetWeight || "0.00"}{" "}
-                            <span className="text-[10px] text-slate-400">
-                              KG
-                            </span>
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-bold text-amber-600 uppercase mb-1">
-                            Gross Weight
-                          </p>
-                          <p className="text-xl font-bold text-slate-800">
-                            {(lc.invoice?.order?.orderItems as any)?.[0]
-                              ?.fabricItem?.totalGrossWeight || "0.00"}{" "}
-                            <span className="text-[10px] text-slate-400">
-                              KG
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 bg-amber-50/30 p-6 rounded-2xl border border-amber-100/50 mb-8">
+                    <Field label="Challan Number" value={lc.challanNo} />
+                    <Field
+                      label="Transport Date"
+                      value={formatDate(lc.dateOfOpening)}
+                    />
+                    <Field label="Transport Mode" value={lc.transportMode} />
+                    <Field label="Carrier" value={lc.carrier} />
+                  </div>
+                  <ItemsTable showPrices={false} />
+                  <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-8 p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                    <Field label="Vehicle No" value={lc.vehicleNo} />
+                    <Field label="Driver Name" value={lc.driverName} />
+                    <Field label="Contact No" value={lc.contactNo} />
+                    <Field label="Sales Term" value={lc.salesTerm} />
                   </div>
                 </CardContent>
               </Card>
 
-              <Button
-                onClick={() => onExport("delivery-challan")}
-                className="w-full h-14 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
-              >
-                Download Delivery Challan
-              </Button>
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
+                  <CardContent className="p-6">
+                    <SectionHeader
+                      icon={Building2}
+                      title="Seller & Dispatch"
+                      colorClass="bg-slate-50 text-slate-600"
+                    />
+                    <div className="space-y-6">
+                      <Field label="Seller Identity">
+                        <p className="text-sm font-bold text-slate-800 leading-tight">
+                          {company?.name}
+                        </p>
+                        <p className="text-[11px] font-bold text-slate-500 mt-1.5 leading-relaxed">
+                          {company?.address}
+                        </p>
+                      </Field>
+                      <Separator className="opacity-50" />
+                      <div className="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+                          Shipment Weight Profile
+                        </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[9px] font-bold text-emerald-600 uppercase mb-1">
+                              Net Weight
+                            </p>
+                            <p className="text-xl font-bold text-slate-800">
+                              {(lc.invoice?.order?.orderItems as any)?.[0]
+                                ?.fabricItem?.totalNetWeight || "0.00"}{" "}
+                              <span className="text-[10px] text-slate-400">
+                                KG
+                              </span>
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-amber-600 uppercase mb-1">
+                              Gross Weight
+                            </p>
+                            <p className="text-xl font-bold text-slate-800">
+                              {(lc.invoice?.order?.orderItems as any)?.[0]
+                                ?.fabricItem?.totalGrossWeight || "0.00"}{" "}
+                              <span className="text-[10px] text-slate-400">
+                                KG
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Button
+                  onClick={() => onExport("delivery-challan")}
+                  className="w-full h-14 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
+                >
+                  Download Delivery Challan
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -510,59 +515,61 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
         {/* ─── TAB: Beneficiary Certificate ─── */}
         <TabsContent
           value="beneficiary-certificate"
-          className="space-y-6 focus-visible:outline-none"
+          className="focus-visible:outline-none"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
-              <CardContent className="p-8">
-                <SectionHeader
-                  icon={FileText}
-                  title="Certification Details"
-                  colorClass="bg-emerald-50 text-emerald-600"
-                />
-                <div className="p-8 bg-emerald-50/20 rounded-2xl border border-emerald-100/50 mb-8 italic text-slate-700 leading-relaxed text-sm">
-                  <p className="font-bold text-emerald-800 mb-2 not-italic">
-                    Official Declaration:
-                  </p>
-                  "
-                  {lc.remarks ||
-                    "We certify that the mentioned products are of Bangladeshi Origin and been delivered in accordance with terms."}
-                  "
-                </div>
-                <ItemsTable />
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
-                <CardContent className="p-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
+                <CardContent className="p-8">
                   <SectionHeader
-                    icon={Signature}
-                    title="Signatory Entity"
-                    colorClass="bg-slate-50 text-slate-600"
+                    icon={FileText}
+                    title="Certification Details"
+                    colorClass="bg-emerald-50 text-emerald-600"
                   />
-                  <div className="space-y-6">
-                    <div>
-                      <p className="text-xs font-bold text-slate-800 mb-1">
-                        For {company?.name}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
-                        Authorized Signature Line
-                      </p>
-                      <div className="h-14 w-full border-b-2 border-dashed border-slate-200" />
-                    </div>
-                    <Separator className="opacity-50" />
-                    <Field label="Buyer Name" value={buyer?.name} />
+                  <div className="p-8 bg-emerald-50/20 rounded-2xl border border-emerald-100/50 mb-8 italic text-slate-700 leading-relaxed text-sm">
+                    <p className="font-bold text-emerald-800 mb-2 not-italic">
+                      Official Declaration:
+                    </p>
+                    "
+                    {lc.remarks ||
+                      "We certify that the mentioned products are of Bangladeshi Origin and been delivered in accordance with terms."}
+                    "
                   </div>
+                  <ItemsTable />
                 </CardContent>
               </Card>
 
-              <Button
-                onClick={() => handleOpenCertDialog("beneficiary")}
-                className="w-full h-14 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
-              >
-                Download Beneficiary Cert.
-              </Button>
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
+                  <CardContent className="p-6">
+                    <SectionHeader
+                      icon={Signature}
+                      title="Signatory Entity"
+                      colorClass="bg-slate-50 text-slate-600"
+                    />
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 mb-1">
+                          For {company?.name}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+                          Authorized Signature Line
+                        </p>
+                        <div className="h-14 w-full border-b-2 border-dashed border-slate-200" />
+                      </div>
+                      <Separator className="opacity-50" />
+                      <Field label="Buyer Name" value={buyer?.name} />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Button
+                  onClick={() => handleOpenCertDialog("beneficiary")}
+                  className="w-full h-14 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
+                >
+                  Download Beneficiary Cert.
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -570,56 +577,62 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
         {/* ─── TAB: Certificate of Origin ─── */}
         <TabsContent
           value="certificate-of-origin"
-          className="space-y-6 focus-visible:outline-none"
+          className="focus-visible:outline-none"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
-              <CardContent className="p-8">
-                <SectionHeader
-                  icon={FileCheck}
-                  title="Origin Verification"
-                  colorClass="bg-orange-50 text-orange-600"
-                />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-                  <Field label="Origin Country" value="Bangladesh" />
-                  <Field label="Cert. Type" value="LC Document" />
-                  <Field label="Issue Date" value={formatDate(lc.issueDate)} />
-                  <Field
-                    label="Expiry Date"
-                    value={formatDate(lc.expiryDate)}
-                  />
-                </div>
-                <ItemsTable />
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-4 space-y-6">
-              <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
-                <CardContent className="p-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <Card className="lg:col-span-8 border-slate-200 rounded-3xl bg-white overflow-hidden">
+                <CardContent className="p-8">
                   <SectionHeader
-                    icon={Shield}
-                    title="Certification"
-                    colorClass="bg-slate-50 text-slate-600"
+                    icon={FileCheck}
+                    title="Origin Verification"
+                    colorClass="bg-orange-50 text-orange-600"
                   />
-                  <p className="text-[11px] text-slate-500 italic mb-6">
-                    This document certifies that the listed goods are
-                    manufactured and originated in the country mentioned above.
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="w-full border-slate-200 text-slate-600 font-bold text-xs uppercase cursor-default tracking-widest shadow-none"
-                  >
-                    Standard Verification
-                  </Button>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                    <Field label="Origin Country" value="Bangladesh" />
+                    <Field label="Cert. Type" value="LC Document" />
+                    <Field
+                      label="Issue Date"
+                      value={formatDate(lc.issueDate)}
+                    />
+                    <Field
+                      label="Expiry Date"
+                      value={formatDate(lc.expiryDate)}
+                    />
+                  </div>
+                  <ItemsTable />
                 </CardContent>
               </Card>
 
-              <Button
-                onClick={() => handleOpenCertDialog("origin")}
-                className="w-full h-14 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
-              >
-                Download Cert. of Origin
-              </Button>
+              <div className="lg:col-span-4 space-y-6">
+                <Card className="border-slate-200 rounded-3xl bg-white overflow-hidden">
+                  <CardContent className="p-6">
+                    <SectionHeader
+                      icon={Shield}
+                      title="Certification"
+                      colorClass="bg-slate-50 text-slate-600"
+                    />
+                    <p className="text-[11px] text-slate-500 italic mb-6">
+                      This document certifies that the listed goods are
+                      manufactured and originated in the country mentioned
+                      above.
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full border-slate-200 text-slate-600 font-bold text-xs uppercase cursor-default tracking-widest shadow-none"
+                    >
+                      Standard Verification
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Button
+                  onClick={() => handleOpenCertDialog("origin")}
+                  className="w-full h-14 rounded-2xl bg-orange-600 hover:bg-orange-700 text-white font-bold uppercase tracking-widest text-xs gap-3 transition-all"
+                >
+                  Download Cert. of Origin
+                </Button>
+              </div>
             </div>
           </div>
         </TabsContent>
@@ -627,109 +640,111 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
         {/* ─── TAB: Bill of Exchange ─── */}
         <TabsContent
           value="bill-of-exchange"
-          className="space-y-6 focus-visible:outline-none"
+          className="focus-visible:outline-none"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <Card className="lg:col-span-12 border-slate-200 rounded-3xl bg-white overflow-hidden">
-              <CardContent className="p-8">
-                <div className="flex justify-between items-center mb-10">
-                  <SectionHeader
-                    icon={Banknote}
-                    title="Exchange Draft"
-                    colorClass="bg-violet-50 text-violet-600"
-                  />
-                  <div className="flex gap-4">
-                    <Badge className="bg-slate-100 text-slate-600 border-none font-bold px-4 py-1.5 uppercase tracking-widest">
-                      COPY 01
-                    </Badge>
-                    <Badge className="bg-slate-100 text-slate-600 border-none font-bold px-4 py-1.5 uppercase tracking-widest">
-                      COPY 02
-                    </Badge>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                  <div className="space-y-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                    <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 font-bold text-[10px] tracking-wider mb-2 uppercase">
-                      Drawer Details (Client)
-                    </Badge>
-                    <div className="grid grid-cols-2 gap-6">
-                      <Field
-                        label="Dispatch Location"
-                        value={lc.billOfExchangeLocationClient}
-                      />
-                      <Field
-                        label="Processing Date"
-                        value={formatDate(lc.billOfExchangeDateClient)}
-                      />
-                    </div>
-                    <div className="mt-4 p-4 bg-white rounded-xl border border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        Internal Remark
-                      </p>
-                      <p className="text-xs text-slate-600 italic leading-relaxed">
-                        {lc.billOfExchangeRemarkClient ||
-                          "No specific drawer remarks provided."}
-                      </p>
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <Card className="lg:col-span-12 border-slate-200 rounded-3xl bg-white overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="flex justify-between items-center mb-10">
+                    <SectionHeader
+                      icon={Banknote}
+                      title="Exchange Draft"
+                      colorClass="bg-violet-50 text-violet-600"
+                    />
+                    <div className="flex gap-4">
+                      <Badge className="bg-slate-100 text-slate-600 border-none font-bold px-4 py-1.5 uppercase tracking-widest">
+                        COPY 01
+                      </Badge>
+                      <Badge className="bg-slate-100 text-slate-600 border-none font-bold px-4 py-1.5 uppercase tracking-widest">
+                        COPY 02
+                      </Badge>
                     </div>
                   </div>
 
-                  <div className="space-y-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
-                    <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 font-bold text-[10px] tracking-wider mb-2 uppercase">
-                      Drawee Details (Bank)
-                    </Badge>
-                    <div className="grid grid-cols-2 gap-6">
-                      <Field
-                        label="Bank Location"
-                        value={lc.billOfExchangeLocationBank}
-                      />
-                      <Field
-                        label="Value Date"
-                        value={formatDate(lc.billOfExchangeDateBank)}
-                      />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="space-y-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                      <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 font-bold text-[10px] tracking-wider mb-2 uppercase">
+                        Drawer Details (Client)
+                      </Badge>
+                      <div className="grid grid-cols-2 gap-6">
+                        <Field
+                          label="Dispatch Location"
+                          value={lc.billOfExchangeLocationClient}
+                        />
+                        <Field
+                          label="Processing Date"
+                          value={formatDate(lc.billOfExchangeDateClient)}
+                        />
+                      </div>
+                      <div className="mt-4 p-4 bg-white rounded-xl border border-slate-100">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                          Internal Remark
+                        </p>
+                        <p className="text-xs text-slate-600 italic leading-relaxed">
+                          {lc.billOfExchangeRemarkClient ||
+                            "No specific drawer remarks provided."}
+                        </p>
+                      </div>
                     </div>
-                    <div className="mt-4 p-4 bg-white rounded-xl border border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        Bank Instruction
-                      </p>
-                      <p className="text-xs text-slate-600 italic leading-relaxed">
-                        {lc.billOfExchangeRemarkBank ||
-                          "No specific bank instructions provided."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="mt-12 bg-slate-50 rounded-3xl p-8 border border-slate-200 relative overflow-hidden">
-                  <Banknote
-                    size={150}
-                    className="absolute -bottom-10 -right-10 text-slate-200 opacity-20 pointer-events-none"
-                  />
-                  <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div className="text-center md:text-left">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
-                        Draft Amount
-                      </p>
-                      <p className="text-4xl font-bold tracking-tight uppercase text-slate-800">
-                        US${" "}
-                        {Number(lc.amount).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
-                      <p className="text-xs font-bold text-slate-500 mt-2 italic capitalize">
-                        {numberToWords(Number(lc.amount))} Only.
-                      </p>
+                    <div className="space-y-6 bg-slate-50/50 p-6 rounded-3xl border border-slate-100">
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 font-bold text-[10px] tracking-wider mb-2 uppercase">
+                        Drawee Details (Bank)
+                      </Badge>
+                      <div className="grid grid-cols-2 gap-6">
+                        <Field
+                          label="Bank Location"
+                          value={lc.billOfExchangeLocationBank}
+                        />
+                        <Field
+                          label="Value Date"
+                          value={formatDate(lc.billOfExchangeDateBank)}
+                        />
+                      </div>
+                      <div className="mt-4 p-4 bg-white rounded-xl border border-slate-100">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                          Bank Instruction
+                        </p>
+                        <p className="text-xs text-slate-600 italic leading-relaxed">
+                          {lc.billOfExchangeRemarkBank ||
+                            "No specific bank instructions provided."}
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      onClick={() => onExport("bill-of-exchange")}
-                      className="h-16 px-10 rounded-2xl bg-violet-600 text-white hover:bg-violet-700 font-bold uppercase tracking-widest text-xs gap-3"
-                    >
-                      Generate Exchange PDF
-                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  <div className="mt-12 bg-slate-50 rounded-3xl p-8 border border-slate-200 relative overflow-hidden">
+                    <Banknote
+                      size={150}
+                      className="absolute -bottom-10 -right-10 text-slate-200 opacity-20 pointer-events-none"
+                    />
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                      <div className="text-center md:text-left">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">
+                          Draft Amount
+                        </p>
+                        <p className="text-4xl font-bold tracking-tight uppercase text-slate-800">
+                          US${" "}
+                          {Number(lc.amount).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                          })}
+                        </p>
+                        <p className="text-xs font-bold text-slate-500 mt-2 italic capitalize">
+                          {numberToWords(Number(lc.amount))} Only.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => onExport("bill-of-exchange")}
+                        className="h-16 px-10 rounded-2xl bg-violet-600 text-white hover:bg-violet-700 font-bold uppercase tracking-widest text-xs gap-3"
+                      >
+                        Generate Exchange PDF
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

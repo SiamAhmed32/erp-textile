@@ -127,13 +127,12 @@ const CompanyProfileCreate = () => {
     <Container className="pb-10 pt-6">
       <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2">
-          <Link
-            href="/company-profile"
-            className="inline-flex items-center text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Profiles
-          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/company-profile">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
           <PrimaryHeading className="!text-black">Add Company</PrimaryHeading>
         </div>
         <div className="flex gap-2">

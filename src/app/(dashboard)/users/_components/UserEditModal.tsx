@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 import { useUpdateUserMutation } from "@/store/services/authApi";
 import { User } from "./types";
 import { CustomModal, InputField } from "@/components/reusables";
@@ -56,7 +56,9 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
     }));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -78,7 +80,7 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
     if (!user) return;
 
     if ((formData.modules || []).length < 2) {
-      toast.error("Please select at least 2 modules");
+      notify.error("Please select at least 2 modules");
       return;
     }
 
@@ -102,10 +104,10 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
       }
 
       await updateUser({ id: user.id, body: data }).unwrap();
-      toast.success("User updated successfully");
+      notify.success("User updated successfully");
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update user");
+      notify.error(error?.data?.message || "Failed to update user");
     }
   };
 
@@ -146,7 +148,7 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
             </div>
 
             {/* Column 2: First Name & Last Name */}
-            <div className="space-y-4 grid grid-cols-2 gap-2" >
+            <div className="space-y-4 grid grid-cols-2 gap-2">
               <InputField
                 label="First Name"
                 name="firstName"
@@ -306,7 +308,7 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
           <Button
             type="submit"
             disabled={isLoading}
-            className="px-8 bg-secondary hover:bg-secondary/90 text-white"
+            className="px-8 bg-black text-white hover:bg-black/90"
           >
             {isLoading ? "Updating..." : "Update User"}
           </Button>

@@ -6,10 +6,23 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Container, Flex, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { useGetAllQuery, usePostMutation, useGetByIdQuery } from "@/store/services/commonApi";
-import { InvoiceFormData, InvoiceTerms, OrderSummary, InvoiceApiItem } from "./types";
+import {
+  useGetAllQuery,
+  usePostMutation,
+  useGetByIdQuery,
+} from "@/store/services/commonApi";
+import {
+  InvoiceFormData,
+  InvoiceTerms,
+  OrderSummary,
+  InvoiceApiItem,
+} from "./types";
 import { invoiceSchema, toFieldErrors } from "./validation";
-import { normalizeInvoice, toInvoiceFormData, toInvoicePayload } from "./helpers";
+import {
+  normalizeInvoice,
+  toInvoiceFormData,
+  toInvoicePayload,
+} from "./helpers";
 import InvoiceForm from "./InvoiceForm";
 
 type FormErrors = Partial<Record<keyof InvoiceFormData, string>>;
@@ -118,10 +131,10 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
   return (
     <Container className="pb-10 pt-6">
       <div className="mb-6">
-        <Button variant="outline" asChild>
+        <Button variant="outline" size="sm" asChild>
           <Link href="/invoice-management/invoices">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Invoices
+            Back
           </Link>
         </Button>
       </div>
@@ -129,7 +142,9 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
       <div className="max-w-4xl mx-auto">
         <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
           <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold leading-none tracking-tight">Create Invoice</h2>
+            <h2 className="text-xl font-semibold leading-none tracking-tight">
+              Create Invoice
+            </h2>
           </div>
           <div className="p-6">
             <InvoiceForm
