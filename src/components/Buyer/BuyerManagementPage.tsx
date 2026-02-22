@@ -3,10 +3,12 @@
 import React from "react";
 import {
   Container,
-  PrimaryHeading,
+  PageHeader,
   PrimaryText,
   SectionGap,
 } from "@/components/reusables";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Buyer, BuyerFormData } from "./types";
 import { BuyerList } from "./BuyerList";
 import { BuyerForm } from "./BuyerForm";
@@ -169,20 +171,27 @@ export function BuyerManagementPage() {
 
   return (
     <Container className="py-8">
-      {/* <div className="space-y-2">
-        <PrimaryHeading>Buyer Management</PrimaryHeading>
-        <PrimaryText className="text-muted-foreground">
-          Manage buyer profiles, contact details, and merchandiser assignments.
-        </PrimaryText>
-      </div>
-
-      <SectionGap /> */}
+      <PageHeader
+        title="Buyer Management"
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/" },
+          { label: "Buyers" },
+        ]}
+        actions={
+          <Button
+            className="bg-black text-white hover:bg-black/90 shadow-sm"
+            onClick={handleCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Buyer
+          </Button>
+        }
+      />
 
       <BuyerList
         buyers={buyers}
         search={search}
         onSearchChange={setSearch}
-        onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onView={handleView}

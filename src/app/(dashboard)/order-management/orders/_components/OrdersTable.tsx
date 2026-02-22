@@ -36,7 +36,6 @@ type Props = {
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
   onPageChange: (page: number) => void;
-  onAddOrder: () => void;
   onRowClick: (row: Order) => void;
   onView: (row: Order) => void;
   onEdit: (row: Order) => void;
@@ -63,7 +62,6 @@ const OrdersTable = ({
   onDateFromChange,
   onDateToChange,
   onPageChange,
-  onAddOrder,
   onRowClick,
   onView,
   onEdit,
@@ -381,8 +379,6 @@ const OrdersTable = ({
               onChange={(e) => onDateToChange(e.target.value)}
             />
           </div>
-
-          <PrimaryButton handleClick={onAddOrder}>Create Order</PrimaryButton>
         </div>
       </div>
       <CustomTable

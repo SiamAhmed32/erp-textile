@@ -144,7 +144,6 @@ const OrderPage = () => {
       onDateFromChange={setDateFrom}
       onDateToChange={setDateTo}
       onPageChange={setPage}
-      onAddOrder={() => router.push("/order-management/orders/add-new-order")}
       onRowClick={handleRowClick}
       onView={handleView}
       onEdit={handleEdit}

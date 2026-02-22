@@ -3,12 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Pencil } from "lucide-react";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
+import { Container, PageHeader, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -152,38 +147,42 @@ const CompanyProfileDetails = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/company-profile">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <PrimaryHeading>{profile?.name || "Company Details"}</PrimaryHeading>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={!profile}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleExportPdf}>
-                Export PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" asChild disabled={!profile}>
-            <Link href={`/company-profile/${id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-        </div>
-      </Flex>
+      <PageHeader
+        title={profile?.name || "Company Details"}
+        backHref="/company-profile"
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/" },
+          { label: "Company Profiles", href: "/company-profile" },
+          { label: profile?.name || "Details" },
+        ]}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={!profile}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportPdf}>
+                  Export PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              className="bg-black text-white hover:bg-black/90 shadow-sm"
+              asChild
+              disabled={!profile}
+            >
+              <Link href={`/company-profile/${id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Profile
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       <div className="mt-4" />
 

@@ -4,8 +4,7 @@ import { notify } from "@/lib/notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex } from "@/components/reusables";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
@@ -158,38 +157,38 @@ const OrderCreate = ({ duplicateId }: Props) => {
     }
   };
 
+  // Basic Progress Calculation for Order
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = [
+      "orderNumber",
+      "orderDate",
+      "buyerId",
+      "companyProfileId",
+      "productType",
+    ];
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter(
+      (key) => !!draft[key as keyof OrderFormData],
+    ).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/order-management/orders">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Create New Order
-            </h1>
-            <p className="text-sm text-slate-500">
-              Configure a new production order
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild disabled={saving}>
-            <Link href="/order-management/orders">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-lg"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Creating..." : "Save Order"}
-          </Button>
-        </div>
-      </Flex>
+      <FormHeader
+        title="Create New Order"
+        backHref="/order-management/orders"
+        breadcrumbItems={[
+          { label: "Order Management", href: "/order-management/orders" },
+          { label: "Orders", href: "/order-management/orders" },
+          { label: "Create" },
+        ]}
+        progress={progressData}
+      />
 
       <div className="mt-8">
         <OrderForm
@@ -206,6 +205,14 @@ const OrderCreate = ({ duplicateId }: Props) => {
           disableStatus
         />
       </div>
+
+      <FormFooter
+        cancelHref="/order-management/orders"
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Create New Order"
+        trustText="Production orders are saved to the central database."
+      />
     </Container>
   );
 };

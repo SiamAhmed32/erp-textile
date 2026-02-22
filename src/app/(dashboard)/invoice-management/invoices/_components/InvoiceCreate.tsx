@@ -3,8 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex, PrimaryText } from "@/components/reusables";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
@@ -128,48 +127,50 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
     }
   };
 
+  // Basic Progress Calculation for Invoice
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = ["piNumber", "date", "orderId", "invoiceTermsId"];
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter(
+      (key) => !!draft[key as keyof InvoiceFormData],
+    ).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   return (
     <Container className="pb-10 pt-6">
-      <div className="mb-6">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/invoice-management/invoices">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
+      <FormHeader
+        title="Create Invoice (PI)"
+        backHref="/invoice-management/invoices"
+        breadcrumbItems={[
+          { label: "Invoice Management", href: "/invoice-management/invoices" },
+          { label: "Invoices", href: "/invoice-management/invoices" },
+          { label: "Create" },
+        ]}
+        progress={progressData}
+      />
+
+      <div className="mt-8">
+        <InvoiceForm
+          data={draft}
+          orders={orders}
+          terms={terms}
+          onChange={handleChange}
+          errors={errors}
+        />
       </div>
 
-      <div className="max-w-4xl mx-auto">
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold leading-none tracking-tight">
-              Create Invoice
-            </h2>
-          </div>
-          <div className="p-6">
-            <InvoiceForm
-              data={draft}
-              orders={orders}
-              terms={terms}
-              onChange={handleChange}
-              errors={errors}
-            />
-
-            <div className="mt-8 flex justify-end gap-3 border-t pt-6">
-              <Button variant="outline" asChild>
-                <Link href="/invoice-management/invoices">Cancel</Link>
-              </Button>
-              <Button
-                className="bg-black text-white hover:bg-black/90"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Invoice"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <FormFooter
+        cancelHref="/invoice-management/invoices"
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Create Invoice"
+        trustText="Proforma Invoices are generated as legal trade documents."
+      />
     </Container>
   );
 };

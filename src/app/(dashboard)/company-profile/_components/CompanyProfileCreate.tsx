@@ -3,14 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
-import { Button } from "@/components/ui/button";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { usePostMutation } from "@/store/services/commonApi";
 import { CompanyProfileApiItem, CompanyProfileFormData } from "./types";
 import CompanyProfileForm from "./CompanyProfileForm";
@@ -51,6 +44,34 @@ const CompanyProfileCreate = () => {
     Partial<Record<keyof CompanyProfileFormData, string>>
   >({});
   const [postItem] = usePostMutation();
+
+  // Progress Calculation
+  const progressData = React.useMemo(() => {
+    // We track all fields except meta-data
+    const fieldsToTrack = Object.keys(emptyForm).filter(
+      (key) => !["id", "logoUrl", "logoFile"].includes(key),
+    );
+
+    // We define "effective" filled fields by ignoring the two default ones
+    // for the sake of the progress bar starting at 0%
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key as keyof CompanyProfileFormData];
+      // Ignore defaults in the count to satisfy the "start at 0%" requirement
+      if (key === "companyType" && val === "PARENT") return false;
+      if (key === "status" && val === "active") return false;
+
+      return val !== "" && val !== null && val !== undefined;
+    }).length;
+
+    // The total fields the user actually NEEDS to interact with
+    const interactiveTotal = fieldsToTrack.length - 2;
+
+    return {
+      percentage: Math.min(100, Math.round((filled / interactiveTotal) * 100)),
+      count: filled,
+      total: interactiveTotal,
+    };
+  }, [draft]);
 
   const handleChange = (
     field: keyof CompanyProfileFormData,
@@ -116,7 +137,7 @@ const CompanyProfileCreate = () => {
         router.push(`/company-profile`);
       }
     } catch (err: any) {
-      const message = err?.message || "Failed to create company profile";
+      const message = err?.message || "Failed to Create New Company profile";
       notify.error(message);
     } finally {
       setSaving(false);
@@ -125,37 +146,29 @@ const CompanyProfileCreate = () => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/company-profile">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <PrimaryHeading className="!text-black">Add Company</PrimaryHeading>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/company-profile">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Company"}
-          </Button>
-        </div>
-      </Flex>
-
-      <div className="mt-4" />
+      <FormHeader
+        title="Create New Company"
+        backHref="/company-profile"
+        breadcrumbItems={[
+          { label: "Company Profiles", href: "/company-profile" },
+          { label: "Add New" },
+        ]}
+        progress={progressData}
+      />
 
       <CompanyProfileForm
         data={draft}
         onChange={handleChange}
         isEditing
         errors={errors}
+      />
+
+      <FormFooter
+        cancelHref="/company-profile"
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Create New Company Profile"
+        trustText="Draft data is stored securely. All inputs are encrypted."
       />
     </Container>
   );

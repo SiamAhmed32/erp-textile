@@ -3,14 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
-import { Button } from "@/components/ui/button";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
 import {
   CompanyProfile,
@@ -95,6 +88,23 @@ const CompanyProfileEdit = ({ id }: Props) => {
     notify.error(message);
   }, [apiError]);
 
+  // Progress Calculation
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = Object.keys(emptyForm).filter(
+      (key) => !["id", "logoUrl", "logoFile", "status"].includes(key),
+    );
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key as keyof CompanyProfileFormData];
+      return val !== "" && val !== null && val !== undefined;
+    }).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   const handleChange = (
     field: keyof CompanyProfileFormData,
     value: string | File | null,
@@ -169,33 +179,25 @@ const CompanyProfileEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/company-profile/${id}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <PrimaryHeading>
-            {profile?.name ? `Edit ${profile.name}` : "Edit Company"}
-          </PrimaryHeading>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/company-profile/${id}`}>Cancel</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </Flex>
+      <FormHeader
+        title={profile?.name ? `Edit ${profile.name}` : "Edit Company"}
+        backHref={`/company-profile/${id}`}
+        breadcrumbItems={[
+          { label: "Company Profiles", href: "/company-profile" },
+          {
+            label: profile?.name || "Loading...",
+            href: `/company-profile/${id}`,
+          },
+          { label: "Edit" },
+        ]}
+        progress={progressData}
+      />
 
-      <div className="mt-4" />
       {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
+        <div className="mb-6 animate-pulse flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg border border-border/50">
+          <div className="h-4 w-4 rounded-full bg-muted border-2 border-muted-foreground/20 animate-spin" />
           Loading company details...
-        </PrimaryText>
+        </div>
       )}
 
       <CompanyProfileForm
@@ -203,6 +205,14 @@ const CompanyProfileEdit = ({ id }: Props) => {
         onChange={handleChange}
         isEditing
         errors={errors}
+      />
+
+      <FormFooter
+        cancelHref={`/company-profile/${id}`}
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Save Changes"
+        trustText="Updates are audited and saved securely. All sensitive data is encrypted."
       />
     </Container>
   );

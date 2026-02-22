@@ -37,7 +37,6 @@ type Props = {
   onStartDateChange: (value: string) => void;
   onEndDateChange: (value: string) => void;
   onPageChange: (page: number) => void;
-  onAddInvoice: () => void;
   onRowClick: (row: Invoice) => void;
   onView: (row: Invoice) => void;
   onEdit: (row: Invoice) => void;
@@ -64,7 +63,6 @@ const InvoicesTable = ({
   onStartDateChange,
   onEndDateChange,
   onPageChange,
-  onAddInvoice,
   onRowClick,
   onView,
   onEdit,
@@ -215,12 +213,6 @@ const InvoicesTable = ({
               onChange={(e) => onEndDateChange(e.target.value)}
             />
           </div>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onAddInvoice}
-          >
-            Create PI
-          </Button>
         </div>
       </div>
 

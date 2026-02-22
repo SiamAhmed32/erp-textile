@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Pencil, Download } from "lucide-react";
-import { Container, Flex, DetailsSkeleton } from "@/components/reusables";
+import { Container, PageHeader, DetailsSkeleton } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
 import { Order } from "./types";
@@ -51,41 +51,43 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
         <DetailsSkeleton />
       ) : (
         <>
-          <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-slate-100 pb-6 mb-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/order-management/orders">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
-                </Link>
-              </Button>
-              <div className="h-6 w-px bg-slate-200 mx-2 hidden sm:block" />
-              <h1 className="text-xl font-bold tracking-tight">
-                {order ? `Order: ${order.orderNumber}` : "Order Details"}
-              </h1>
-            </div>
+          <PageHeader
+            title={order ? `Order: ${order.orderNumber}` : "Order Details"}
+            backHref="/order-management/orders"
+            breadcrumbItems={[
+              { label: "Dashboard", href: "/" },
+              { label: "Order Management", href: "/order-management/orders" },
+              { label: "Orders", href: "/order-management/orders" },
+              { label: order?.orderNumber || "Details" },
+            ]}
+            actions={
+              <div className="flex flex-wrap gap -2">
+                {order && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-slate-200 hover:bg-slate-50 shadow-sm"
+                    onClick={() => exportOrderToPdf(order)}
+                  >
+                    <Download className="h-4 w-4" />
+                    Export PDF
+                  </Button>
+                )}
 
-            <div className="flex flex-wrap gap-2 text-foreground">
-              {order && (
                 <Button
-                  variant="outline"
+                  className="bg-black text-white hover:bg-black/90 shadow-sm"
                   size="sm"
-                  className="gap-2 border-slate-200 hover:bg-slate-50"
-                  onClick={() => exportOrderToPdf(order)}
+                  asChild
+                  disabled={!order}
                 >
-                  <Download className="h-4 w-4 text-emerald-600" />
-                  Export PDF
+                  <Link href={`/order-management/orders/${id}/edit`}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit Order
+                  </Link>
                 </Button>
-              )}
-
-              <Button variant="outline" size="sm" asChild disabled={!order}>
-                <Link href={`/order-management/orders/${id}/edit`}>
-                  <Pencil className="mr-2 h-4 w-4 text-primary" />
-                  Edit Order
-                </Link>
-              </Button>
-            </div>
-          </Flex>
+              </div>
+            }
+          />
 
           {order && <OrderReadOnly order={order} />}
         </>

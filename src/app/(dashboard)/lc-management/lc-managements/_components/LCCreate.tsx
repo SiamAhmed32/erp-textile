@@ -4,8 +4,7 @@ import { notify } from "@/lib/notifications";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex } from "@/components/reusables";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { LCFormData, lcSchema, toFieldErrors } from "./validation";
@@ -161,36 +160,38 @@ const LCCreate = () => {
     }
   };
 
+  // Basic Progress Calculation for LC
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = [
+      "bblcNumber",
+      "dateOfOpening",
+      "notifyParty",
+      "lcIssueBankName",
+      "invoiceId",
+    ];
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter(
+      (key) => !!draft[key as keyof LCFormData],
+    ).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href="/lc-management/lc-managements">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Create BBLC</h1>
-            <p className="text-sm text-muted-foreground">
-              Setup a new Back-to-Back Letter of Credit
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild disabled={saving}>
-            <Link href="/lc-management/lc-managements">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-lg"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Creating..." : "Save BBLC"}
-          </Button>
-        </div>
-      </Flex>
+      <FormHeader
+        title="Create BBLC"
+        backHref="/lc-management/lc-managements"
+        breadcrumbItems={[
+          { label: "LC Management", href: "/lc-management/lc-managements" },
+          { label: "BBLC List", href: "/lc-management/lc-managements" },
+          { label: "Create" },
+        ]}
+        progress={progressData}
+      />
 
       <div className="mt-8">
         <LCForm
@@ -202,6 +203,14 @@ const LCCreate = () => {
           saving={saving}
         />
       </div>
+
+      <FormFooter
+        cancelHref="/lc-management/lc-managements"
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Create BBLC"
+        trustText="Financial records are encrypted and stored according to bank protocols."
+      />
     </Container>
   );
 };

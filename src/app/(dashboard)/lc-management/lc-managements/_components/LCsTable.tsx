@@ -28,7 +28,6 @@ type Props = {
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
   onPageChange: (page: number) => void;
-  onAddLC: () => void;
   onRowClick: (row: LCManagement) => void;
   onView: (row: LCManagement) => void;
   onEdit: (row: LCManagement) => void;
@@ -50,7 +49,6 @@ const LCsTable = ({
   onDateFromChange,
   onDateToChange,
   onPageChange,
-  onAddLC,
   onRowClick,
   onView,
   onEdit,
@@ -200,7 +198,6 @@ const LCsTable = ({
               onChange={(e) => onDateToChange(e.target.value)}
             />
           </div>
-          <PrimaryButton handleClick={onAddLC}>Create BBLC</PrimaryButton>
         </div>
       </div>
       <CustomTable

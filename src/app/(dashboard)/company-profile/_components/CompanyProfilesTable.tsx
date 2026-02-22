@@ -31,7 +31,6 @@ type Props = {
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
-  onAddCompany: () => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: CompanyProfile) => void;
   onDelete: (row: CompanyProfile) => void;
@@ -48,7 +47,6 @@ const CompanyProfilesTable = ({
   onSearchChange,
   onTypeFilterChange,
   onStatusFilterChange,
-  onAddCompany,
   onPageChange,
   onRowClick,
   onDelete,
@@ -172,12 +170,6 @@ const CompanyProfilesTable = ({
               </SelectContent>
             </Select>
           </div>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onAddCompany}
-          >
-            Add Company
-          </Button>
         </div>
       </div>
 

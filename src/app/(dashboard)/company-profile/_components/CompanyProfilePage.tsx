@@ -135,7 +135,6 @@ const CompanyProfilePage = () => {
         onSearchChange={setSearch}
         onTypeFilterChange={setTypeFilter}
         onStatusFilterChange={setStatusFilter}
-        onAddCompany={() => router.push("/company-profile/add-new-company")}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onDelete={handleDelete}

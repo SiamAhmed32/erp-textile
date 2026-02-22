@@ -1,6 +1,6 @@
 "use client";
 
-import { Container, Flex, PrimaryText } from "@/components/reusables";
+import { Container, PageHeader, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetByIdQuery } from "@/store/services/commonApi";
 import { jsPDF } from "jspdf";
@@ -453,49 +453,55 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
   return (
     <Container className="pb-10 pt-6">
       <div className="print:hidden">
-        <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link href="/invoice-management/invoices">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
-            {invoice && (
-              <span
-                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(invoice.status)}`}
+        <PageHeader
+          title={invoice?.piNumber || "Invoice Details"}
+          backHref="/invoice-management/invoices"
+          breadcrumbItems={[
+            { label: "Dashboard", href: "/" },
+            {
+              label: "Invoice Management",
+              href: "/invoice-management/invoices",
+            },
+            { label: invoice?.piNumber || "Details" },
+          ]}
+          actions={
+            <div className="flex flex-wrap gap-2">
+              {invoice && (
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${statusBadgeClass(invoice.status)}`}
+                >
+                  {invoice.status}
+                </span>
+              )}
+              <Button
+                variant="outline"
+                onClick={handleExportPdf}
+                disabled={!invoice}
+                className="shadow-sm"
               >
-                {invoice.status}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={handleExportPdf}
-              disabled={!invoice}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export PDF
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsDuplicateModalOpen(true)}
-              disabled={!invoice}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Duplicate
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditModalOpen(true)}
-              disabled={!invoice}
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Button>
-          </div>
-        </Flex>
+                <Download className="mr-2 h-4 w-4" />
+                Export PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsDuplicateModalOpen(true)}
+                disabled={!invoice}
+                className="shadow-sm"
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </Button>
+              <Button
+                className="bg-black text-white hover:bg-black/90 shadow-sm"
+                onClick={() => setIsEditModalOpen(true)}
+                disabled={!invoice}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Invoice
+              </Button>
+            </div>
+          }
+        />
 
         {error && (
           <PrimaryText className="mt-4 text-sm text-destructive">

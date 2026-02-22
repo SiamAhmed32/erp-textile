@@ -4,8 +4,7 @@ import { notify } from "@/lib/notifications";
 import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex } from "@/components/reusables";
+import { Container, FormHeader, FormFooter } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetByIdQuery,
@@ -163,6 +162,27 @@ const OrderEdit = ({ id }: Props) => {
     }
   };
 
+  // Basic Progress Calculation for Order
+  const progressData = React.useMemo(() => {
+    if (!draft) return { percentage: 0, count: 0, total: 0 };
+    const fieldsToTrack = [
+      "orderNumber",
+      "orderDate",
+      "buyerId",
+      "companyProfileId",
+      "productType",
+    ];
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter(
+      (key) => !!draft[key as keyof OrderFormData],
+    ).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   if (loadingOrder || !draft) {
     return (
       <Container className="pt-10">
@@ -178,36 +198,20 @@ const OrderEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/order-management/orders/${id}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
-              Edit Order
-            </h1>
-            <p className="text-sm text-slate-500">
-              Update order information and production details
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild disabled={saving}>
-            <Link href={`/order-management/orders/${id}`}>Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-lg"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving Changes..." : "Update Order"}
-          </Button>
-        </div>
-      </Flex>
+      <FormHeader
+        title={`Edit Order: ${order?.orderNumber || ""}`}
+        backHref={`/order-management/orders/${id}`}
+        breadcrumbItems={[
+          { label: "Order Management", href: "/order-management/orders" },
+          { label: "Orders", href: "/order-management/orders" },
+          {
+            label: order?.orderNumber || "Order",
+            href: `/order-management/orders/${id}`,
+          },
+          { label: "Edit" },
+        ]}
+        progress={progressData}
+      />
 
       <div className="mt-8">
         <OrderForm
@@ -225,6 +229,14 @@ const OrderEdit = ({ id }: Props) => {
           onTabChange={setActiveTab as any}
         />
       </div>
+
+      <FormFooter
+        cancelHref={`/order-management/orders/${id}`}
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Update Order"
+        trustText="Changes are synced to production planning."
+      />
     </Container>
   );
 };

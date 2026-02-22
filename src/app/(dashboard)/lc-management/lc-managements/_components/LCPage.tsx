@@ -110,8 +110,7 @@ const LCPage = () => {
   }, [search]);
 
   return (
-    <div className="space-y-6">
-      <PrimaryHeading>LC Management</PrimaryHeading>
+    <div className="space-y-4">
       <LCsTable
         data={lcs}
         loading={loading}
@@ -128,7 +127,6 @@ const LCPage = () => {
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
         onPageChange={setPage}
-        onAddLC={() => router.push("/lc-management/lc-managements/create")}
         onRowClick={handleRowClick}
         onView={handleView}
         onEdit={handleEdit}

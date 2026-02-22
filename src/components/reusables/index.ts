@@ -20,6 +20,7 @@ export { default as SectionHeading } from './SectionHeading'
 export { default as ContactButtons } from './ContactButtons'
 export { default as TextBreak } from './TextBreak'
 export { default as PageHeading } from './PageHeading'
+export { default as PageHeader } from './PageHeader'
 export { default as Border } from './Border'
 
 export { default as PriceText } from './PriceText';
@@ -29,3 +30,6 @@ export { default as CustomModal } from './CustomModal';
 export { default as PageLoader } from './PageLoader';
 export { default as InPageLoader } from './InPageLoader';
 export { default as DetailsSkeleton } from './DetailsSkeleton';
+export { default as Breadcrumb } from './Breadcrumb';
+export { default as FormHeader } from './FormHeader';
+export { default as FormFooter } from './FormFooter';

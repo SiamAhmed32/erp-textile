@@ -11,6 +11,10 @@ import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
 import { countByType, normalizeInvoice } from "./helpers";
 
+import { PageHeader } from "@/components/reusables";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
 const InvoicePage = () => {
   const router = useRouter();
   const [page, setPage] = useState(1);
@@ -140,6 +144,23 @@ const InvoicePage = () => {
 
   return (
     <>
+      <PageHeader
+        title="Proforma Invoices (PI)"
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/" },
+          { label: "Invoice Management", href: "/invoice-management/invoices" },
+          { label: "Invoices" },
+        ]}
+        actions={
+          <Button
+            className="bg-black text-white hover:bg-black/90 shadow-sm"
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Create New PI
+          </Button>
+        }
+      />
       <InvoicesTable
         data={invoices}
         loading={loading}

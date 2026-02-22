@@ -10,7 +10,6 @@ type Props = {
   buyers: Buyer[];
   search: string;
   onSearchChange: (value: string) => void;
-  onCreate: () => void;
   onEdit: (buyer: Buyer) => void;
   onDelete: (buyer: Buyer) => void;
   onView: (buyer: Buyer) => void;
@@ -23,7 +22,6 @@ export function BuyerList({
   buyers,
   search,
   onSearchChange,
-  onCreate,
   onEdit,
   onDelete,
   onView,
@@ -123,12 +121,6 @@ export function BuyerList({
             Search
           </Button>
         </div>
-        <Button
-          onClick={onCreate}
-          className="bg-black text-white hover:bg-black/90"
-        >
-          Add Buyer
-        </Button>
       </div>
 
       <CustomTable
