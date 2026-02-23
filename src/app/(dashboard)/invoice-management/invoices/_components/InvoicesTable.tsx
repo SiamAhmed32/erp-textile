@@ -204,8 +204,10 @@ const InvoicesTable = ({
           <DateRangeFilter
             start={startDate}
             end={endDate}
-            onStartChange={onStartDateChange}
-            onEndChange={onEndDateChange}
+            onFilterChange={({ start, end }) => {
+              onStartDateChange(start);
+              onEndDateChange(end);
+            }}
             placeholder="Invoice Dates"
           />
         </div>

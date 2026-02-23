@@ -370,8 +370,10 @@ const OrdersTable = ({
           <DateRangeFilter
             start={dateFrom}
             end={dateTo}
-            onStartChange={onDateFromChange}
-            onEndChange={onDateToChange}
+            onFilterChange={({ start, end }) => {
+              onDateFromChange(start);
+              onDateToChange(end);
+            }}
             placeholder="Order Dates"
           />
         </div>

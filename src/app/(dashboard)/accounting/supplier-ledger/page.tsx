@@ -232,7 +232,6 @@ export default function SupplierLedgerPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "name",
     dir: "asc",
@@ -247,8 +246,6 @@ export default function SupplierLedgerPage() {
     sort: sort ? `${sort.dir === "desc" ? "-" : ""}${sort.field}` : undefined,
     filters: {
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-      ...(dateRange.start ? { startDate: dateRange.start } : {}),
-      ...(dateRange.end ? { endDate: dateRange.end } : {}),
     },
   });
 
@@ -394,8 +391,6 @@ export default function SupplierLedgerPage() {
           setSearch={setSearch}
           status={statusFilter}
           setStatus={setStatusFilter}
-          dateRange={dateRange}
-          setDateRange={setDateRange}
           sort={sort}
           setSort={setSort}
         />

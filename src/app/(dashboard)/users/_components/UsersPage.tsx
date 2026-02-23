@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import PrimaryButton from "@/components/reusables/PrimaryButton";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/services/types";
 import {
@@ -15,19 +14,37 @@ import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
 import { PageHeader, CustomModal } from "@/components/reusables";
-import { Plus } from "lucide-react";
+import { Plus, Search, ChevronDown, ArrowUpDown } from "lucide-react";
 import { User } from "./types";
 import { notify } from "@/lib/notifications";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 const UsersPage = () => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "username",
+    dir: "asc",
+  });
   const [page, setPage] = useState(1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
-  const { data, isLoading } = useGetUsersQuery({ search });
+  const { data, isLoading } = useGetUsersQuery({
+    search: search || undefined,
+    filters: {
+      ...(roleFilter !== "all" ? { role: roleFilter } : {}),
+    },
+    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
+  });
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
 
@@ -39,6 +56,29 @@ const UsersPage = () => {
     setSearch(searchInput);
     setPage(1);
   };
+
+  const roleOptions = [
+    { value: "all", label: "All Roles" },
+    { value: "super_admin", label: "Super Admin" },
+    { value: "admin", label: "Admin" },
+    { value: "user", label: "User" },
+  ];
+
+  const sortOptions = [
+    {
+      value: "username_asc",
+      label: "Username A → Z",
+      field: "username",
+      dir: "asc",
+    },
+    {
+      value: "username_desc",
+      label: "Username Z → A",
+      field: "username",
+      dir: "desc",
+    },
+    { value: "role_asc", label: "Role A → Z", field: "role", dir: "asc" },
+  ];
 
   const handleDelete = async () => {
     if (!deletingUser) return;
@@ -76,16 +116,107 @@ const UsersPage = () => {
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md">
-          <Input
-            placeholder="Search by username, email, name..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-          />
-          <Button variant="outline" onClick={handleSearchSubmit}>
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search by username, email, name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={handleSearchSubmit}
+            className="h-11 px-6 bg-white border-slate-200 font-medium"
+          >
             Search
           </Button>
+        </div>
+
+        {/* Right: Filters Group */}
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          {/* Role Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                  roleFilter !== "all" &&
+                    "bg-blue-50 border-blue-200 text-blue-700",
+                )}
+              >
+                <span>
+                  {roleOptions.find((r) => r.value === roleFilter)?.label}
+                </span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+            >
+              {roleOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() => {
+                    setRoleFilter(opt.value);
+                    setPage(1);
+                  }}
+                  className={cn(
+                    "rounded-lg my-0.5",
+                    roleFilter === opt.value ? "bg-blue-50 text-blue-700" : "",
+                  )}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Sort Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                  (sort.field !== "username" || sort.dir !== "asc") &&
+                    "bg-purple-50 border-purple-200 text-purple-700",
+                )}
+              >
+                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                <span>Sort</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+            >
+              {sortOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() =>
+                    setSort({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    })
+                  }
+                  className={cn(
+                    "rounded-lg my-0.5",
+                    sort.field === opt.field && sort.dir === opt.dir
+                      ? "bg-purple-50 text-purple-700"
+                      : "",
+                  )}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

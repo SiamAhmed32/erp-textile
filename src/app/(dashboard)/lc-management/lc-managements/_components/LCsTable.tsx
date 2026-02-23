@@ -190,8 +190,10 @@ const LCsTable = ({
           <DateRangeFilter
             start={dateFrom}
             end={dateTo}
-            onStartChange={onDateFromChange}
-            onEndChange={onDateToChange}
+            onFilterChange={({ start, end }) => {
+              onDateFromChange(start);
+              onDateToChange(end);
+            }}
             placeholder="LC Issue Dates"
           />
         </div>

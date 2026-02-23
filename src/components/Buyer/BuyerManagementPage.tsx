@@ -45,6 +45,13 @@ const validate = (data: BuyerFormData) => {
 export function BuyerManagementPage() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
+  const [sort, setSort] = React.useState<{
+    field: string;
+    dir: "asc" | "desc";
+  }>({
+    field: "name",
+    dir: "asc",
+  });
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formData, setFormData] = React.useState<BuyerFormData>(emptyBuyer);
@@ -65,7 +72,8 @@ export function BuyerManagementPage() {
     path: "buyers",
     page,
     limit: 10,
-    search,
+    search: search || undefined,
+    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
   });
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const totalPages = (buyersPayload as any)?.meta?.pagination?.totalPages || 1;
@@ -192,6 +200,8 @@ export function BuyerManagementPage() {
         buyers={buyers}
         search={search}
         onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
         onEdit={handleEdit}
         onDelete={handleDelete}
         onView={handleView}

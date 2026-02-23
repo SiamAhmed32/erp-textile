@@ -18,8 +18,6 @@ interface SupplierToolbarProps {
   setSearch: (val: string) => void;
   status: string;
   setStatus: (val: string) => void;
-  dateRange: { start: string; end: string };
-  setDateRange: (range: { start: string; end: string }) => void;
   sort: { field: string; dir: "asc" | "desc" };
   setSort: (sort: { field: string; dir: "asc" | "desc" }) => void;
 }
@@ -29,8 +27,6 @@ export default function SupplierToolbar({
   setSearch,
   status,
   setStatus,
-  dateRange,
-  setDateRange,
   sort,
   setSort,
 }: SupplierToolbarProps) {
@@ -114,15 +110,6 @@ export default function SupplierToolbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Reusable Date Range Filter */}
-        <DateRangeFilter
-          start={dateRange.start}
-          end={dateRange.end}
-          onStartChange={(val) => setDateRange({ ...dateRange, start: val })}
-          onEndChange={(val) => setDateRange({ ...dateRange, end: val })}
-          className="h-11"
-        />
 
         {/* Sort Dropdown */}
         <DropdownMenu>

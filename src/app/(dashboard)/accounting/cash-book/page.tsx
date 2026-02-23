@@ -256,12 +256,7 @@ export default function CashBookPage() {
             <DateRangeFilter
               start={dateRange.start}
               end={dateRange.end}
-              onStartChange={(val) =>
-                setDateRange((prev) => ({ ...prev, start: val }))
-              }
-              onEndChange={(val) =>
-                setDateRange((prev) => ({ ...prev, end: val }))
-              }
+              onFilterChange={setDateRange}
               placeholder="Activity Dates"
             />
             <Button

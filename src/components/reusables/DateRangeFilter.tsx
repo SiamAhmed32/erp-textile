@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Calendar, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,28 +14,53 @@ import { cn } from "@/lib/utils";
 interface DateRangeFilterProps {
   start: string;
   end: string;
-  onStartChange: (val: string) => void;
-  onEndChange: (val: string) => void;
-  onClear?: () => void;
-  onApply?: () => void;
+  onFilterChange: (range: { start: string; end: string }) => void;
   className?: string;
   placeholder?: string;
 }
 
+/**
+ * DateRangeFilter Component
+ *
+ * DESIGN PATTERN: Deferred State (Apply Pattern)
+ * As a senior developer, we want to ensure that expensive operations (like API re-fetching)
+ * only happen when the user has finished their selection.
+ * This component uses local state for the inputs and only calls onFilterChange when "Apply" is clicked.
+ */
 export default function DateRangeFilter({
   start,
   end,
-  onStartChange,
-  onEndChange,
-  onClear,
-  onApply,
+  onFilterChange,
   className,
   placeholder = "Date Range",
 }: DateRangeFilterProps) {
+  // Local state to hold values before "Apply" is clicked
+  const [tempStart, setTempStart] = useState(start);
+  const [tempEnd, setTempEnd] = useState(end);
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Sync with props if they change externally (e.g. parent clears all)
+  useEffect(() => {
+    setTempStart(start);
+    setTempEnd(end);
+  }, [start, end]);
+
   const hasValue = start || end;
 
+  const handleApply = () => {
+    onFilterChange({ start: tempStart, end: tempEnd });
+    setIsOpen(false);
+  };
+
+  const handleClear = () => {
+    setTempStart("");
+    setTempEnd("");
+    onFilterChange({ start: "", end: "" });
+    setIsOpen(false);
+  };
+
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
@@ -70,8 +95,8 @@ export default function DateRangeFilter({
             </p>
             <Input
               type="date"
-              value={start}
-              onChange={(e) => onStartChange(e.target.value)}
+              value={tempStart}
+              onChange={(e) => setTempStart(e.target.value)}
               className="h-10 bg-slate-50 border-slate-200"
             />
           </div>
@@ -81,8 +106,8 @@ export default function DateRangeFilter({
             </p>
             <Input
               type="date"
-              value={end}
-              onChange={(e) => onEndChange(e.target.value)}
+              value={tempEnd}
+              onChange={(e) => setTempEnd(e.target.value)}
               className="h-10 bg-slate-50 border-slate-200"
             />
           </div>
@@ -91,17 +116,13 @@ export default function DateRangeFilter({
           <Button
             variant="ghost"
             className="flex-1 h-9 rounded-lg text-slate-500 hover:text-slate-900"
-            onClick={() => {
-              onStartChange("");
-              onEndChange("");
-              onClear?.();
-            }}
+            onClick={handleClear}
           >
             Clear
           </Button>
           <Button
             className="flex-1 h-9 rounded-lg bg-black text-white hover:bg-black/90"
-            onClick={onApply}
+            onClick={handleApply}
           >
             Apply
           </Button>

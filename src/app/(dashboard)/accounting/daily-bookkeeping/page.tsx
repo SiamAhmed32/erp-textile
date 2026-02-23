@@ -266,12 +266,7 @@ export default function DailyBookkeepingList() {
             <DateRangeFilter
               start={dateRange.start}
               end={dateRange.end}
-              onStartChange={(val) =>
-                setDateRange((prev) => ({ ...prev, start: val }))
-              }
-              onEndChange={(val) =>
-                setDateRange((prev) => ({ ...prev, end: val }))
-              }
+              onFilterChange={setDateRange}
               placeholder="Voucher Dates"
             />
             <Button
