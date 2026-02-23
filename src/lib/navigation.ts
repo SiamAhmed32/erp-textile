@@ -23,30 +23,6 @@ export const navMain = [
         icon: Home,
     },
     {
-        title: "Company Profile",
-        module: 'companyProfile',
-        url: "/company-profile",
-        icon: Building2,
-    },
-    {
-        title: "Users",
-        module: 'users',
-        url: "/users",
-        icon: Users,
-    },
-    {
-        title: "Buyers",
-        module: 'buyers',
-        url: "/buyers",
-        icon: Contact,
-    },
-    {
-        title: "Invoice Terms",
-        module: 'invoiceTerms',
-        url: "/invoice-terms",
-        icon: FileText,
-    },
-    {
         title: "Order Management",
         module: 'orders',
         icon: ShoppingCart,
@@ -64,11 +40,24 @@ export const navMain = [
         ],
     },
     {
-        title: "Proforma Invoice",
-        module: 'piManagement',
-        icon: FileText,
-        url: "/invoice-management/invoices",
+        title: "Buyers",
+        module: 'buyers',
+        url: "/buyers",
+        icon: Contact,
     },
+    {
+        title: "Users",
+        module: 'users',
+        url: "/users",
+        icon: Users,
+    },
+    {
+        title: "Company Profile",
+        module: 'companyProfile',
+        url: "/company-profile",
+        icon: Building2,
+    },
+
     {
         title: "LC Management",
         module: 'lcManagement',
@@ -118,5 +107,17 @@ export const navMain = [
                 icon: FileText,
             },
         ],
+    },
+    {
+        title: "Proforma Invoice",
+        module: 'piManagement',
+        icon: FileText,
+        url: "/invoice-management/invoices",
+    },
+    {
+        title: "Invoice Terms",
+        module: 'invoiceTerms',
+        url: "/invoice-terms",
+        icon: FileText,
     },
 ];
