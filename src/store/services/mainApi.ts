@@ -21,7 +21,9 @@ const tags = [
 	'buyers',
 	'invoices',
 	'lc-managements',
-	'suppliers'
+	'suppliers',
+	'accounting',
+	'accounting/accountHeads'
 ];
 
 export const mainApi = createApi({
