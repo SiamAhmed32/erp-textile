@@ -40,18 +40,18 @@ export default function SupplierToolbar({
   const sortOptions = [
     { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
     { value: "name_desc", label: "Name Z → A", field: "name", dir: "desc" },
-    {
-      value: "liability_asc",
-      label: "Liability Low-High",
-      field: "openingLiability",
-      dir: "asc",
-    },
-    {
-      value: "liability_desc",
-      label: "Liability High-Low",
-      field: "openingLiability",
-      dir: "desc",
-    },
+    // {
+    //   value: "liability_asc",
+    //   label: "Liability Low-High",
+    //   field: "openingLiability",
+    //   dir: "asc",
+    // },
+    // {
+    //   value: "liability_desc",
+    //   label: "Liability High-Low",
+    //   field: "openingLiability",
+    //   dir: "desc",
+    // },
   ];
 
   return (
@@ -119,7 +119,7 @@ export default function SupplierToolbar({
               className={cn(
                 "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                 (sort.field !== "name" || sort.dir !== "asc") &&
-                  "bg-purple-50 border-purple-200 text-purple-700",
+                "bg-purple-50 border-purple-200 text-purple-700",
               )}
             >
               <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -127,8 +127,8 @@ export default function SupplierToolbar({
                 {sort.field === "name" && sort.dir === "asc"
                   ? "Sort By"
                   : sortOptions.find(
-                      (opt) => opt.field === sort.field && opt.dir === sort.dir,
-                    )?.label}
+                    (opt) => opt.field === sort.field && opt.dir === sort.dir,
+                  )?.label}
               </span>
             </Button>
           </DropdownMenuTrigger>
