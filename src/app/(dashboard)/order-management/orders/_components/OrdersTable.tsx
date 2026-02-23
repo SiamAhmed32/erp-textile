@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
@@ -367,18 +367,13 @@ const OrdersTable = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex w-full gap-2 sm:max-w-[280px]">
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => onDateFromChange(e.target.value)}
-            />
-            <Input
-              type="date"
-              value={dateTo}
-              onChange={(e) => onDateToChange(e.target.value)}
-            />
-          </div>
+          <DateRangeFilter
+            start={dateFrom}
+            end={dateTo}
+            onStartChange={onDateFromChange}
+            onEndChange={onDateToChange}
+            placeholder="Order Dates"
+          />
         </div>
       </div>
       <CustomTable
