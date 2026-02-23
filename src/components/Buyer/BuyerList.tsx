@@ -1,15 +1,26 @@
+"use client";
+
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, SquarePen, Trash2 } from "lucide-react";
+import { Search, Eye, SquarePen, Trash2, ArrowUpDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Buyer } from "./types";
+import { cn } from "@/lib/utils";
 
 type Props = {
   buyers: Buyer[];
   search: string;
   onSearchChange: (value: string) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onEdit: (buyer: Buyer) => void;
   onDelete: (buyer: Buyer) => void;
   onView: (buyer: Buyer) => void;
@@ -22,6 +33,8 @@ export function BuyerList({
   buyers,
   search,
   onSearchChange,
+  sort,
+  onSortChange,
   onEdit,
   onDelete,
   onView,
@@ -29,6 +42,13 @@ export function BuyerList({
   totalPages,
   onPageChange,
 }: Props) {
+  const sortOptions = [
+    { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
+    { value: "name_desc", label: "Name Z → A", field: "name", dir: "desc" },
+    { value: "email_asc", label: "Email A → Z", field: "email", dir: "asc" },
+    { value: "email_desc", label: "Email Z → A", field: "email", dir: "desc" },
+  ];
+
   const columns = useMemo(
     () => [
       {
@@ -36,7 +56,7 @@ export function BuyerList({
         accessor: (row: Buyer) => (
           <Link
             href={`/buyers/${row.id}`}
-            className="font-medium hover:underline"
+            className="font-semibold text-foreground hover:underline"
           >
             {row.name}
           </Link>
@@ -108,18 +128,73 @@ export function BuyerList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full max-w-sm items-center gap-2">
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search buyer"
-            className="w-full"
-          />
-          <Button variant="outline" className="shrink-0">
-            <Search className="mr-2 h-4 w-4" />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search buyer name, email, merchandiser..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button
+            variant="outline"
+            className="h-11 px-6 bg-white border-slate-200 font-medium"
+          >
             Search
           </Button>
+        </div>
+
+        {/* Right: Sort Group */}
+        <div className="flex items-center gap-2 lg:justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                  (sort.field !== "name" || sort.dir !== "asc") &&
+                    "bg-purple-50 border-purple-200 text-purple-700",
+                )}
+              >
+                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                <span>
+                  {sort.field === "name" && sort.dir === "asc"
+                    ? "Sort By"
+                    : sortOptions.find(
+                        (opt) =>
+                          opt.field === sort.field && opt.dir === sort.dir,
+                      )?.label}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+            >
+              {sortOptions.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onClick={() =>
+                    onSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    })
+                  }
+                  className={cn(
+                    "rounded-lg my-0.5",
+                    sort.field === opt.field && sort.dir === opt.dir
+                      ? "bg-purple-50 text-purple-700"
+                      : "",
+                  )}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

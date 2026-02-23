@@ -68,10 +68,11 @@ export const userApi = mainApi.injectEndpoints({
     }),
 
     post: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "POST",
         body: body,
+        formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
         const baseTag = path.split("/")[0];
@@ -80,10 +81,11 @@ export const userApi = mainApi.injectEndpoints({
     }),
 
     patch: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "PATCH",
         body,
+        formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
         const baseTag = path.split("/")[0];
@@ -92,10 +94,11 @@ export const userApi = mainApi.injectEndpoints({
     }),
 
     put: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "PUT",
         body,
+        formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
         const baseTag = path.split("/")[0];
@@ -104,10 +107,11 @@ export const userApi = mainApi.injectEndpoints({
     }),
 
     deleteOne: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "DELETE",
         body,
+        formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
         const baseTag = path.split("/")[0];

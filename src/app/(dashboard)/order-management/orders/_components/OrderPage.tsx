@@ -17,6 +17,8 @@ const OrderPage = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [deliveryDateFrom, setDeliveryDateFrom] = useState("");
+  const [deliveryDateTo, setDeliveryDateTo] = useState("");
   const [patchItem] = usePatchMutation();
 
   useEffect(() => {
@@ -39,6 +41,8 @@ const OrderPage = () => {
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
       ...(dateFrom ? { dateFrom } : {}),
       ...(dateTo ? { dateTo } : {}),
+      ...(deliveryDateFrom ? { deliveryDateFrom } : {}),
+      ...(deliveryDateTo ? { deliveryDateTo } : {}),
     },
   });
 
@@ -137,12 +141,16 @@ const OrderPage = () => {
       typeFilter={typeFilter}
       dateFrom={dateFrom}
       dateTo={dateTo}
+      deliveryDateFrom={deliveryDateFrom}
+      deliveryDateTo={deliveryDateTo}
       onSearchChange={setSearch}
       onSearchSubmit={handleSearchSubmit}
       onStatusFilterChange={setStatusFilter}
       onTypeFilterChange={setTypeFilter}
       onDateFromChange={setDateFrom}
       onDateToChange={setDateTo}
+      onDeliveryDateFromChange={setDeliveryDateFrom}
+      onDeliveryDateToChange={setDeliveryDateTo}
       onPageChange={setPage}
       onRowClick={handleRowClick}
       onView={handleView}

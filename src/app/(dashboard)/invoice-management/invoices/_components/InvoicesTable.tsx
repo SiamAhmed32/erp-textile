@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Invoice } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import InvoiceActions from "./InvoiceActions";
@@ -201,18 +201,15 @@ const InvoicesTable = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex w-full gap-2 sm:max-w-[260px]">
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-            />
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-            />
-          </div>
+          <DateRangeFilter
+            start={startDate}
+            end={endDate}
+            onFilterChange={({ start, end }) => {
+              onStartDateChange(start);
+              onEndDateChange(end);
+            }}
+            placeholder="Invoice Dates"
+          />
         </div>
       </div>
 

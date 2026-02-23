@@ -15,7 +15,7 @@ const AccountingOverviewPage = () => {
       <PageHeader
         title="Accounting Dashboard"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Accounting" },
         ]}
       />

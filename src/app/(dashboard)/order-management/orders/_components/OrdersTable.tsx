@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
@@ -29,12 +29,16 @@ type Props = {
   typeFilter: string;
   dateFrom: string;
   dateTo: string;
+  deliveryDateFrom: string;
+  deliveryDateTo: string;
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onStatusFilterChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
+  onDeliveryDateFromChange: (value: string) => void;
+  onDeliveryDateToChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: Order) => void;
   onView: (row: Order) => void;
@@ -55,12 +59,16 @@ const OrdersTable = ({
   typeFilter,
   dateFrom,
   dateTo,
+  deliveryDateFrom,
+  deliveryDateTo,
   onSearchChange,
   onSearchSubmit,
   onStatusFilterChange,
   onTypeFilterChange,
   onDateFromChange,
   onDateToChange,
+  onDeliveryDateFromChange,
+  onDeliveryDateToChange,
   onPageChange,
   onRowClick,
   onView,
@@ -367,18 +375,24 @@ const OrdersTable = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex w-full gap-2 sm:max-w-[280px]">
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => onDateFromChange(e.target.value)}
-            />
-            <Input
-              type="date"
-              value={dateTo}
-              onChange={(e) => onDateToChange(e.target.value)}
-            />
-          </div>
+          <DateRangeFilter
+            start={dateFrom}
+            end={dateTo}
+            onFilterChange={({ start, end }) => {
+              onDateFromChange(start);
+              onDateToChange(end);
+            }}
+            placeholder="Order Dates"
+          />
+          <DateRangeFilter
+            start={deliveryDateFrom}
+            end={deliveryDateTo}
+            onFilterChange={({ start, end }) => {
+              onDeliveryDateFromChange(start);
+              onDeliveryDateToChange(end);
+            }}
+            placeholder="Delivery Dates"
+          />
         </div>
       </div>
       <CustomTable

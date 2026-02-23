@@ -20,7 +20,8 @@ const tags = [
 	'company-profiles',
 	'buyers',
 	'invoices',
-	'lc-managements'
+	'lc-managements',
+	'suppliers'
 ];
 
 export const mainApi = createApi({

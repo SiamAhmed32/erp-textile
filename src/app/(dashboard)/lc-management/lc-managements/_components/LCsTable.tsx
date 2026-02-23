@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LCManagement } from "./types";
 import PrimaryButton from "@/components/reusables/PrimaryButton";
+import { DateRangeFilter } from "@/components/reusables";
 
 type Props = {
   data: LCManagement[];
@@ -186,18 +187,15 @@ const LCsTable = ({
           </Button>
         </div>
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <div className="flex w-full gap-2 sm:max-w-[280px]">
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => onDateFromChange(e.target.value)}
-            />
-            <Input
-              type="date"
-              value={dateTo}
-              onChange={(e) => onDateToChange(e.target.value)}
-            />
-          </div>
+          <DateRangeFilter
+            start={dateFrom}
+            end={dateTo}
+            onFilterChange={({ start, end }) => {
+              onDateFromChange(start);
+              onDateToChange(end);
+            }}
+            placeholder="LC Issue Dates"
+          />
         </div>
       </div>
       <CustomTable

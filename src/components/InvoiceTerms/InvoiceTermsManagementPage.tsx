@@ -1,12 +1,9 @@
 "use client";
 
 import React from "react";
-import {
-  Container,
-  PrimaryHeading,
-  PrimaryText,
-  SectionGap,
-} from "@/components/reusables";
+import { Container, PageHeader, SectionGap } from "@/components/reusables";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   InvoiceTerms,
   InvoiceTermsErrors,
@@ -73,6 +70,13 @@ const validate = (data: InvoiceTermsFormData): InvoiceTermsErrors => {
 export function InvoiceTermsManagementPage() {
   const [search, setSearch] = React.useState("");
   const [page, setPage] = React.useState(1);
+  const [sort, setSort] = React.useState<{
+    field: string;
+    dir: "asc" | "desc";
+  }>({
+    field: "name",
+    dir: "asc",
+  });
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
   const [formData, setFormData] =
@@ -95,7 +99,7 @@ export function InvoiceTermsManagementPage() {
     page,
     limit: 10,
     search,
-    sort: null,
+    sort: sort.field ? `${sort.field}:${sort.dir}` : null,
   });
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
   const totalPages = (termsPayload as any)?.meta?.pagination?.totalPages || 1;
@@ -208,20 +212,29 @@ export function InvoiceTermsManagementPage() {
 
   return (
     <Container className="py-8">
-      {/* <div className="space-y-2">
-        <PrimaryHeading>Invoice Terms</PrimaryHeading>
-        <PrimaryText className="text-muted-foreground">
-          Create and manage reusable invoice terms for consistent commercial
-          documents.
-        </PrimaryText>
-      </div>
-
-      <SectionGap /> */}
+      <PageHeader
+        title="Invoice Terms"
+        breadcrumbItems={[
+          //{ label: "Dashboard", href: "/" },
+          { label: "Invoice Terms" },
+        ]}
+        actions={
+          <Button
+            className="bg-black text-white hover:bg-black/90 shadow-sm"
+            onClick={handleCreate}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add New Terms
+          </Button>
+        }
+      />
 
       <InvoiceTermsList
         terms={terms}
         search={search}
         onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
         onCreate={handleCreate}
         onEdit={handleEdit}
         onDelete={handleDelete}

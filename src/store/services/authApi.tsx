@@ -3,7 +3,7 @@ import { LoginBodyType, LoginPayloadType, RootState } from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND;
 const tags = ["self"];
-import Cookies from 'js-cookie';
+import Cookies from "js-cookie";
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
@@ -44,10 +44,17 @@ export const authApi = createApi({
       invalidatesTags: ["self", "users" as any],
     }),
 
-    getUsers: builder.query<any, { search?: string }>({
-      query: ({ search } = {}) => ({
+    getUsers: builder.query<
+      any,
+      { search?: string; filters?: any; sort?: string }
+    >({
+      query: ({ search, filters, sort } = {}) => ({
         url: `/users`,
-        params: search ? { search } : undefined,
+        params: {
+          ...(search ? { search } : {}),
+          ...(filters ? { filters: JSON.stringify(filters) } : {}),
+          ...(sort ? { sort } : {}),
+        },
       }),
       providesTags: ["users" as any],
     }),
@@ -62,7 +69,10 @@ export const authApi = createApi({
       invalidatesTags: ["users" as any],
     }),
 
-    deleteUser: builder.mutation<any, { id: string; body: { isDeleted: boolean } }>({
+    deleteUser: builder.mutation<
+      any,
+      { id: string; body: { isDeleted: boolean } }
+    >({
       query: ({ id, body }) => ({
         url: `/users/${id}`,
         method: "PUT",

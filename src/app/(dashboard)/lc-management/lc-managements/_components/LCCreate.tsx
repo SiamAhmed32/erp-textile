@@ -4,12 +4,18 @@ import { notify } from "@/lib/notifications";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Container, FormHeader, FormFooter } from "@/components/reusables";
+import {
+  Container,
+  FormHeader,
+  RecoveryModal,
+  NavigationGuard,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { LCFormData, lcSchema, toFieldErrors } from "./validation";
 import LCForm from "./LCForm";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 const emptyLC: LCFormData = {
   bblcNumber: "",
@@ -44,12 +50,28 @@ const emptyLC: LCFormData = {
 
 const LCCreate = () => {
   const router = useRouter();
-  const [draft, setDraft] = React.useState<LCFormData>(emptyLC);
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<LCFormData>({
+    key: "lc_create",
+    defaultValue: emptyLC,
+  });
+
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof LCFormData, string>>
   >({});
   const [postItem] = usePostMutation();
+
+  const isDirty = React.useMemo(() => {
+    return JSON.stringify(draft) !== JSON.stringify(emptyLC);
+  }, [draft]);
 
   const { data: invoicesPayload, error: invoicesError } = useGetAllQuery({
     path: "invoices",
@@ -70,6 +92,7 @@ const LCCreate = () => {
 
   const handleChange = (field: keyof LCFormData, value: any) => {
     setDraft((prev) => ({ ...prev, [field]: value }));
+    setHasInteracted(true);
     setErrors((prev) => ({ ...prev, [field]: undefined }));
 
     // Auto-populate data if invoice is selected
@@ -144,6 +167,8 @@ const LCCreate = () => {
         invalidate: ["lc-managements", "orders", "invoices"],
       }).unwrap();
 
+      clearDraft();
+
       notify.success("BBLC Created Successfully");
       const id = (result as any)?.data?.id || (result as any)?.id;
       router.push(
@@ -182,6 +207,14 @@ const LCCreate = () => {
 
   return (
     <Container className="pb-10 pt-6">
+      <NavigationGuard isDirty={isDirty} />
+
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+      />
+
       <FormHeader
         title="Create BBLC"
         backHref="/lc-management/lc-managements"
@@ -201,16 +234,9 @@ const LCCreate = () => {
           errors={errors}
           onSave={handleSave}
           saving={saving}
+          cancelHref="/lc-management/lc-managements"
         />
       </div>
-
-      <FormFooter
-        cancelHref="/lc-management/lc-managements"
-        onSave={handleSave}
-        saving={saving}
-        saveLabel="Create BBLC"
-        trustText="Financial records are encrypted and stored according to bank protocols."
-      />
     </Container>
   );
 };

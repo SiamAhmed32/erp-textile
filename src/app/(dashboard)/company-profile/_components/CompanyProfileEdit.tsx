@@ -3,7 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Container, FormHeader, FormFooter } from "@/components/reusables";
+import {
+  Container,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
+} from "@/components/reusables";
 import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
 import {
   CompanyProfile,
@@ -19,6 +25,7 @@ import {
 } from "./helpers";
 import { companyProfileSchema, toFieldErrors } from "./validation";
 import { notify } from "@/lib/notifications";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 type Props = {
   id: string;
@@ -52,7 +59,22 @@ const emptyForm: CompanyProfileFormData = {
 const CompanyProfileEdit = ({ id }: Props) => {
   const router = useRouter();
   const [profile, setProfile] = React.useState<CompanyProfile | null>(null);
-  const [draft, setDraft] = React.useState<CompanyProfileFormData>(emptyForm);
+  const [baseFormData, setBaseFormData] =
+    React.useState<CompanyProfileFormData>(emptyForm);
+
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<CompanyProfileFormData>({
+    key: `company_edit_${id}`,
+    defaultValue: emptyForm, // We set this to empty initially
+  });
+
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof CompanyProfileFormData, string>>
@@ -66,6 +88,15 @@ const CompanyProfileEdit = ({ id }: Props) => {
     error: apiError,
   } = useGetByIdQuery({ path: "company-profiles", id }, { skip: isInvalidId });
 
+  const isDirty = React.useMemo(() => {
+    // If draft is still empty and we have a loaded profile, we compare it to baseFormData
+    // But we should really compare draft with the data that came from server
+    return (
+      JSON.stringify(draft) !== JSON.stringify(baseFormData) &&
+      JSON.stringify(draft) !== JSON.stringify(emptyForm)
+    );
+  }, [draft, baseFormData]);
+
   React.useEffect(() => {
     if (isInvalidId) {
       notify.error("Invalid company ID.");
@@ -76,10 +107,16 @@ const CompanyProfileEdit = ({ id }: Props) => {
       | undefined;
     if (!item) return;
     const normalized = normalizeProfile(item);
+    const formData = toFormData(normalized);
     setProfile(normalized);
-    setDraft(toFormData(normalized));
+    setBaseFormData(formData);
+
+    // Only set draft if it's currently at emptyForm (meaning user hasn't started editing or restored a draft yet)
+    if (JSON.stringify(draft) === JSON.stringify(emptyForm)) {
+      setDraft(formData);
+    }
     setErrors({});
-  }, [profilePayload, isInvalidId]);
+  }, [profilePayload, isInvalidId, draft, setDraft]);
 
   React.useEffect(() => {
     const parsed = apiError as any;
@@ -123,8 +160,25 @@ const CompanyProfileEdit = ({ id }: Props) => {
         }));
         return;
       }
+
+      if (value.size < 1024 * 1024) {
+        // Under 1MB
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setDraft((prev) => ({
+            ...prev,
+            logoFile: value,
+            logoUrl: reader.result as string,
+          }));
+        };
+        reader.readAsDataURL(value);
+      } else {
+        setDraft((prev) => ({ ...prev, logoFile: value, logoUrl: "" }));
+      }
+    } else {
+      setDraft((prev) => ({ ...prev, [field]: value as any }));
     }
-    setDraft((prev) => ({ ...prev, [field]: value as any }));
+    setHasInteracted(true);
     setErrors((prev) => ({ ...prev, [field]: undefined, logoUrl: undefined }));
   };
 
@@ -137,17 +191,6 @@ const CompanyProfileEdit = ({ id }: Props) => {
             Record<keyof CompanyProfileFormData, string>
           >);
 
-    if (draft.logoFile) {
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(draft.logoFile.type)) {
-        nextErrors.logoUrl = "Only PNG, JPG, JPEG, or WEBP images are allowed.";
-      }
-    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     if (!isValidId(draft.id)) {
@@ -160,8 +203,12 @@ const CompanyProfileEdit = ({ id }: Props) => {
       await patchItem({
         path: `company-profiles/${draft.id}`,
         body: toApiFormData(draft),
+        formData: true,
         invalidate: ["company-profiles"],
       }).unwrap();
+
+      clearDraft();
+
       notify.success("Company profile updated successfully");
       router.push(`/company-profile/${draft.id}`);
     } catch (err: any) {
@@ -179,6 +226,16 @@ const CompanyProfileEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
+      <NavigationGuard isDirty={isDirty} />
+
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+        title="Unsaved Changes Found"
+        description="You have unsaved edits for this record from a previous session. Would you like to restore them or view the current official data?"
+      />
+
       <FormHeader
         title={profile?.name ? `Edit ${profile.name}` : "Edit Company"}
         backHref={`/company-profile/${id}`}

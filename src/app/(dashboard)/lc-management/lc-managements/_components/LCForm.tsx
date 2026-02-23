@@ -1,6 +1,6 @@
 "use client";
-
 import React, { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,6 +39,7 @@ type Props = {
   isEdit?: boolean;
   onSave?: () => void;
   saving?: boolean;
+  cancelHref?: string;
 };
 
 const TAB_ORDER = ["general", "export", "boe", "delivery", "remarks"] as const;
@@ -87,7 +88,7 @@ const InputGroup = ({
 
 const SectionHeader = ({ title, description, icon: Icon }: any) => (
   <div className="mb-6 flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-    <div className="p-2.5 rounded-lg bg-white shadow-sm ring-1 ring-primary/10">
+    <div className="p-2.5 rounded-lg bg-white  ring-1 ring-primary/10">
       <Icon className="size-5 text-primary" />
     </div>
     <div>
@@ -105,6 +106,7 @@ const LCForm = ({
   isEdit,
   onSave,
   saving,
+  cancelHref = "/lc-management/lc-managements",
 }: Props) => {
   const [activeTab, setActiveTab] = useState<TabKey>("general");
 
@@ -133,30 +135,41 @@ const LCForm = ({
         Back
       </Button>
 
-      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest hidden sm:block">
         Step {currentIndex + 1} of {TAB_ORDER.length}
       </p>
 
-      {isLast ? (
+      <div className="flex items-center gap-3">
         <Button
           type="button"
-          onClick={onSave}
-          disabled={saving}
-          className="gap-2 bg-black text-white hover:bg-black/90 shadow-lg px-6"
+          variant="ghost"
+          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+          asChild
         >
-          <Save className="size-4" />
-          {saving ? "Saving..." : isEdit ? "Update BBLC" : "Save BBLC"}
+          <Link href={cancelHref}>Cancel</Link>
         </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={goNext}
-          className="gap-2 bg-primary text-white hover:bg-primary/90"
-        >
-          Next
-          <ChevronRight className="size-4" />
-        </Button>
-      )}
+
+        {isLast ? (
+          <Button
+            type="button"
+            onClick={onSave}
+            disabled={saving}
+            className="gap-2 bg-black text-white hover:bg-black/90  px-6"
+          >
+            <Save className="size-4" />
+            {saving ? "Saving..." : isEdit ? "Update BBLC" : "Save BBLC"}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={goNext}
+            className="gap-2 bg-primary text-white hover:bg-primary/90"
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 
@@ -211,7 +224,7 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+            <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
               <CardContent className="pt-8 space-y-8">
                 <SectionHeader
                   icon={Building2}
@@ -236,7 +249,7 @@ const LCForm = ({
                       >
                         <SelectValue placeholder="Select Proforma Invoice" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl shadow-2xl">
+                      <SelectContent className="rounded-xl ">
                         {invoices.map((inv) => (
                           <SelectItem
                             key={inv.id}
@@ -320,7 +333,7 @@ const LCForm = ({
         {/* 2. Export & Logistics Tab */}
         <TabsContent value="export" className="mt-6 focus-visible:outline-none">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden">
+            <Card className="border-none rounded-3xl overflow-hidden">
               <CardContent className="pt-8 space-y-8">
                 <SectionHeader
                   icon={Globe}
@@ -430,7 +443,7 @@ const LCForm = ({
         {/* 3. Bill of Exchange Tab */}
         <TabsContent value="boe" className="mt-6 focus-visible:outline-none">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden">
+            <Card className="border-none rounded-3xl overflow-hidden">
               <CardContent className="pt-8 space-y-8">
                 <SectionHeader
                   icon={Banknote}
@@ -542,7 +555,7 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden">
+            <Card className="border-none rounded-3xl overflow-hidden">
               <CardContent className="pt-8 space-y-8">
                 <SectionHeader
                   icon={Truck}
@@ -609,7 +622,7 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden">
+            <Card className="border-none rounded-3xl overflow-hidden">
               <CardContent className="pt-8 space-y-8">
                 <SectionHeader
                   icon={ClipboardList}

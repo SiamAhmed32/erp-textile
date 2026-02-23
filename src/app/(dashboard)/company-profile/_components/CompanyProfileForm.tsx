@@ -35,7 +35,7 @@ const CompanyProfileForm = ({
   const [preview, setPreview] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!data.logoFile) {
+    if (!data.logoFile || !(data.logoFile instanceof Blob)) {
       setPreview(null);
       return;
     }
