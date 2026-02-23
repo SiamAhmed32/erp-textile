@@ -47,6 +47,36 @@ export function BuyerList({
     { value: "name_desc", label: "Name Z → A", field: "name", dir: "desc" },
     { value: "email_asc", label: "Email A → Z", field: "email", dir: "asc" },
     { value: "email_desc", label: "Email Z → A", field: "email", dir: "desc" },
+    {
+      value: "location_asc",
+      label: "Location A → Z",
+      field: "location",
+      dir: "asc",
+    },
+    {
+      value: "location_desc",
+      label: "Location Z → A",
+      field: "location",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
   ];
 
   const columns = useMemo(
@@ -155,13 +185,13 @@ export function BuyerList({
                 variant="outline"
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  (sort.field !== "name" || sort.dir !== "asc") &&
+                  (sort.field !== "createdAt" || sort.dir !== "desc") &&
                     "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
                 <span>
-                  {sort.field === "name" && sort.dir === "asc"
+                  {sort.field === "createdAt" && sort.dir === "desc"
                     ? "Sort By"
                     : sortOptions.find(
                         (opt) =>

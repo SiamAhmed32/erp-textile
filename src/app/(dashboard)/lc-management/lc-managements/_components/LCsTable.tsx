@@ -32,6 +32,10 @@ export type LCsTableProps = {
   onDateToChange: (value: string) => void;
   onExpiryDateFromChange: (value: string) => void;
   onExpiryDateToChange: (value: string) => void;
+  minAmount: string;
+  maxAmount: string;
+  onMinAmountChange: (value: string) => void;
+  onMaxAmountChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: LCManagement) => void;
   onView: (row: LCManagement) => void;
@@ -57,6 +61,10 @@ const LCsTable: React.FC<LCsTableProps> = ({
   onDateToChange,
   onExpiryDateFromChange,
   onExpiryDateToChange,
+  minAmount,
+  maxAmount,
+  onMinAmountChange,
+  onMaxAmountChange,
   onPageChange,
   onRowClick,
   onView,
@@ -215,6 +223,23 @@ const LCsTable: React.FC<LCsTableProps> = ({
             }}
             placeholder="Expiry Range"
           />
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
+              placeholder="Min Amnt"
+              value={minAmount}
+              onChange={(e) => onMinAmountChange(e.target.value)}
+              className="h-11 w-24 border-slate-200"
+            />
+            <span className="text-slate-400">-</span>
+            <Input
+              type="number"
+              placeholder="Max Amnt"
+              value={maxAmount}
+              onChange={(e) => onMaxAmountChange(e.target.value)}
+              className="h-11 w-24 border-slate-200"
+            />
+          </div>
         </div>
       </div>
       <CustomTable
