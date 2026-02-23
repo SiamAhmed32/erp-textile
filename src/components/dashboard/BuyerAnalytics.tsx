@@ -16,7 +16,7 @@ import { useGetBuyerAnalyticsQuery } from "@/store/services/analyticsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import DateFilter, { DateRange } from "./DateFilter";
 import { format, startOfMonth, endOfDay } from "date-fns";
-import { generateMockAnalytics } from "@/utils/mockData";
+import EmptyChartState from "./EmptyChartState";
 
 const BuyerAnalytics: React.FC = () => {
     const [dateRange, setDateRange] = React.useState<DateRange>({
@@ -30,13 +30,9 @@ const BuyerAnalytics: React.FC = () => {
         endDate: dateRange.endDate
     });
 
-    const mockData = React.useMemo(() =>
-        generateMockAnalytics(dateRange.startDate, dateRange.endDate, "buyer"),
-        [dateRange]
-    );
-
-    const chartData = (data?.data && data.data.length > 0) ? data.data : mockData;
+    const chartData = data?.data || [];
     const isLoading = apiLoading && !data;
+    const isEmpty = !isLoading && chartData.length === 0;
 
     return (
         <Card className="col-span-1">
@@ -47,6 +43,8 @@ const BuyerAnalytics: React.FC = () => {
             <CardContent>
                 {isLoading ? (
                     <Skeleton className="h-[300px] w-full" />
+                ) : isEmpty ? (
+                    <EmptyChartState message="No buyer data found" />
                 ) : (
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">

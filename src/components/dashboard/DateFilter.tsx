@@ -23,6 +23,11 @@ interface DateFilterProps {
 
 const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
     const [selectedLabel, setSelectedLabel] = useState("This Month");
+    const [showCustom, setShowCustom] = useState(false);
+    const [customDates, setCustomDates] = useState({
+        startDate: format(new Date(), "yyyy-MM-dd"),
+        endDate: format(new Date(), "yyyy-MM-dd"),
+    });
 
     const filters = [
         {
@@ -71,12 +76,22 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
 
     const handleSelect = (filter: typeof filters[0]) => {
         setSelectedLabel(filter.label);
+        setShowCustom(false);
         const range = filter.getValue();
         onFilterChange({ ...range, label: filter.label });
     };
 
+    const handleApplyCustom = () => {
+        setSelectedLabel("Custom");
+        onFilterChange({
+            startDate: customDates.startDate,
+            endDate: customDates.endDate,
+            label: "Custom",
+        });
+    };
+
     return (
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => !open && setShowCustom(false)}>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
@@ -84,7 +99,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
                     <ChevronDown className="h-4 w-4 opacity-50" />
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuContent align="end" className="w-[200px] p-2">
                 {filters.map((filter) => (
                     <DropdownMenuItem
                         key={filter.label}
@@ -94,6 +109,45 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
                         {filter.label}
                     </DropdownMenuItem>
                 ))}
+
+                <DropdownMenuItem
+                    onClick={(e) => {
+                        e.preventDefault();
+                        setShowCustom(!showCustom);
+                    }}
+                    className="cursor-pointer"
+                >
+                    Custom Range
+                </DropdownMenuItem>
+
+                {showCustom && (
+                    <div className="p-2 space-y-3 border-t mt-2 pt-3">
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-medium uppercase text-muted-foreground">Start Date</label>
+                            <input
+                                type="date"
+                                className="w-full text-sm border rounded px-2 py-1 outline-none"
+                                value={customDates.startDate}
+                                onChange={(e) => setCustomDates({ ...customDates, startDate: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[10px] font-medium uppercase text-muted-foreground">End Date</label>
+                            <input
+                                type="date"
+                                className="w-full text-sm border rounded px-2 py-1 outline-none"
+                                value={customDates.endDate}
+                                onChange={(e) => setCustomDates({ ...customDates, endDate: e.target.value })}
+                            />
+                        </div>
+                        <Button
+                            className="w-full h-8 text-xs"
+                            onClick={handleApplyCustom}
+                        >
+                            Apply Filter
+                        </Button>
+                    </div>
+                )}
             </DropdownMenuContent>
         </DropdownMenu>
     );
