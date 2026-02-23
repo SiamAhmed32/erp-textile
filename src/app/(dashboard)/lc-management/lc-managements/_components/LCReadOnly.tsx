@@ -249,6 +249,15 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
               {buyer?.name || "—"}
             </p>
           </div>
+          <Separator orientation="vertical" className="h-10 hidden sm:block" />
+          <div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">
+              Expiry Date
+            </p>
+            <p className="text-sm font-semibold text-gray-800">
+              {formatDate(lc.expiryDate)}
+            </p>
+          </div>
           <div className="ml-auto">
             <Badge className="bg-blue-50 text-blue-600 border border-blue-100 font-semibold text-[11px] uppercase tracking-wider px-3 py-1 hover:bg-blue-50">
               Active

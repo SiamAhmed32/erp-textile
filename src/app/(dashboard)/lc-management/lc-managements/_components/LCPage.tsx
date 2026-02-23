@@ -17,6 +17,8 @@ const LCPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [expiryDateFrom, setExpiryDateFrom] = useState("");
+  const [expiryDateTo, setExpiryDateTo] = useState("");
   const [deleteItem] = useDeleteOneMutation();
 
   useEffect(() => {
@@ -37,6 +39,8 @@ const LCPage = () => {
     filters: {
       ...(dateFrom ? { startDate: dateFrom } : {}),
       ...(dateTo ? { endDate: dateTo } : {}),
+      ...(expiryDateFrom ? { expiryStartDate: expiryDateFrom } : {}),
+      ...(expiryDateTo ? { expiryEndDate: expiryDateTo } : {}),
     },
   });
 
@@ -122,10 +126,14 @@ const LCPage = () => {
         search={search}
         dateFrom={dateFrom}
         dateTo={dateTo}
+        expiryDateFrom={expiryDateFrom}
+        expiryDateTo={expiryDateTo}
         onSearchChange={setSearch}
         onSearchSubmit={handleSearchSubmit}
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
+        onExpiryDateFromChange={setExpiryDateFrom}
+        onExpiryDateToChange={setExpiryDateTo}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onView={handleView}
