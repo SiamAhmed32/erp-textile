@@ -49,8 +49,8 @@ export function BuyerManagementPage() {
     field: string;
     dir: "asc" | "desc";
   }>({
-    field: "name",
-    dir: "asc",
+    field: "createdAt",
+    dir: "desc",
   });
   const [formOpen, setFormOpen] = React.useState(false);
   const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
@@ -73,7 +73,8 @@ export function BuyerManagementPage() {
     page,
     limit: 10,
     search: search || undefined,
-    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
   });
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const totalPages = (buyersPayload as any)?.meta?.pagination?.totalPages || 1;

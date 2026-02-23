@@ -17,6 +17,10 @@ const LCPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [expiryDateFrom, setExpiryDateFrom] = useState("");
+  const [expiryDateTo, setExpiryDateTo] = useState("");
+  const [minAmount, setMinAmount] = useState("");
+  const [maxAmount, setMaxAmount] = useState("");
   const [deleteItem] = useDeleteOneMutation();
 
   useEffect(() => {
@@ -37,6 +41,10 @@ const LCPage = () => {
     filters: {
       ...(dateFrom ? { startDate: dateFrom } : {}),
       ...(dateTo ? { endDate: dateTo } : {}),
+      ...(expiryDateFrom ? { expiryStartDate: expiryDateFrom } : {}),
+      ...(expiryDateTo ? { expiryEndDate: expiryDateTo } : {}),
+      ...(minAmount ? { minAmount } : {}),
+      ...(maxAmount ? { maxAmount } : {}),
     },
   });
 
@@ -122,10 +130,18 @@ const LCPage = () => {
         search={search}
         dateFrom={dateFrom}
         dateTo={dateTo}
+        expiryDateFrom={expiryDateFrom}
+        expiryDateTo={expiryDateTo}
+        minAmount={minAmount}
+        maxAmount={maxAmount}
         onSearchChange={setSearch}
         onSearchSubmit={handleSearchSubmit}
         onDateFromChange={setDateFrom}
         onDateToChange={setDateTo}
+        onExpiryDateFromChange={setExpiryDateFrom}
+        onExpiryDateToChange={setExpiryDateTo}
+        onMinAmountChange={setMinAmount}
+        onMaxAmountChange={setMaxAmount}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onView={handleView}

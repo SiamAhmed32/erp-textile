@@ -7,7 +7,33 @@ import RecentTransactions from "./_components/RecentTransactions";
 import {
   mockAccountingStats,
   mockRecentTransactions,
+  AccountingStat,
 } from "./_components/types";
+import StatsCard from "@/components/dashboard/StatsCard";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Landmark,
+  LucideIcon,
+} from "lucide-react";
+
+const iconMap: Record<string, LucideIcon> = {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Landmark,
+};
+
+const colorMap: Record<
+  string,
+  "orange" | "green" | "red" | "blue" | "purple" | "indigo"
+> = {
+  green: "green",
+  red: "red",
+  emerald: "blue",
+  amber: "orange",
+};
 
 const AccountingOverviewPage = () => {
   return (
@@ -22,39 +48,15 @@ const AccountingOverviewPage = () => {
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {mockAccountingStats.map((stat, i) => (
-          <Box
+        {mockAccountingStats.map((stat: AccountingStat, i) => (
+          <StatsCard
             key={i}
-            className={cn(
-              "bg-white border border-slate-200 rounded-xl p-5 shadow-sm border-t-4",
-              stat.color === "green"
-                ? "border-t-emerald-500"
-                : stat.color === "red"
-                  ? "border-t-red-500"
-                  : stat.color === "amber"
-                    ? "border-t-amber-500"
-                    : "border-t-primary",
-            )}
-          >
-            <div className="text-[10px] font-bold tracking-wider uppercase text-slate-400 mb-2">
-              {stat.label}
-            </div>
-            <div
-              className={cn(
-                "text-2xl font-black tracking-tight mb-1",
-                stat.color === "green"
-                  ? "text-emerald-600"
-                  : stat.color === "red"
-                    ? "text-red-600"
-                    : stat.color === "amber"
-                      ? "text-amber-600"
-                      : "text-primary",
-              )}
-            >
-              {stat.value}
-            </div>
-            <div className="text-[11px] text-slate-500">{stat.subLabel}</div>
-          </Box>
+            title={stat.label}
+            value={stat.value}
+            icon={iconMap[stat.icon] || DollarSign}
+            description={stat.subLabel}
+            color={colorMap[stat.color] || "blue"}
+          />
         ))}
       </div>
 

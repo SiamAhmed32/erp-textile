@@ -12,10 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LCManagement } from "./types";
-import PrimaryButton from "@/components/reusables/PrimaryButton";
 import { DateRangeFilter } from "@/components/reusables";
+import { formatDate } from "./utils";
 
-type Props = {
+export type LCsTableProps = {
   data: LCManagement[];
   loading: boolean;
   error: string;
@@ -24,10 +24,18 @@ type Props = {
   search: string;
   dateFrom: string;
   dateTo: string;
+  expiryDateFrom: string;
+  expiryDateTo: string;
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
+  onExpiryDateFromChange: (value: string) => void;
+  onExpiryDateToChange: (value: string) => void;
+  minAmount: string;
+  maxAmount: string;
+  onMinAmountChange: (value: string) => void;
+  onMaxAmountChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: LCManagement) => void;
   onView: (row: LCManagement) => void;
@@ -36,7 +44,7 @@ type Props = {
   onDelete: (row: LCManagement) => void;
 };
 
-const LCsTable = ({
+const LCsTable: React.FC<LCsTableProps> = ({
   data,
   loading,
   error,
@@ -45,17 +53,25 @@ const LCsTable = ({
   search,
   dateFrom,
   dateTo,
+  expiryDateFrom,
+  expiryDateTo,
   onSearchChange,
   onSearchSubmit,
   onDateFromChange,
   onDateToChange,
+  onExpiryDateFromChange,
+  onExpiryDateToChange,
+  minAmount,
+  maxAmount,
+  onMinAmountChange,
+  onMaxAmountChange,
   onPageChange,
   onRowClick,
   onView,
   onEdit,
   onExport,
   onDelete,
-}: Props) => {
+}) => {
   const columns = useMemo(
     () => [
       {
@@ -98,13 +114,13 @@ const LCsTable = ({
       {
         header: "Issue Date",
         accessor: (row: LCManagement) => (
-          <span>{new Date(row.issueDate).toLocaleDateString()}</span>
+          <span>{formatDate(row.issueDate)}</span>
         ),
       },
       {
         header: "Expiry Date",
         accessor: (row: LCManagement) => (
-          <span>{new Date(row.expiryDate).toLocaleDateString()}</span>
+          <span className="font-medium">{formatDate(row.expiryDate)}</span>
         ),
       },
       {
@@ -181,12 +197,14 @@ const LCsTable = ({
             placeholder="Search BBLC, Bank, Branch..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="h-11 border-slate-200"
           />
-          <Button variant="outline" onClick={onSearchSubmit}>
+          <Button variant="outline" onClick={onSearchSubmit} className="h-11">
             Search
           </Button>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+
+        <div className="flex flex-wrap items-center gap-3">
           <DateRangeFilter
             start={dateFrom}
             end={dateTo}
@@ -194,8 +212,34 @@ const LCsTable = ({
               onDateFromChange(start);
               onDateToChange(end);
             }}
-            placeholder="LC Issue Dates"
+            placeholder="Issue Range"
           />
+          <DateRangeFilter
+            start={expiryDateFrom}
+            end={expiryDateTo}
+            onFilterChange={({ start, end }) => {
+              onExpiryDateFromChange(start);
+              onExpiryDateToChange(end);
+            }}
+            placeholder="Expiry Range"
+          />
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
+              placeholder="Min Amnt"
+              value={minAmount}
+              onChange={(e) => onMinAmountChange(e.target.value)}
+              className="h-11 w-24 border-slate-200"
+            />
+            <span className="text-slate-400">-</span>
+            <Input
+              type="number"
+              placeholder="Max Amnt"
+              value={maxAmount}
+              onChange={(e) => onMaxAmountChange(e.target.value)}
+              className="h-11 w-24 border-slate-200"
+            />
+          </div>
         </div>
       </div>
       <CustomTable
