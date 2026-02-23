@@ -31,6 +31,8 @@ type Props = {
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: CompanyProfile) => void;
   onDelete: (row: CompanyProfile) => void;
@@ -47,10 +49,18 @@ const CompanyProfilesTable = ({
   onSearchChange,
   onTypeFilterChange,
   onStatusFilterChange,
+  sort,
+  onSortChange,
   onPageChange,
   onRowClick,
   onDelete,
 }: Props) => {
+  const sortOptions = [
+    { label: "Company Name (A-Z)", field: "name", dir: "asc" },
+    { label: "Created Date (Newest)", field: "createdAt", dir: "desc" },
+    { label: "Created Date (Oldest)", field: "createdAt", dir: "asc" },
+  ];
+
   const columns = useMemo(
     () => [
       {
@@ -244,25 +254,58 @@ const CompanyProfilesTable = ({
             <DropdownMenuTrigger asChild>
               <Button
                 variant="outline"
-                className="h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium"
+                className={cn(
+                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                  (sort.field !== "name" || sort.dir !== "asc") &&
+                    "bg-purple-50 border-purple-200 text-purple-700",
+                )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
-                <span>Sort</span>
+                <span>
+                  {sort.field === "name" && sort.dir === "asc"
+                    ? "Sort By"
+                    : sortOptions.find(
+                        (opt) =>
+                          opt.field === sort.field && opt.dir === sort.dir,
+                      )?.label}
+                </span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
               className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
             >
-              <DropdownMenuItem className="rounded-lg my-0.5">
-                Company Name (A-Z)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-lg my-0.5">
-                Created Date (Newest)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-lg my-0.5">
-                Created Date (Oldest)
-              </DropdownMenuItem>
+              {[
+                { label: "Company Name (A-Z)", field: "name", dir: "asc" },
+                {
+                  label: "Created Date (Newest)",
+                  field: "createdAt",
+                  dir: "desc",
+                },
+                {
+                  label: "Created Date (Oldest)",
+                  field: "createdAt",
+                  dir: "asc",
+                },
+              ].map((opt, idx) => (
+                <DropdownMenuItem
+                  key={idx}
+                  onClick={() =>
+                    onSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    })
+                  }
+                  className={cn(
+                    "rounded-lg my-0.5",
+                    sort.field === opt.field && sort.dir === opt.dir
+                      ? "bg-purple-50 text-purple-700"
+                      : "",
+                  )}
+                >
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

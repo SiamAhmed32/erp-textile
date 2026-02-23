@@ -276,8 +276,42 @@ export default function AccountHeadersPage() {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedHeader, setSelectedHeader] = useState<any>(null);
   const [typeFilter, setTypeFilter] = useState("all");
+  const [sort, setSort] = useState({ field: "id", dir: "asc" });
 
-  // ... (rest of the component remains the same)
+  const sortOptions = [
+    { label: "Account Code", field: "id", dir: "asc" },
+    { label: "Account Name (A-Z)", field: "name", dir: "asc" },
+    { label: "Balance: High to Low", field: "balanceAmount", dir: "desc" },
+    { label: "Balance: Low to High", field: "balanceAmount", dir: "asc" },
+  ];
+
+  const filteredHeaders = useMemo(() => {
+    const result = mockHeaders.filter((h) => {
+      const matchesSearch =
+        h.name.toLowerCase().includes(search.toLowerCase()) ||
+        h.id.toLowerCase().includes(search.toLowerCase()) ||
+        h.category.toLowerCase().includes(search.toLowerCase());
+      const matchesType =
+        typeFilter === "all" ||
+        h.type.toLowerCase() === typeFilter.toLowerCase();
+      return matchesSearch && matchesType;
+    });
+
+    // Apply Sorting
+    result.sort((a: any, b: any) => {
+      const fieldA = a[sort.field];
+      const fieldB = b[sort.field];
+
+      if (typeof fieldA === "string") {
+        return sort.dir === "asc"
+          ? fieldA.localeCompare(fieldB)
+          : fieldB.localeCompare(fieldA);
+      }
+      return sort.dir === "asc" ? fieldA - fieldB : fieldB - fieldA;
+    });
+
+    return result;
+  }, [search, typeFilter, sort]);
 
   const columns = useMemo(
     () => [
@@ -439,28 +473,46 @@ export default function AccountHeadersPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium"
+                  className={cn(
+                    "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                    (sort.field !== "id" || sort.dir !== "asc") &&
+                      "bg-purple-50 border-purple-200 text-purple-700",
+                  )}
                 >
                   <ArrowUpDown className="h-4 w-4 opacity-50" />
-                  <span>Sort</span>
+                  <span>
+                    {sort.field === "id" && sort.dir === "asc"
+                      ? "Sort By"
+                      : sortOptions.find(
+                          (opt) =>
+                            opt.field === sort.field && opt.dir === sort.dir,
+                        )?.label}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
               >
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Account Code
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Account Name
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Balance: High to Low
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Balance: Low to High
-                </DropdownMenuItem>
+                {sortOptions.map((opt, idx) => (
+                  <DropdownMenuItem
+                    key={idx}
+                    onClick={() =>
+                      setSort({
+                        field: opt.field,
+                        dir: opt.dir as "asc" | "desc",
+                      })
+                    }
+                    className={cn(
+                      "rounded-lg my-0.5",
+                      sort.field === opt.field && sort.dir === opt.dir
+                        ? "bg-purple-50 text-purple-700"
+                        : "",
+                    )}
+                  >
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -476,7 +528,7 @@ export default function AccountHeadersPage() {
 
         {/* Ledger Table */}
         <CustomTable
-          data={mockHeaders}
+          data={filteredHeaders}
           columns={columns}
           isLoading={false}
           scrollAreaHeight="h-[calc(100vh-320px)]"

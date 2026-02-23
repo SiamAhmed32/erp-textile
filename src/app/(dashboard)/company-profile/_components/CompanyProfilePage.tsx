@@ -23,6 +23,10 @@ const CompanyProfilePage = () => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "name",
+    dir: "asc",
+  });
   const [deleteTarget, setDeleteTarget] = useState<CompanyProfile | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -62,7 +66,7 @@ const CompanyProfilePage = () => {
 
   const filteredProfiles = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    return profiles.filter((profile: CompanyProfile) => {
+    const result = profiles.filter((profile: CompanyProfile) => {
       const matchesType =
         typeFilter === "all" || profile.companyType === typeFilter;
       const matchesStatus =
@@ -81,7 +85,24 @@ const CompanyProfilePage = () => {
         .toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [profiles, search, statusFilter, typeFilter]);
+
+    // Apply Sorting
+    result.sort((a: any, b: any) => {
+      const fieldA = a[sort.field];
+      const fieldB = b[sort.field];
+
+      if (typeof fieldA === "string") {
+        return sort.dir === "asc"
+          ? fieldA.localeCompare(fieldB)
+          : fieldB.localeCompare(fieldA);
+      }
+      return sort.dir === "asc"
+        ? new Date(fieldA).getTime() - new Date(fieldB).getTime()
+        : new Date(fieldB).getTime() - new Date(fieldA).getTime();
+    });
+
+    return result;
+  }, [profiles, search, statusFilter, typeFilter, sort]);
 
   const handleRowClick = useCallback(
     (row: CompanyProfile) => {
@@ -135,6 +156,8 @@ const CompanyProfilePage = () => {
         onSearchChange={setSearch}
         onTypeFilterChange={setTypeFilter}
         onStatusFilterChange={setStatusFilter}
+        sort={sort}
+        onSortChange={setSort}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onDelete={handleDelete}

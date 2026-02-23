@@ -123,7 +123,13 @@ export default function SupplierToolbar({
               )}
             >
               <ArrowUpDown className="h-4 w-4 opacity-50" />
-              <span>Sort</span>
+              <span>
+                {sort.field === "name" && sort.dir === "asc"
+                  ? "Sort By"
+                  : sortOptions.find(
+                      (opt) => opt.field === sort.field && opt.dir === sort.dir,
+                    )?.label}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
