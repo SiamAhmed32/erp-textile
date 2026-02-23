@@ -3,10 +3,17 @@
 import React from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CustomModal, SelectBox } from "@/components/reusables";
+import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { usePostMutation } from "@/store/services/commonApi";
 import { AccountHeaderFormData, AccountHeaderFormSchema } from "./types";
 import toast from "react-hot-toast";
@@ -71,7 +78,7 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
             title="Create Account Header"
             maxWidth="600px"
         >
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <Label>Account Name <span className="text-red-500">*</span></Label>
@@ -94,22 +101,31 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex flex-col">
+                    <div className="space-y-1.5 flex flex-col">
+                        <Label>Account Type <span className="text-red-500">*</span></Label>
                         <Controller
                             name="type"
                             control={control}
                             render={({ field }) => (
-                                <SelectBox
-                                    label="Account Type"
-                                    required
-                                    name={field.name}
+                                <Select
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
                                     value={field.value}
-                                    onChange={field.onChange}
-                                    options={accountTypeOptions}
-                                    error={errors.type?.message}
-                                />
+                                >
+                                    <SelectTrigger className={cn("h-10", errors.type && "border-red-500")}>
+                                        <SelectValue placeholder="Select Account Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {accountTypeOptions.map((opt) => (
+                                            <SelectItem key={opt._id} value={opt._id}>
+                                                {opt.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             )}
                         />
+                        {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type.message}</p>}
                     </div>
                     <div>
                         <Label>Opening Balance</Label>
