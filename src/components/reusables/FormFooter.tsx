@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 
 type FormFooterProps = {
   cancelHref: string;
-  onSave: () => void;
-  saving: boolean;
+  onSave?: () => void;
+  saving?: boolean;
   saveLabel?: string;
   savingLabel?: string;
   trustText?: string;
@@ -14,10 +14,6 @@ type FormFooterProps = {
 
 const FormFooter = ({
   cancelHref,
-  onSave,
-  saving,
-  saveLabel = "Save Changes",
-  savingLabel = "Saving...",
   trustText = "All data is stored securely. All inputs are encrypted.",
 }: FormFooterProps) => {
   return (
@@ -34,13 +30,6 @@ const FormFooter = ({
           asChild
         >
           <Link href={cancelHref}>Cancel</Link>
-        </Button>
-        <Button
-          className="w-full sm:w-auto bg-black text-white hover:bg-black/90 min-w-[160px] shadow-sm font-semibold"
-          onClick={onSave}
-          disabled={saving}
-        >
-          {saving ? savingLabel : saveLabel}
         </Button>
       </div>
     </div>

@@ -17,6 +17,8 @@ interface DateRangeFilterProps {
   onFilterChange: (range: { start: string; end: string }) => void;
   className?: string;
   placeholder?: string;
+  startLabel?: string;
+  endLabel?: string;
 }
 
 /**
@@ -33,6 +35,8 @@ export default function DateRangeFilter({
   onFilterChange,
   className,
   placeholder = "Date Range",
+  startLabel = "Start Date",
+  endLabel = "End Date",
 }: DateRangeFilterProps) {
   // Local state to hold values before "Apply" is clicked
   const [tempStart, setTempStart] = useState(start);
@@ -91,7 +95,7 @@ export default function DateRangeFilter({
         <div className="space-y-4">
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-              From Date
+              {startLabel}
             </p>
             <Input
               type="date"
@@ -102,7 +106,7 @@ export default function DateRangeFilter({
           </div>
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-              To Date
+              {endLabel}
             </p>
             <Input
               type="date"

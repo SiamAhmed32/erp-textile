@@ -6,13 +6,8 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import { PrimaryText } from "@/components/reusables";
 import { notify } from "@/lib/notifications";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { CustomModal } from "@/components/reusables";
+
 import CompanyProfilesTable from "./CompanyProfilesTable";
 import { CompanyProfile, CompanyProfileApiItem } from "./types";
 import { isValidId, normalizeProfile } from "./helpers";
@@ -23,6 +18,10 @@ const CompanyProfilePage = () => {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "name",
+    dir: "asc",
+  });
   const [deleteTarget, setDeleteTarget] = useState<CompanyProfile | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -62,7 +61,7 @@ const CompanyProfilePage = () => {
 
   const filteredProfiles = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    return profiles.filter((profile: CompanyProfile) => {
+    const result = profiles.filter((profile: CompanyProfile) => {
       const matchesType =
         typeFilter === "all" || profile.companyType === typeFilter;
       const matchesStatus =
@@ -81,7 +80,24 @@ const CompanyProfilePage = () => {
         .toLowerCase();
       return haystack.includes(normalizedSearch);
     });
-  }, [profiles, search, statusFilter, typeFilter]);
+
+    // Apply Sorting
+    result.sort((a: any, b: any) => {
+      const fieldA = a[sort.field];
+      const fieldB = b[sort.field];
+
+      if (typeof fieldA === "string") {
+        return sort.dir === "asc"
+          ? fieldA.localeCompare(fieldB)
+          : fieldB.localeCompare(fieldA);
+      }
+      return sort.dir === "asc"
+        ? new Date(fieldA).getTime() - new Date(fieldB).getTime()
+        : new Date(fieldB).getTime() - new Date(fieldA).getTime();
+    });
+
+    return result;
+  }, [profiles, search, statusFilter, typeFilter, sort]);
 
   const handleRowClick = useCallback(
     (row: CompanyProfile) => {
@@ -135,27 +151,28 @@ const CompanyProfilePage = () => {
         onSearchChange={setSearch}
         onTypeFilterChange={setTypeFilter}
         onStatusFilterChange={setStatusFilter}
+        sort={sort}
+        onSortChange={setSort}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onDelete={handleDelete}
       />
 
-      <Dialog
+      <CustomModal
         open={deleteOpen}
         onOpenChange={(open) => {
           setDeleteOpen(open);
           if (!open) setDeleteTarget(null);
         }}
+        title="Delete Company?"
+        maxWidth="450px"
       >
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Company?</DialogTitle>
-          </DialogHeader>
+        <div className="space-y-4 pt-2">
           <PrimaryText className="text-sm text-muted-foreground">
             This will mark the company as deleted and remove it from the active
             list.
           </PrimaryText>
-          <DialogFooter>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <Button
               variant="outline"
               onClick={() => setDeleteOpen(false)}
@@ -170,9 +187,9 @@ const CompanyProfilePage = () => {
             >
               {deleting ? "Deleting..." : "Delete"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </CustomModal>
     </div>
   );
 };

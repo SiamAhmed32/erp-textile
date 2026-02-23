@@ -307,16 +307,44 @@ export default function LoanManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState({ field: "lender", dir: "asc" });
+
+  const sortOptions = [
+    { label: "Lender Name (A-Z)", field: "lender", dir: "asc" },
+    { label: "Lender Name (Z-A)", field: "lender", dir: "desc" },
+    { label: "Principal: High to Low", field: "principalAmount", dir: "desc" },
+    { label: "Principal: Low to High", field: "principalAmount", dir: "asc" },
+    {
+      label: "Outstanding: High to Low",
+      field: "outstandingAmount",
+      dir: "desc",
+    },
+  ];
 
   const filteredLoans = useMemo(() => {
-    return loans.filter((l) => {
+    const result = loans.filter((l) => {
       const matchesSearch =
         l.lender.toLowerCase().includes(search.toLowerCase()) ||
         l.type.toLowerCase().includes(search.toLowerCase());
       const matchesStatus = statusFilter === "all" || l.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
-  }, [search, statusFilter]);
+
+    // Apply Sorting
+    result.sort((a: any, b: any) => {
+      const fieldA = a[sort.field];
+      const fieldB = b[sort.field];
+
+      if (typeof fieldA === "string") {
+        return sort.dir === "asc"
+          ? fieldA.localeCompare(fieldB)
+          : fieldB.localeCompare(fieldA);
+      }
+      return sort.dir === "asc" ? fieldA - fieldB : fieldB - fieldA;
+    });
+
+    return result;
+  }, [search, statusFilter, sort]);
 
   const listColumns = useMemo(
     () => [
@@ -476,28 +504,46 @@ export default function LoanManagementPage() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium"
+                  className={cn(
+                    "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                    (sort.field !== "lender" || sort.dir !== "asc") &&
+                      "bg-purple-50 border-purple-200 text-purple-700",
+                  )}
                 >
                   <ArrowUpDown className="h-4 w-4 opacity-50" />
-                  <span>Sort</span>
+                  <span>
+                    {sort.field === "lender" && sort.dir === "asc"
+                      ? "Sort By"
+                      : sortOptions.find(
+                          (opt) =>
+                            opt.field === sort.field && opt.dir === sort.dir,
+                        )?.label}
+                  </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
               >
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Lender Name
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Principal: High to Low
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Principal: Low to High
-                </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg my-0.5">
-                  Outstanding Amount
-                </DropdownMenuItem>
+                {sortOptions.map((opt, idx) => (
+                  <DropdownMenuItem
+                    key={idx}
+                    onClick={() =>
+                      setSort({
+                        field: opt.field,
+                        dir: opt.dir as "asc" | "desc",
+                      })
+                    }
+                    className={cn(
+                      "rounded-lg my-0.5",
+                      sort.field === opt.field && sort.dir === opt.dir
+                        ? "bg-purple-50 text-purple-700"
+                        : "",
+                    )}
+                  >
+                    {opt.label}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
 

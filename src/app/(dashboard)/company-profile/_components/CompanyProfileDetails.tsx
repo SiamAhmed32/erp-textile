@@ -151,7 +151,7 @@ const CompanyProfileDetails = ({ id }: Props) => {
         title={profile?.name || "Company Details"}
         backHref="/company-profile"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Company Profiles", href: "/company-profile" },
           { label: profile?.name || "Details" },
         ]}

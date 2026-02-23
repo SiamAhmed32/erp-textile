@@ -29,12 +29,16 @@ type Props = {
   typeFilter: string;
   dateFrom: string;
   dateTo: string;
+  deliveryDateFrom: string;
+  deliveryDateTo: string;
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onStatusFilterChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
+  onDeliveryDateFromChange: (value: string) => void;
+  onDeliveryDateToChange: (value: string) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: Order) => void;
   onView: (row: Order) => void;
@@ -55,12 +59,16 @@ const OrdersTable = ({
   typeFilter,
   dateFrom,
   dateTo,
+  deliveryDateFrom,
+  deliveryDateTo,
   onSearchChange,
   onSearchSubmit,
   onStatusFilterChange,
   onTypeFilterChange,
   onDateFromChange,
   onDateToChange,
+  onDeliveryDateFromChange,
+  onDeliveryDateToChange,
   onPageChange,
   onRowClick,
   onView,
@@ -375,6 +383,15 @@ const OrdersTable = ({
               onDateToChange(end);
             }}
             placeholder="Order Dates"
+          />
+          <DateRangeFilter
+            start={deliveryDateFrom}
+            end={deliveryDateTo}
+            onFilterChange={({ start, end }) => {
+              onDeliveryDateFromChange(start);
+              onDeliveryDateToChange(end);
+            }}
+            placeholder="Delivery Dates"
           />
         </div>
       </div>

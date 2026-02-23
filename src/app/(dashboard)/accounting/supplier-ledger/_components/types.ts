@@ -31,8 +31,7 @@ export const SupplierFormSchema = z
 
     openingLiability: z.coerce
       .number()
-      .min(0, "Liability cannot be negative")
-      .default(0),
+      .min(0, "Liability cannot be negative"),
   })
   .strict();
 

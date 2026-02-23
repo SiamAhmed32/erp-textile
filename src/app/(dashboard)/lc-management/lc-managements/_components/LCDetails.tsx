@@ -154,7 +154,7 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
             title={lc ? `LC: ${lc.bblcNumber}` : "LC Details"}
             backHref="/lc-management/lc-managements"
             breadcrumbItems={[
-              { label: "Dashboard", href: "/" },
+              //{ label: "Dashboard", href: "/" },
               { label: "LC Management", href: "/lc-management/lc-managements" },
               { label: lc?.bblcNumber || "Details" },
             ]}

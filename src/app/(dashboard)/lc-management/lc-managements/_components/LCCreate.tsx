@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import {
   Container,
   FormHeader,
-  FormFooter,
   RecoveryModal,
   NavigationGuard,
 } from "@/components/reusables";
@@ -235,16 +234,9 @@ const LCCreate = () => {
           errors={errors}
           onSave={handleSave}
           saving={saving}
+          cancelHref="/lc-management/lc-managements"
         />
       </div>
-
-      <FormFooter
-        cancelHref="/lc-management/lc-managements"
-        onSave={handleSave}
-        saving={saving}
-        saveLabel="Create BBLC"
-        trustText="Financial records are encrypted and stored according to bank protocols."
-      />
     </Container>
   );
 };

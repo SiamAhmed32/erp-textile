@@ -215,7 +215,7 @@ export function InvoiceTermsManagementPage() {
       <PageHeader
         title="Invoice Terms"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Invoice Terms" },
         ]}
         actions={

@@ -147,7 +147,7 @@ const InvoicePage = () => {
       <PageHeader
         title="Proforma Invoices (PI)"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Invoice Management", href: "/invoice-management/invoices" },
           { label: "Invoices" },
         ]}
@@ -179,7 +179,6 @@ const InvoicePage = () => {
         onStartDateChange={setStartDate}
         onEndDateChange={setEndDate}
         onPageChange={setPage}
-        onAddInvoice={() => setIsCreateModalOpen(true)}
         onRowClick={handleRowClick}
         onView={handleView}
         onEdit={handleEdit}
