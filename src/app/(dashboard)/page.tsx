@@ -21,6 +21,10 @@ import { useGetCountQuery } from "@/store/services/commonApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import DateFilter from "@/components/dashboard/DateFilter";
+import BuyerAnalytics from "@/components/dashboard/BuyerAnalytics";
+import OrderAnalytics from "@/components/dashboard/OrderAnalytics";
+import UserAnalytics from "@/components/dashboard/UserAnalytics";
 
 const Dashboard = () => {
   const { data: ordersCount, isLoading: loadingOrders } = useGetCountQuery({
@@ -39,12 +43,14 @@ const Dashboard = () => {
   return (
     <Container className="py-8">
       <Flex className="flex-col gap-8">
-        <div>
-          <PrimaryHeading>Dashboard</PrimaryHeading>
-          <PrimarySubHeading>
-            Overview of your store's performance.
-          </PrimarySubHeading>
-        </div>
+        <Flex className="justify-between items-center w-full">
+          <div>
+            <PrimaryHeading>Dashboard</PrimaryHeading>
+            <PrimarySubHeading>
+              Overview of your store's performance.
+            </PrimarySubHeading>
+          </div>
+        </Flex>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <StatsCard
@@ -78,6 +84,15 @@ const Dashboard = () => {
             loading={loadingBuyers}
             color="green"
           />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
+          <BuyerAnalytics />
+          <OrderAnalytics />
+        </div>
+
+        <div className="grid gap-4 grid-cols-1">
+          <UserAnalytics />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
