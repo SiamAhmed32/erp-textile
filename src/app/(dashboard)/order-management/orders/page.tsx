@@ -10,7 +10,7 @@ export default function Page() {
       <PageHeader
         title="Production Orders"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Order Management", href: "/order-management/orders" },
           { label: "Orders" },
         ]}

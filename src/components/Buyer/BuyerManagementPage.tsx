@@ -182,7 +182,7 @@ export function BuyerManagementPage() {
       <PageHeader
         title="Buyer Management"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Buyers" },
         ]}
         actions={

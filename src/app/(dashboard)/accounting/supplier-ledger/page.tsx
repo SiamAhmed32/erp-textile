@@ -45,7 +45,7 @@ function SupplierFormModal({
     reset,
     formState: { errors, isSubmitting },
   } = useForm<SupplierFormData>({
-    resolver: zodResolver(SupplierFormSchema),
+    resolver: zodResolver(SupplierFormSchema) as any,
     defaultValues: {
       name: "",
       supplierCode: "",
@@ -341,7 +341,7 @@ export default function SupplierLedgerPage() {
       <PageHeader
         title="Supplier Ledger"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "Accounting", href: "/accounting" },
           { label: "Supplier Ledger" },
         ]}

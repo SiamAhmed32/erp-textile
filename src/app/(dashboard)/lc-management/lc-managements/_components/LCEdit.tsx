@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import {
   Container,
   FormHeader,
-  FormFooter,
   RecoveryModal,
   NavigationGuard,
 } from "@/components/reusables";
@@ -215,16 +214,9 @@ const LCEdit = ({ id }: Props) => {
           isEdit={true}
           onSave={handleSave}
           saving={saving}
+          cancelHref={`/lc-management/lc-managements/${id}`}
         />
       </div>
-
-      <FormFooter
-        cancelHref={`/lc-management/lc-managements/${id}`}
-        onSave={handleSave}
-        saving={saving}
-        saveLabel="Update BBLC"
-        trustText="Financial data is secured and encrypted."
-      />
     </Container>
   );
 };

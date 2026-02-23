@@ -1,15 +1,5 @@
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { CustomModal, InputField } from "@/components/reusables";
 import { InvoiceTermsErrors, InvoiceTermsFormData } from "./types";
 
 export type InvoiceTermsFormMode = "create" | "edit";
@@ -39,156 +29,119 @@ export function InvoiceTermsForm({
     ? "Define a reusable template for payment, delivery, and banking details."
     : "Update this template to keep invoice terms consistent across buyers.";
 
-  const fieldClass = (key: keyof InvoiceTermsFormData) =>
-    errors[key] ? "border-destructive focus-visible:ring-destructive/40" : "";
-
   return (
-    <Dialog open={open} onOpenChange={(value) => !value && onClose()}>
-      <DialogContent className="sm:max-w-[425px] md:max-w-2xl w-[calc(100%-2rem)] mx-auto rounded-xl">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="name">Template Name</Label>
-            <Input
-              id="name"
-              value={data.name}
-              onChange={(e) => onChange("name", e.target.value)}
-              placeholder="Standard LC 90 Days"
-              className={fieldClass("name")}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="payment">Payment Terms</Label>
-            <Input
-              id="payment"
-              value={data.payment}
-              onChange={(e) => onChange("payment", e.target.value)}
-              placeholder="TT 30 Days"
-              className={fieldClass("payment")}
-            />
-            {errors.payment && (
-              <p className="text-xs text-destructive">{errors.payment}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="delivery">Delivery Terms</Label>
-            <Input
-              id="delivery"
-              value={data.delivery}
-              onChange={(e) => onChange("delivery", e.target.value)}
-              placeholder="FOB Chittagong"
-              className={fieldClass("delivery")}
-            />
-            {errors.delivery && (
-              <p className="text-xs text-destructive">{errors.delivery}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="advisingBank">Advising Bank</Label>
-            <Input
-              id="advisingBank"
-              value={data.advisingBank}
-              onChange={(e) => onChange("advisingBank", e.target.value)}
-              placeholder="HSBC Bangladesh"
-              className={fieldClass("advisingBank")}
-            />
-            {errors.advisingBank && (
-              <p className="text-xs text-destructive">{errors.advisingBank}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="negotiation">Negotiation</Label>
-            <Input
-              id="negotiation"
-              value={data.negotiation}
-              onChange={(e) => onChange("negotiation", e.target.value)}
-              placeholder="By sight"
-              className={fieldClass("negotiation")}
-            />
-            {errors.negotiation && (
-              <p className="text-xs text-destructive">{errors.negotiation}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="origin">Origin</Label>
-            <Input
-              id="origin"
-              value={data.origin}
-              onChange={(e) => onChange("origin", e.target.value)}
-              placeholder="Bangladesh"
-              className={fieldClass("origin")}
-            />
-            {errors.origin && (
-              <p className="text-xs text-destructive">{errors.origin}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="swiftCode">SWIFT Code</Label>
-            <Input
-              id="swiftCode"
-              value={data.swiftCode}
-              onChange={(e) => onChange("swiftCode", e.target.value)}
-              placeholder="HSBCBDDH"
-              className={fieldClass("swiftCode")}
-            />
-            {errors.swiftCode && (
-              <p className="text-xs text-destructive">{errors.swiftCode}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="binNo">BIN</Label>
-            <Input
-              id="binNo"
-              value={data.binNo}
-              onChange={(e) => onChange("binNo", e.target.value)}
-              placeholder="123456789"
-              className={fieldClass("binNo")}
-            />
-            {errors.binNo && (
-              <p className="text-xs text-destructive">{errors.binNo}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="hsCode">H.S. Code</Label>
-            <Input
-              id="hsCode"
-              value={data.hsCode}
-              onChange={(e) => onChange("hsCode", e.target.value)}
-              placeholder="610910"
-              className={fieldClass("hsCode")}
-            />
-            {errors.hsCode && (
-              <p className="text-xs text-destructive">{errors.hsCode}</p>
-            )}
-          </div>
+    <CustomModal
+      open={open}
+      onOpenChange={(value) => !value && onClose()}
+      title={title}
+      maxWidth="700px"
+    >
+      <div className="space-y-4">
+        <p className="text-sm text-slate-500 mb-4">{description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField
+            label="Template Name"
+            name="name"
+            value={data.name}
+            onChange={(e) => onChange("name", e.target.value)}
+            placeholder="Standard LC 90 Days"
+            error={errors.name}
+          />
+          <InputField
+            label="Payment Terms"
+            name="payment"
+            value={data.payment}
+            onChange={(e) => onChange("payment", e.target.value)}
+            placeholder="TT 30 Days"
+            error={errors.payment}
+          />
+          <InputField
+            label="Delivery Terms"
+            name="delivery"
+            value={data.delivery}
+            onChange={(e) => onChange("delivery", e.target.value)}
+            placeholder="FOB Chittagong"
+            error={errors.delivery}
+          />
+          <InputField
+            label="Advising Bank"
+            name="advisingBank"
+            value={data.advisingBank}
+            onChange={(e) => onChange("advisingBank", e.target.value)}
+            placeholder="HSBC Bangladesh"
+            error={errors.advisingBank}
+          />
+          <InputField
+            label="Negotiation"
+            name="negotiation"
+            value={data.negotiation}
+            onChange={(e) => onChange("negotiation", e.target.value)}
+            placeholder="By sight"
+            error={errors.negotiation}
+          />
+          <InputField
+            label="Origin"
+            name="origin"
+            value={data.origin}
+            onChange={(e) => onChange("origin", e.target.value)}
+            placeholder="Bangladesh"
+            error={errors.origin}
+          />
+          <InputField
+            label="SWIFT Code"
+            name="swiftCode"
+            value={data.swiftCode}
+            onChange={(e) => onChange("swiftCode", e.target.value)}
+            placeholder="HSBCBDDH"
+            error={errors.swiftCode}
+          />
+          <InputField
+            label="BIN"
+            name="binNo"
+            value={data.binNo}
+            onChange={(e) => onChange("binNo", e.target.value)}
+            placeholder="123456789"
+            error={errors.binNo}
+          />
+          <InputField
+            label="H.S. Code"
+            name="hsCode"
+            value={data.hsCode}
+            onChange={(e) => onChange("hsCode", e.target.value)}
+            placeholder="610910"
+            error={errors.hsCode}
+          />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="remarks">Remarks</Label>
-          <Textarea
-            id="remarks"
+          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            Remarks
+          </label>
+          <textarea
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             value={data.remarks}
             onChange={(e) => onChange("remarks", e.target.value)}
             placeholder="Handle with care"
           />
         </div>
 
-        <div className="flex items-center justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2"
+            onClick={onClose}
+          >
             Cancel
-          </Button>
-          <Button onClick={onSubmit}>
+          </button>
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow h-9 px-4 py-2 bg-black text-white hover:bg-black/90"
+            onClick={onSubmit}
+          >
             {isCreate ? "Create" : "Save Changes"}
-          </Button>
+          </button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </CustomModal>
   );
 }

@@ -457,7 +457,7 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
           title={invoice?.piNumber || "Invoice Details"}
           backHref="/invoice-management/invoices"
           breadcrumbItems={[
-            { label: "Dashboard", href: "/" },
+            //{ label: "Dashboard", href: "/" },
             {
               label: "Invoice Management",
               href: "/invoice-management/invoices",

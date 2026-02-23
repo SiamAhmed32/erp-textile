@@ -10,7 +10,7 @@ export default function Page() {
       <PageHeader
         title="Back-to-Back LC (BBLC)"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          //{ label: "Dashboard", href: "/" },
           { label: "LC Management", href: "/lc-management/lc-managements" },
           { label: "BBLC List" },
         ]}
@@ -19,7 +19,7 @@ export default function Page() {
             className="bg-black text-white hover:bg-black/90 shadow-sm"
             asChild
           >
-            <Link href="/lc-management/lc-managements/add-new-lc">
+            <Link href="/lc-management/lc-managements/create">
               <Plus className="mr-2 h-4 w-4" />
               Create BBLC
             </Link>

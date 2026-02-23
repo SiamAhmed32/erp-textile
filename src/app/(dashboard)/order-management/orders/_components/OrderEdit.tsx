@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import {
   Container,
   FormHeader,
-  FormFooter,
   RecoveryModal,
   NavigationGuard,
 } from "@/components/reusables";
@@ -271,16 +270,9 @@ const OrderEdit = ({ id }: Props) => {
           saving={saving}
           activeTab={activeTab}
           onTabChange={setActiveTab as any}
+          cancelHref={`/order-management/orders/${id}`}
         />
       </div>
-
-      <FormFooter
-        cancelHref={`/order-management/orders/${id}`}
-        onSave={handleSave}
-        saving={saving}
-        saveLabel="Update Order"
-        trustText="Changes are synced to production planning."
-      />
     </Container>
   );
 };

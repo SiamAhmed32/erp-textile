@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Container,
   FormHeader,
-  FormFooter,
   RecoveryModal,
   NavigationGuard,
 } from "@/components/reusables";
@@ -245,16 +244,9 @@ const OrderCreate = ({ duplicateId }: Props) => {
           activeTab={activeTab}
           onTabChange={setActiveTab as any}
           disableStatus
+          cancelHref="/order-management/orders"
         />
       </div>
-
-      <FormFooter
-        cancelHref="/order-management/orders"
-        onSave={handleSave}
-        saving={saving}
-        saveLabel="Create New Order"
-        trustText="Production orders are saved to the central database."
-      />
     </Container>
   );
 };

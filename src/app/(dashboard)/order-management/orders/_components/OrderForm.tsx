@@ -1,4 +1,6 @@
+"use client";
 import React, { useState } from "react";
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -137,6 +139,7 @@ type Props = {
   saving?: boolean;
   activeTab: TabKey;
   onTabChange: (tab: TabKey) => void;
+  cancelHref?: string;
 };
 
 /* ─────────────── Main Component ─────────────── */
@@ -155,13 +158,14 @@ const OrderForm = ({
   saving,
   activeTab,
   onTabChange,
+  cancelHref = "/order-management/orders",
 }: Props) => {
   const getError = (path: string) => errors?.[path];
 
   /* ─── Basic Info Tab ─── */
   const renderBasicInfo = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
         <CardContent className="pt-8 space-y-8">
           <SectionHeader
             icon={FileText}
@@ -209,7 +213,7 @@ const OrderForm = ({
                 >
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-2xl">
+                <SelectContent className="rounded-xl ">
                   {[
                     "DRAFT",
                     "PENDING",
@@ -258,7 +262,7 @@ const OrderForm = ({
                 >
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-2xl">
+                <SelectContent className="rounded-xl ">
                   <SelectItem
                     value="FABRIC"
                     className="rounded-md my-1 focus:bg-amber-50"
@@ -304,7 +308,7 @@ const OrderForm = ({
                 >
                   <SelectValue placeholder="Select buyer" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-2xl">
+                <SelectContent className="rounded-xl ">
                   {buyers.map((buyer) => (
                     <SelectItem
                       key={buyer.id}
@@ -342,7 +346,7 @@ const OrderForm = ({
                 >
                   <SelectValue placeholder="Select company" />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl shadow-2xl">
+                <SelectContent className="rounded-xl ">
                   {companies.map((company) => (
                     <SelectItem
                       key={company.id}
@@ -385,7 +389,7 @@ const OrderForm = ({
   const renderFabricDetails = () => {
     const rows = data.orderItems.fabricItem?.fabricItemData || [];
     return (
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
         <CardContent className="pt-8 space-y-8">
           <SectionHeader
             icon={Layers}
@@ -506,7 +510,7 @@ const OrderForm = ({
                 rows.map((row, index) => (
                   <div
                     key={index}
-                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300 md:grid-cols-2 lg:grid-cols-6 items-end"
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-6 items-end"
                   >
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -627,7 +631,7 @@ const OrderForm = ({
   const renderLabelDetails = () => {
     const rows = data.orderItems.labelItem?.labelItemData || [];
     return (
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
         <CardContent className="pt-8 space-y-8">
           <SectionHeader
             icon={Tag}
@@ -709,7 +713,7 @@ const OrderForm = ({
                 rows.map((row, index) => (
                   <div
                     key={index}
-                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
                   >
                     <div className="lg:col-span-2 space-y-1.5">
                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -846,7 +850,7 @@ const OrderForm = ({
   const renderCartonDetails = () => {
     const rows = data.orderItems.cartonItem?.cartonItemData || [];
     return (
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
         <CardContent className="pt-8 space-y-8">
           <SectionHeader
             icon={Box}
@@ -931,7 +935,7 @@ const OrderForm = ({
                 rows.map((row, index) => (
                   <div
                     key={index}
-                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
                   >
                     <div className="lg:col-span-2 space-y-1.5">
                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -1087,7 +1091,7 @@ const OrderForm = ({
       {data.productType === "LABEL_TAG" && renderLabelDetails()}
       {data.productType === "CARTON" && renderCartonDetails()}
 
-      <Card className="border-none shadow-xl shadow-slate-200/50 rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
+      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
         <CardContent className="pt-8 space-y-8">
           <SectionHeader
             icon={Truck}
@@ -1137,30 +1141,41 @@ const OrderForm = ({
         Back
       </Button>
 
-      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">
+      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest hidden sm:block">
         Step {currentIndex + 1} of {TAB_ORDER.length}
       </p>
 
-      {isLast ? (
+      <div className="flex items-center gap-3">
         <Button
           type="button"
-          onClick={onSave}
-          disabled={saving}
-          className="gap-2 bg-black text-white hover:bg-black/90 shadow-lg px-6"
+          variant="ghost"
+          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+          asChild
         >
-          <Save className="size-4" />
-          {saving ? "Saving..." : isEdit ? "Update Order" : "Save Order"}
+          <Link href={cancelHref}>Cancel</Link>
         </Button>
-      ) : (
-        <Button
-          type="button"
-          onClick={goNext}
-          className="gap-2 bg-primary text-white hover:bg-primary/90"
-        >
-          Next
-          <ChevronRight className="size-4" />
-        </Button>
-      )}
+
+        {isLast ? (
+          <Button
+            type="button"
+            onClick={onSave}
+            disabled={saving}
+            className="gap-2 bg-black text-white hover:bg-black/90  px-6"
+          >
+            <Save className="size-4" />
+            {saving ? "Saving..." : isEdit ? "Update Order" : "Save Order"}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={goNext}
+            className="gap-2 bg-primary text-white hover:bg-primary/90"
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 

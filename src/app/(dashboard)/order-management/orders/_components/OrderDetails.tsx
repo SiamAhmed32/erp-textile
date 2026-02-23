@@ -55,7 +55,7 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
             title={order ? `Order: ${order.orderNumber}` : "Order Details"}
             backHref="/order-management/orders"
             breadcrumbItems={[
-              { label: "Dashboard", href: "/" },
+              //{ label: "Dashboard", href: "/" },
               { label: "Order Management", href: "/order-management/orders" },
               { label: "Orders", href: "/order-management/orders" },
               { label: order?.orderNumber || "Details" },
