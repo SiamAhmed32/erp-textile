@@ -15,7 +15,7 @@ import { useGetOrderAnalyticsQuery } from "@/store/services/analyticsApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, startOfMonth, endOfDay } from "date-fns";
 import DateFilter, { DateRange } from "./DateFilter";
-import { generateMockAnalytics } from "@/utils/mockData";
+import EmptyChartState from "./EmptyChartState";
 
 const OrderAnalytics: React.FC = () => {
     const [dateRange, setDateRange] = React.useState<DateRange>({
@@ -29,13 +29,9 @@ const OrderAnalytics: React.FC = () => {
         endDate: dateRange.endDate
     });
 
-    const mockData = React.useMemo(() =>
-        generateMockAnalytics(dateRange.startDate, dateRange.endDate, "order"),
-        [dateRange]
-    );
-
-    const chartData = (data?.data && data.data.length > 0) ? data.data : mockData;
+    const chartData = data?.data || [];
     const isLoading = apiLoading && !data;
+    const isEmpty = !isLoading && chartData.length === 0;
 
     return (
         <Card className="col-span-1">
@@ -46,6 +42,8 @@ const OrderAnalytics: React.FC = () => {
             <CardContent>
                 {isLoading ? (
                     <Skeleton className="h-[300px] w-full" />
+                ) : isEmpty ? (
+                    <EmptyChartState message="No order history found" />
                 ) : (
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
