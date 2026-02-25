@@ -48,7 +48,6 @@ const BanksPage = () => {
         return {
             total: data?.meta?.pagination?.total || 0,
             active: banks.filter(b => !b.isDeleted).length,
-            linked: banks.filter(b => !!b.accountHeadId).length,
         };
     }, [banks, data]);
 
@@ -87,11 +86,11 @@ const BanksPage = () => {
                     description="Total registered accounts"
                 />
                 <StatsCard
-                    title="Linked Accounts"
-                    value={stats.linked}
+                    title="Active Banks"
+                    value={stats.active}
                     icon={Landmark}
                     color="green"
-                    description="Linked to Chart of Accounts"
+                    description="Currently active sub-ledgers"
                 />
                 <StatsCard
                     title="System Status"

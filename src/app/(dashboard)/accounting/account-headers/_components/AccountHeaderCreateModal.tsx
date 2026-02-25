@@ -1,8 +1,5 @@
 "use client";
 
-import React from "react";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +11,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { usePostMutation } from "@/store/services/commonApi";
-import { AccountHeaderFormData, AccountHeaderFormSchema } from "./types";
-import toast from "react-hot-toast";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { AccountHeader, AccountHeaderFormData, AccountHeaderFormSchema } from "./types";
 
 type Props = {
     open: boolean;
@@ -27,12 +27,20 @@ type Props = {
 const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
     const [postItem] = usePostMutation();
 
+    // Fetch all account heads for parents
+    const { data: accountsData, isLoading: isLoadingAccounts } = useGetAllQuery({
+        path: "accounting/accountHeads",
+        limit: 1000,
+    });
+
+    const allAccounts = (accountsData?.data || []) as AccountHeader[];
+
     const accountTypeOptions = [
-        { name: "ASSET", _id: "ASSET" },
-        { name: "LIABILITY", _id: "LIABILITY" },
-        { name: "REVENUE", _id: "REVENUE" },
-        { name: "EXPENSE", _id: "EXPENSE" },
-        { name: "EQUITY", _id: "EQUITY" },
+        { name: "ASSET", _id: "ASSET", color: "text-sky-600 bg-sky-50 border-sky-100" },
+        { name: "LIABILITY", _id: "LIABILITY", color: "text-rose-600 bg-rose-50 border-rose-100" },
+        { name: "EQUITY", _id: "EQUITY", color: "text-violet-600 bg-violet-50 border-violet-100" },
+        { name: "INCOME", _id: "INCOME", color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
+        { name: "EXPENSE", _id: "EXPENSE", color: "text-amber-600 bg-amber-50 border-amber-100" },
     ];
 
     const {
@@ -40,6 +48,7 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
         handleSubmit,
         reset,
         control,
+        watch,
         formState: { errors, isSubmitting },
     } = useForm<AccountHeaderFormData>({
         resolver: zodResolver(AccountHeaderFormSchema),
@@ -49,8 +58,15 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
             type: "ASSET",
             description: "",
             openingBalance: 0,
+            parentId: null,
+            isControlAccount: false,
         },
     });
+
+    const selectedType = watch("type");
+
+    // Filter potential parents: same type
+    const parentOptions = allAccounts.filter(acc => acc.type === selectedType);
 
     const onSubmit = async (data: AccountHeaderFormData) => {
         try {
@@ -59,12 +75,11 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
                 body: { companyProfileId: "3d0afbda-6b2b-4013-895c-7680da86376e", ...data },
                 invalidate: ["accounting/accountHeads"],
             }).unwrap();
-            toast.success("Account header created successfully");
+            toast.success("Account head registered successfully");
             reset();
             onOpenChange(false);
         } catch (error: any) {
-            console.error("Failed to create account header:", error);
-            toast.error(error?.data?.message || "Failed to create account header");
+            toast.error(error?.data?.message || "Failed to create account head");
         }
     };
 
@@ -75,100 +90,147 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
                 if (!val) reset();
                 onOpenChange(val);
             }}
-            title="Create Account Header"
-            maxWidth="600px"
+            title="Register Ledger Head"
+            maxWidth="640px"
         >
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <Label>Account Name <span className="text-red-500">*</span></Label>
-                        <Input
-                            {...register("name")}
-                            placeholder="e.g. Cash Account"
-                            className={cn("mt-1.5", errors.name && "border-red-500")}
-                        />
-                        {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
-                    </div>
-                    <div>
-                        <Label>Account Code <span className="text-red-500">*</span></Label>
-                        <Input
-                            {...register("code")}
-                            placeholder="e.g. CASH-001"
-                            className={cn("mt-1.5", errors.code && "border-red-500")}
-                        />
-                        {errors.code && <p className="text-xs text-red-500 mt-1">{errors.code.message}</p>}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                {/* ── Group & Mode Section ────────────────────────────────── */}
+                <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-1.5">
+                            <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Financial Group</Label>
+                            <Controller
+                                name="type"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger className="h-11 bg-white border-zinc-200 font-semibold text-zinc-800">
+                                            <SelectValue placeholder="Select Group" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {accountTypeOptions.map((opt) => (
+                                                <SelectItem key={opt._id} value={opt._id}>
+                                                    <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold", opt.color)}>
+                                                        {opt.name}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-zinc-200">
+                            <div className="space-y-0.5">
+                                <Label className="text-zinc-800 font-bold text-sm">Control Account</Label>
+                                <p className="text-[10px] text-zinc-400 font-medium">Allow sub-accounts</p>
+                            </div>
+                            <Controller
+                                name="isControlAccount"
+                                control={control}
+                                render={({ field }) => (
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                )}
+                            />
+                        </div>
                     </div>
                 </div>
 
+                {/* ── Hierarchy ───────────────────────────────────────────── */}
+                <div className="space-y-1.5">
+                    <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Parent Classification</Label>
+                    <Controller
+                        name="parentId"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                onValueChange={(val) => field.onChange(val === "none" ? null : val)}
+                                value={field.value || "none"}
+                            >
+                                <SelectTrigger className="h-11 border-zinc-200 bg-white">
+                                    <SelectValue placeholder="Select Parent Category (Optional)" />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[250px]">
+                                    <SelectItem value="none" className="italic text-zinc-400 text-xs">Top Level (No Parent)</SelectItem>
+                                    {parentOptions.map((acc) => (
+                                        <SelectItem key={acc.id} value={acc.id}>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold text-zinc-700">{acc.name}</span>
+                                                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 px-1 border rounded">{acc.code}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
+                </div>
+
+                {/* ── Basic Info ──────────────────────────────────────────── */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-1.5 flex flex-col">
-                        <Label>Account Type <span className="text-red-500">*</span></Label>
-                        <Controller
-                            name="type"
-                            control={control}
-                            render={({ field }) => (
-                                <Select
-                                    onValueChange={field.onChange}
-                                    defaultValue={field.value}
-                                    value={field.value}
-                                >
-                                    <SelectTrigger className={cn("h-10", errors.type && "border-red-500")}>
-                                        <SelectValue placeholder="Select Account Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {accountTypeOptions.map((opt) => (
-                                            <SelectItem key={opt._id} value={opt._id}>
-                                                {opt.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            )}
+                    <div className="space-y-1.5">
+                        <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Account Name</Label>
+                        <Input
+                            {...register("name")}
+                            placeholder="e.g. Petty Cash"
+                            className={cn("h-11 border-zinc-200 focus:ring-zinc-900 font-semibold", errors.name && "border-red-500")}
                         />
-                        {errors.type && <p className="text-xs text-red-500 mt-1">{errors.type.message}</p>}
+                        {errors.name && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.name.message}</p>}
                     </div>
-                    <div>
-                        <Label>Opening Balance</Label>
+                    <div className="space-y-1.5">
+                        <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Unique Code</Label>
+                        <Input
+                            {...register("code")}
+                            placeholder="e.g. 1010-01"
+                            className={cn("h-11 border-zinc-200 font-mono font-bold", errors.code && "border-red-500")}
+                        />
+                        {errors.code && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.code.message}</p>}
+                    </div>
+                </div>
+
+                {/* ── Balance ─────────────────────────────────────────────── */}
+                <div className="space-y-1.5">
+                    <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Opening Balance</Label>
+                    <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">৳</span>
                         <Input
                             type="number"
                             step="0.01"
                             {...register("openingBalance", { valueAsNumber: true })}
-                            placeholder="0.00"
-                            className={cn("mt-1.5", errors.openingBalance && "border-red-500")}
+                            className="h-11 border-zinc-200 pl-8 font-mono font-black text-zinc-800 text-lg"
                         />
-                        {errors.openingBalance && <p className="text-xs text-red-500 mt-1">{errors.openingBalance.message}</p>}
                     </div>
                 </div>
 
-                <div>
-                    <Label>Description</Label>
+                <div className="space-y-1.5">
+                    <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Operational Notes</Label>
                     <textarea
                         {...register("description")}
-                        rows={3}
-                        placeholder="Account description..."
-                        className={cn(
-                            "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 mt-1.5",
-                            errors.description && "border-red-500"
-                        )}
+                        rows={2}
+                        className="flex min-h-[80px] w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 transition-all"
+                        placeholder="Define the purpose of this ledger head..."
                     />
-                    {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>}
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
                     <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => onOpenChange(false)}
-                        className="border-slate-200"
+                        className="h-11 px-6 text-zinc-500 font-bold hover:bg-zinc-50"
                     >
                         Cancel
                     </Button>
                     <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="bg-black text-white hover:bg-black/90 shadow-sm px-8"
+                        className="h-11 px-10 bg-zinc-900 text-white font-bold hover:bg-black transition-all active:scale-95"
                     >
-                        {isSubmitting ? "Creating..." : "Create Account"}
+                        {isSubmitting ? "Registering..." : "Register Head"}
                     </Button>
                 </div>
             </form>

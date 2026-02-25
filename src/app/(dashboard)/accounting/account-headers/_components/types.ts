@@ -12,6 +12,8 @@ export const AccountHeaderFormSchema = z
             .max(50, "Code must be at most 50 characters"),
         type: z.enum(["ASSET", "LIABILITY", "REVENUE", "EXPENSE", "EQUITY"]),
         description: z.string().max(200).optional(),
+        parentId: z.string().uuid().nullable().optional(),
+        isControlAccount: z.boolean().default(false).optional(),
         openingBalance: z.number().min(0, "Opening balance cannot be negative"),
     });
 
@@ -24,13 +26,11 @@ export interface AccountHeader {
     type: "ASSET" | "LIABILITY" | "REVENUE" | "EXPENSE" | "EQUITY";
     description: string;
     openingBalance: number;
+    parentId: string | null;
+    parent?: AccountHeader;
+    isControlAccount: boolean;
     companyProfileId: string;
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;
-    companyProfile?: {
-        id: string;
-        name: string;
-        [key: string]: any;
-    };
 }
