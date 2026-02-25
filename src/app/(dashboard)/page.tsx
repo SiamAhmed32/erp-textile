@@ -15,9 +15,9 @@ import {
   Users,
   Package,
   ArrowUpRight,
-  TrendingUp,
 } from "lucide-react";
 import { useGetCountQuery } from "@/store/services/commonApi";
+import { useGetSummaryAnalyticsQuery } from "@/store/services/analyticsApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -25,20 +25,12 @@ import DateFilter from "@/components/dashboard/DateFilter";
 import BuyerAnalytics from "@/components/dashboard/BuyerAnalytics";
 import OrderAnalytics from "@/components/dashboard/OrderAnalytics";
 import UserAnalytics from "@/components/dashboard/UserAnalytics";
+import OrderStatusChart from "@/components/dashboard/OrderStatusChart";
 
 const Dashboard = () => {
-  const { data: ordersCount, isLoading: loadingOrders } = useGetCountQuery({
-    path: "orders",
-    filters: {},
-  });
-  const { data: buyersCount, isLoading: loadingBuyers } = useGetCountQuery({
-    path: "buyers",
-    filters: {},
-  });
-  const { data: productsCount, isLoading: loadingProducts } = useGetCountQuery({
-    path: "products",
-    filters: {},
-  });
+  const { data: summaryData, isLoading: loadingSummary } = useGetSummaryAnalyticsQuery(undefined);
+
+  const summary = summaryData?.data;
 
   return (
     <Container className="py-8">
@@ -52,46 +44,38 @@ const Dashboard = () => {
           </div>
         </Flex>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <StatsCard
-            title="Total Revenue"
-            value="$45,231.89"
-            icon={TrendingUp}
-            description="+20.1% from last month"
-            color="indigo"
-          />
-          <StatsCard
-            title="Orders"
-            value={ordersCount?.count || "+0"}
+            title="Total Orders"
+            value={summary?.orders ?? 0}
             icon={ShoppingCart}
-            description="+180.1% from last month"
-            loading={loadingOrders}
-            color="orange"
+            description="Total orders placed"
+            loading={loadingSummary}
           />
           <StatsCard
-            title="Products"
-            value={productsCount?.count || "+0"}
-            icon={Package}
-            description="+19% from last month"
-            loading={loadingProducts}
-            color="purple"
-          />
-          <StatsCard
-            title="Active Buyers"
-            value={buyersCount?.count || "+0"}
+            title="Total Buyers"
+            value={summary?.buyers ?? 0}
             icon={Users}
-            description="+201 since last hour"
-            loading={loadingBuyers}
-            color="green"
+            description="Total buyers available"
+            loading={loadingSummary}
+          />
+          <StatsCard
+            title="Total Users"
+            value={summary?.users ?? 0}
+            icon={Users}
+            description="Total registered users"
+            loading={loadingSummary}
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-          <BuyerAnalytics />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-[35%_65%]">
+
+          <OrderStatusChart />
           <OrderAnalytics />
         </div>
 
-        <div className="grid gap-4 grid-cols-1">
+        <div className="grid gap-4 md:grid-cols-2">
+          <BuyerAnalytics />
           <UserAnalytics />
         </div>
 

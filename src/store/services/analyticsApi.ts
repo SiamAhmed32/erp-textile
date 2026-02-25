@@ -19,6 +19,13 @@ export const analyticsApi = mainApi.injectEndpoints({
             providesTags: ["orders"],
         }),
 
+        getOrderStatusAnalytics: builder.query({
+            query: () => ({
+                url: "orders/analytics-orders-status",
+            }),
+            providesTags: ["orders"],
+        }),
+
         getUserAnalytics: builder.query({
             query: ({ startDate, endDate }) => ({
                 url: "users/analytics",
@@ -26,11 +33,20 @@ export const analyticsApi = mainApi.injectEndpoints({
             }),
             providesTags: ["user"],
         }),
+
+        getSummaryAnalytics: builder.query({
+            query: () => ({
+                url: "analyticss",
+            }),
+            providesTags: ["buyers", "orders", "user"],
+        }),
     }),
 });
 
 export const {
     useGetBuyerAnalyticsQuery,
     useGetOrderAnalyticsQuery,
+    useGetOrderStatusAnalyticsQuery,
     useGetUserAnalyticsQuery,
+    useGetSummaryAnalyticsQuery,
 } = analyticsApi;

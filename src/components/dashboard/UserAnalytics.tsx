@@ -34,7 +34,7 @@ const UserAnalytics: React.FC = () => {
     const isEmpty = !isLoading && chartData.length === 0;
 
     return (
-        <Card className="col-span-1 lg:col-span-2">
+        <Card className="">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-7">
                 <CardTitle className="text-base font-medium">User Analytics</CardTitle>
                 <DateFilter onFilterChange={setDateRange} />

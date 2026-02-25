@@ -11,7 +11,6 @@ interface StatsCardProps {
   description?: string;
   loading?: boolean;
   className?: string;
-  color?: "orange" | "green" | "red" | "blue" | "purple" | "indigo";
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
@@ -21,77 +20,44 @@ const StatsCard: React.FC<StatsCardProps> = ({
   description,
   loading,
   className,
-  color = "blue",
 }) => {
-  const iconBoxVariants = {
-    orange: "bg-orange-500",
-    green: "bg-emerald-500",
-    red: "bg-rose-500",
-    blue: "bg-blue-500",
-    purple: "bg-purple-500",
-    indigo: "bg-indigo-500",
-  };
-
-  const borderVariants = {
-    orange: "border-orange-100 dark:border-orange-900/20",
-    green: "border-emerald-100 dark:border-emerald-900/20",
-    red: "border-rose-100 dark:border-rose-900/20",
-    blue: "border-blue-100 dark:border-blue-900/20",
-    purple: "border-purple-100 dark:border-purple-900/20",
-    indigo: "border-indigo-100 dark:border-indigo-900/20",
-  };
-
   return (
     <Card
       className={cn(
-        "relative overflow-hidden border bg-white dark:bg-slate-900 transition-all duration-300",
-        borderVariants[color],
+        "relative overflow-hidden border border-indigo-100 dark:border-indigo-900/30 shadow-sm bg-white dark:bg-slate-900 rounded-xl",
         className,
       )}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1 text-left">
-            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+      {/* Left accent bar */}
+      <div className="absolute left-0 top-0 h-full w-1 rounded-l-xl bg-button" />
+
+      <CardContent className="pl-6 pr-4 py-5">
+        <div className="flex items-center justify-between gap-4">
+          {/* Text */}
+          <div className="space-y-1.5 min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 truncate">
               {title}
             </p>
             {loading ? (
               <Skeleton className="h-8 w-24 rounded-lg" />
             ) : (
-              <h3 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              <p className="text-3xl font-bold tracking-tight text-slate-800 dark:text-white">
                 {value}
-              </h3>
+              </p>
+            )}
+            {!loading && description && (
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-medium truncate">
+                {description}
+              </p>
             )}
           </div>
-          <div
-            className={cn(
-              "flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-500",
-              iconBoxVariants[color],
-            )}
-          >
-            <Icon className="h-6 w-6 text-white" />
+
+          {/* Icon box — primary tint */}
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-button">
+            <Icon className="h-5 w-5" />
           </div>
         </div>
-
-        {!loading && description && (
-          <div className="mt-3 flex items-center gap-1.5">
-            <div
-              className={cn("h-1.5 w-1.5 rounded-full", iconBoxVariants[color])}
-            />
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-none">
-              {description}
-            </p>
-          </div>
-        )}
       </CardContent>
-
-      {/* Decorative gradient background */}
-      <div
-        className={cn(
-          "absolute -right-4 -bottom-4 h-24 w-24 rounded-full opacity-[0.03] blur-3xl",
-          iconBoxVariants[color],
-        )}
-      />
     </Card>
   );
 };
