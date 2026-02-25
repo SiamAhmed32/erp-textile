@@ -166,7 +166,10 @@ const InvoicesTable = ({
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
           />
-          <Button variant="outline" onClick={onSearchSubmit}>
+          <Button
+            className="bg-black text-white hover:bg-black/80"
+            onClick={onSearchSubmit}
+          >
             Search
           </Button>
         </div>
