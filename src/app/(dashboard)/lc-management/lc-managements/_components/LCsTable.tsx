@@ -199,7 +199,10 @@ const LCsTable: React.FC<LCsTableProps> = ({
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-11 border-slate-200"
           />
-          <Button variant="outline" onClick={onSearchSubmit} className="h-11">
+          <Button
+            onClick={onSearchSubmit}
+            className="h-11 bg-black text-white hover:bg-black/80"
+          >
             Search
           </Button>
         </div>

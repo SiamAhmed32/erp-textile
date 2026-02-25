@@ -128,9 +128,8 @@ const UsersPage = () => {
             />
           </div>
           <Button
-            variant="outline"
             onClick={handleSearchSubmit}
-            className="h-11 px-6 bg-white border-slate-200 font-medium"
+            className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium"
           >
             Search
           </Button>

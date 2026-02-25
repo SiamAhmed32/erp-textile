@@ -248,7 +248,10 @@ export default function CashBookPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <Button variant="outline" onClick={() => {}}>
+            <Button
+              className="bg-black text-white hover:bg-black/80"
+              onClick={() => {}}
+            >
               Search
             </Button>
           </div>

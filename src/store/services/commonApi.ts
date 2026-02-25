@@ -18,6 +18,8 @@ export const userApi = mainApi.injectEndpoints({
     getAll: builder.query({
       query: ({
         sort,
+        sortBy,
+        sortOrder,
         page = 1,
         limit = BASE_LIMIT,
         search = "",
@@ -32,10 +34,13 @@ export const userApi = mainApi.injectEndpoints({
           ...filters,
         };
 
-        // If sort is explicitly null, don't include it.
-        // If sort is undefined, use the default '-createdAt'.
-        // If sort has a value, use that value.
-        if (sort === null) {
+        // Support two sorting approaches:
+        // 1. sortBy + sortOrder (separate params) — takes priority
+        // 2. sort (combined param, e.g. "-createdAt") — legacy fallback
+        if (sortBy) {
+          params.sortBy = sortBy;
+          params.sortOrder = sortOrder || "desc";
+        } else if (sort === null) {
           // Do nothing, don't include sort
         } else if (sort === undefined) {
           params.sort = "-createdAt";

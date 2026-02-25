@@ -147,10 +147,7 @@ export function InvoiceTermsList({
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button
-            variant="outline"
-            className="h-11 px-6 bg-white border-slate-200 font-medium"
-          >
+          <Button className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium">
             Search
           </Button>
         </div>
