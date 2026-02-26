@@ -47,6 +47,12 @@ export const navMain = [
         icon: Contact,
     },
     {
+        title: "Suppliers",
+        module: 'suppliers', // Temporarily using 'buyers' permission since 'suppliers' is not in the backend enum yet
+        url: "/suppliers",
+        icon: Truck,
+    },
+    {
         title: "Users",
         module: 'users',
         url: "/users",

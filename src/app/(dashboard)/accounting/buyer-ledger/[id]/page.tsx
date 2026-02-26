@@ -256,10 +256,10 @@ export default function BuyerLedgerDetailPage() {
             </div>
 
             {/* Action Filters & Transaction Table */}
-            <div className="space-y-4 shadow-sm border border-zinc-200 rounded-xl p-4 bg-white">
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-100">
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-base font-semibold text-zinc-700 flex items-center gap-2">
+                        <h2 className="text-sm font-semibold text-zinc-700 flex items-center gap-2">
                             <FileText className="w-4 h-4" />
                             Transaction History
                         </h2>
@@ -304,54 +304,8 @@ export default function BuyerLedgerDetailPage() {
                     />
                 </div>
 
-                {/* Totals footer */}
-                {rows.length > 0 && (
-                    <div className="flex justify-end">
-                        <div className="bg-zinc-900 text-white rounded-xl px-6 py-4 flex items-center gap-8">
-                            <div className="text-center">
-                                <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">
-                                    Total Debit
-                                </p>
-                                <p className="font-mono font-bold">{fmt(totalDebit)}</p>
-                            </div>
-                            <div className="w-px h-8 bg-white/10" />
-                            <div className="text-center">
-                                <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">
-                                    Total Credit
-                                </p>
-                                <p className="font-mono font-bold">{fmt(totalCredit)}</p>
-                            </div>
-                            <div className="w-px h-8 bg-white/10" />
-                            <div className="text-center">
-                                <p className="text-zinc-400 text-xs uppercase tracking-widest mb-1">
-                                    Closing Balance
-                                </p>
-                                <p
-                                    className={cn(
-                                        "font-mono font-bold",
-                                        closingBalance > 0 ? "text-amber-400" : "text-emerald-400"
-                                    )}
-                                >
-                                    {fmt(closingBalance)}{" "}
-                                    <span className="text-xs font-normal">
-                                        {closingBalance > 0 ? "Dr" : "Cr"}
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
-                {/* Empty state */}
-                {!isLoadingEntries && rows.length === 0 && (
-                    <div className="text-center py-16 text-zinc-400">
-                        <FileText className="w-10 h-10 mx-auto mb-3 text-zinc-200" />
-                        <p className="font-semibold text-sm">No transactions found</p>
-                        <p className="text-xs mt-1">
-                            Try adjusting your date filters or check back later.
-                        </p>
-                    </div>
-                )}
+
             </div>
         </Container>
     );
