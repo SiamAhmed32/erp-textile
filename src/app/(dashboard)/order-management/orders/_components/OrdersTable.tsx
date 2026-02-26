@@ -217,6 +217,13 @@ const OrdersTable = ({
           </div>
         ),
       },
+      {
+        header: "Delivery Date",
+        className: "px-4 ",
+        accessor: (row: Order) => (
+          <div className="whitespace-nowrap">{formatDate(row.deliveryDate)}</div>
+        ),
+      },
 
       /*
                         {

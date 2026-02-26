@@ -144,16 +144,18 @@
     0% {
       transform: translateX(-100%);
     }
+
     50% {
       transform: translateX(100%);
     }
+
     100% {
       transform: translateX(-100%);
     }
   }
 
-  --shadow-premium:
-    0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05),
+  0 8px 10px -6px rgba(0, 0, 0, 0.05);
 }
 
 body {
@@ -219,14 +221,31 @@ body {
   /* Hide scrollbar for sidebar components */
   [data-sidebar="content"]::-webkit-scrollbar,
   [data-sidebar="sidebar"]::-webkit-scrollbar,
-  [data-sidebar="menu-sub"]::-webkit-scrollbar {
+  [data-sidebar="menu-sub"]::-webkit-scrollbar,
+  [data-slot="sidebar-inner"]::-webkit-scrollbar,
+  [data-slot="sidebar-container"]::-webkit-scrollbar {
     display: none;
   }
+
   [data-sidebar="content"],
   [data-sidebar="sidebar"],
-  [data-sidebar="menu-sub"] {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+  [data-sidebar="menu-sub"],
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-container"] {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  /* Ensure content is visible but scrollbars are hidden */
+  [data-sidebar="content"] {
+    overflow-y: auto;
+  }
+
+  /* Prevent horizontal overflow during transitions if needed, but not on inner */
+  [data-slot="sidebar-container"] {
+    overflow-x: hidden;
   }
 
   /* --- Fillet (Inverted Rounded Corner) Effect --- */
