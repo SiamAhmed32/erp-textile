@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  Container,
-} from "@/components/reusables";
+import { Container, PageHeader } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +17,6 @@ import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertTriangle,
-  ArrowLeft,
   Bookmark,
   Building,
   CheckCircle2,
@@ -30,60 +27,163 @@ import {
   Scale,
   Send,
   Trash2,
-  Undo2
+  Undo2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useRef } from "react";
-import { Controller, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  Controller,
+  SubmitHandler,
+  useFieldArray,
+  useForm,
+  useWatch,
+} from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
 
-/* ─── Validation Schema ────────────────────────────────────── */
+/* ─── Validation Schema (mirrors backend journalEntry.validation.ts) ─────── */
 const journalEntrySchema = z.object({
   date: z.string().nonempty("Date is required"),
-  category: z.enum(["BUYER_DUE", "RECEIPT", "SUPPLIER_DUE", "PAYMENT", "JOURNAL", "CONTRA"]),
-  narration: z.string().optional(),
-  buyerId: z.string().uuid().optional(),
-  supplierId: z.string().uuid().optional(),
+  category: z.enum([
+    "BUYER_DUE",
+    "RECEIPT",
+    "SUPPLIER_DUE",
+    "PAYMENT",
+    "JOURNAL",
+    "CONTRA",
+  ]),
+  narration: z.string().optional(),        // optional — backend: z.string().max(1000).optional()
+  buyerId: z.string().uuid().optional(),   // optional — backend: only needed for BUYER_DUE / RECEIPT
+  supplierId: z.string().uuid().optional(),// optional — backend: only needed for SUPPLIER_DUE / PAYMENT
   companyProfileId: z.string().uuid(),
-  lines: z.array(z.object({
-    accountHeadId: z.string().uuid("Required"),
-    type: z.enum(["DEBIT", "CREDIT"]),
-    amount: z.number().positive("Must be > 0"),
-    bankId: z.string().uuid().optional(),
-  })).min(2, "At least 2 lines required")
+  lines: z
+    .array(
+      z.object({
+        accountHeadId: z.string().uuid("Account head is required"),
+        type: z.enum(["DEBIT", "CREDIT"]),
+        amount: z.number().positive("Must be greater than 0"),
+        bankId: z.string().uuid().optional(), // optional — backend: sub-ledger only when bank involved
+      })
+    )
+    .min(2, "At least 2 lines required"),
 });
 
 type JournalFormValues = z.infer<typeof journalEntrySchema>;
 
-/* ─── UI Constants ────────────────────────────────────────── */
-const categoryConfigs: Record<string, { label: string; icon: any; color: string; desc: string }> = {
-  BUYER_DUE: { label: "Buyer Due", icon: Bookmark, color: "amber", desc: "Recognize sales revenue and buyer obligation." },
-  RECEIPT: { label: "Receipt", icon: Receipt, color: "emerald", desc: "Record payment received from a buyer." },
-  SUPPLIER_DUE: { label: "Supplier Due", icon: Building, color: "purple", desc: "Recognize purchase expense and supplier obligation." },
-  PAYMENT: { label: "Payment", icon: Send, color: "indigo", desc: "Record payment sent to a supplier." },
-  JOURNAL: { label: "Journal", icon: FileText, color: "zinc", desc: "Standard adjustment for payroll, depreciation, etc." },
-  CONTRA: { label: "Contra", icon: Undo2, color: "sky", desc: "Transfer funds between your own cash and bank accounts." }
+/* ─── Category Configs ────────────────────────────────────────────────────── */
+const categoryConfigs: Record<
+  string,
+  { label: string; icon: any; desc: string }
+> = {
+  BUYER_DUE: {
+    label: "Buyer Due",
+    icon: Bookmark,
+    desc: "Recognize sales revenue and buyer obligation.",
+  },
+  RECEIPT: {
+    label: "Receipt",
+    icon: Receipt,
+    desc: "Record a payment received from a buyer.",
+  },
+  SUPPLIER_DUE: {
+    label: "Supplier Due",
+    icon: Building,
+    desc: "Recognize purchase expense and supplier obligation.",
+  },
+  PAYMENT: {
+    label: "Payment",
+    icon: Send,
+    desc: "Record a payment sent to a supplier.",
+  },
+  JOURNAL: {
+    label: "Journal",
+    icon: FileText,
+    desc: "General adjustment: payroll, depreciation, etc.",
+  },
+  CONTRA: {
+    label: "Contra",
+    icon: Undo2,
+    desc: "Transfer funds between cash and bank accounts.",
+  },
 };
 
+/* ─── Helper: Required & Optional labels ─────────────────────────────────── */
+function RequiredLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Label className="text-xs font-semibold text-zinc-700">
+      {children}{" "}
+      <span className="text-red-500 ml-0.5" title="This field is required">
+        *
+      </span>
+    </Label>
+  );
+}
+
+function OptionalLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Label className="text-xs font-semibold text-zinc-700">
+      {children}{" "}
+      <span className="text-zinc-400 font-normal ml-1 text-[11px]">
+        (optional)
+      </span>
+    </Label>
+  );
+}
+
+function HelperText({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] text-zinc-400 flex items-start gap-1 mt-1">
+      <Info className="w-3 h-3 mt-0.5 shrink-0" />
+      {children}
+    </p>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="text-[11px] text-red-500 font-medium flex items-center gap-1 mt-1">
+      <AlertTriangle className="w-3 h-3 shrink-0" />
+      {message}
+    </p>
+  );
+}
+
+/* ─── Main Page ──────────────────────────────────────────────────────────── */
 export default function BookkeepingCreatePage() {
   const router = useRouter();
   const [postEntry, { isLoading: isPosting }] = usePostMutation();
 
-  // ── Ref guard: prevents StrictMode double-firing append ──
+  // Ref guard: prevents StrictMode double-firing on append
   const isAppendingRef = useRef(false);
 
-  // Fetch required data
-  const { data: accountsData } = useGetAllQuery({ path: "accounting/accountHeads", limit: 1000 });
+  // Fetch sub-ledger data
+  const { data: accountsData } = useGetAllQuery({
+    path: "accounting/accountHeads",
+    limit: 1000,
+  });
   const { data: buyersData } = useGetAllQuery({ path: "buyers", limit: 1000 });
-  const { data: suppliersData } = useGetAllQuery({ path: "suppliers", limit: 1000 });
-  const { data: banksData } = useGetAllQuery({ path: "accounting/banks", limit: 1000 });
+  const { data: suppliersData } = useGetAllQuery({
+    path: "suppliers",
+    limit: 1000,
+  });
+  const { data: banksData } = useGetAllQuery({
+    path: "accounting/banks",
+    limit: 1000,
+  });
+  // Company profile — auto-selected (single-company ERP)
+  const { data: companyData } = useGetAllQuery({
+    path: "company-profiles",
+    limit: 10,
+  });
 
   const accounts = (accountsData?.data || []) as any[];
   const buyers = (buyersData?.data || []) as any[];
   const suppliers = (suppliersData?.data || []) as any[];
   const banks = (banksData?.data || []) as any[];
+  const companyProfileId: string =
+    ((companyData as any)?.data?.[0]?.id as string) ?? "";
 
   const {
     control,
@@ -91,7 +191,7 @@ export default function BookkeepingCreatePage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors },
   } = useForm<JournalFormValues>({
     resolver: zodResolver(journalEntrySchema),
     defaultValues: {
@@ -99,34 +199,45 @@ export default function BookkeepingCreatePage() {
       category: "JOURNAL",
       lines: [
         { accountHeadId: "", type: "DEBIT", amount: 0 },
-        { accountHeadId: "", type: "CREDIT", amount: 0 }
+        { accountHeadId: "", type: "CREDIT", amount: 0 },
       ],
-      companyProfileId: "3d0afbda-6b2b-4013-895c-7680da86376e"
-    }
+      companyProfileId: "", // will be set via useEffect once company-profiles loads
+    },
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
   const activeCategory = watch("category");
-  const watchLines = watch("lines");
+  // useWatch gives a live subscription on nested array values — fixes stale
+  // snapshot issue where watch("lines") wouldn't recompute on typed input.
+  const watchLines = useWatch({ control, name: "lines" });
 
-  // ── Guarded append: safe against StrictMode double-fire ──
+  // Auto-set companyProfileId as soon as it loads from API
+  useEffect(() => {
+    if (companyProfileId) {
+      setValue("companyProfileId", companyProfileId);
+    }
+  }, [companyProfileId, setValue]);
+
+  // Guarded append: safe against StrictMode double-fire
   const handleAddLine = useCallback(() => {
     if (isAppendingRef.current) return;
     isAppendingRef.current = true;
     append({ accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined });
-    // Release the guard after a tick
     setTimeout(() => {
       isAppendingRef.current = false;
     }, 50);
   }, [append]);
 
   const totals = useMemo(() => {
-    return watchLines.reduce((acc, line) => {
-      const amt = Number(line.amount) || 0;
-      if (line.type === "DEBIT") acc.debit += amt;
-      else acc.credit += amt;
-      return acc;
-    }, { debit: 0, credit: 0 });
+    return watchLines.reduce(
+      (acc, line) => {
+        const amt = Number(line.amount) || 0;
+        if (line.type === "DEBIT") acc.debit += amt;
+        else acc.credit += amt;
+        return acc;
+      },
+      { debit: 0, credit: 0 }
+    );
   }, [watchLines]);
 
   const isBalanced = totals.debit === totals.credit && totals.debit > 0;
@@ -136,185 +247,239 @@ export default function BookkeepingCreatePage() {
       toast.error("Voucher is not balanced. Debits must equal Credits.");
       return;
     }
-
     try {
       await postEntry({
         path: "accounting/journal-entries",
         body: data,
-        invalidate: ["accounting/journal-entries"]
+        invalidate: ["accounting/journal-entries"],
       }).unwrap();
 
-      toast.success("Voucher created as draft successfully");
+      toast.success("Journal entry saved as DRAFT successfully.");
       router.push("/accounting/daily-bookkeeping");
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to establish journal entry.");
+      toast.error(
+        error?.data?.error?.message ||
+        error?.data?.message ||
+        "Failed to save journal entry."
+      );
     }
   };
 
   const currentConfig = categoryConfigs[activeCategory];
 
   return (
-    <Container className="py-8 space-y-10 !max-w-[1200px] pb-32 font-outfit">
-      {/* ── Header ─────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-4">
-          <Button variant="ghost" size="sm" asChild className="text-zinc-500 hover:text-zinc-900 -ml-2">
-            <Link href="/accounting/daily-bookkeeping">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Return to Bookkeeping
-            </Link>
-          </Button>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-[0.2em] text-[10px]">
-              <Scale className="w-3 h-3" />
-              <span>Financial Posting Engine</span>
-            </div>
-            <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">New Voucher</h1>
-            <p className="text-zinc-500 text-sm font-medium">Draft a new transaction according to double-entry standards.</p>
+    <Container className="pb-32 !max-w-[1200px]">
+      {/* ── Standard PageHeader ─────────────────────────────────────────── */}
+      <PageHeader
+        title="New Journal Entry"
+        breadcrumbItems={[
+          { label: "Accounting", href: "/accounting/overview" },
+          {
+            label: "Daily Bookkeeping",
+            href: "/accounting/daily-bookkeeping",
+          },
+          { label: "New Entry" },
+        ]}
+        backHref="/accounting/daily-bookkeeping"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+              onClick={() => router.back()}
+            >
+              Discard
+            </Button>
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              disabled={isPosting || !isBalanced}
+              className={cn(
+                "transition-all",
+                isBalanced
+                  ? "bg-black text-white hover:bg-black/90"
+                  : "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed"
+              )}
+            >
+              {isPosting
+                ? "Saving..."
+                : isBalanced
+                  ? "Save as Draft"
+                  : "Voucher Unbalanced"}
+            </Button>
           </div>
-        </div>
+        }
+      />
 
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-12 px-8 rounded-2xl border-zinc-200 font-bold text-zinc-600 hover:bg-zinc-50" onClick={() => router.back()}>
-            Discard
-          </Button>
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            disabled={isPosting}
-            className={cn(
-              "h-12 px-10 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl",
-              isBalanced ? "bg-zinc-900 text-white hover:bg-black" : "bg-zinc-100 text-zinc-400 cursor-not-allowed border border-zinc-200"
-            )}
-          >
-            {isPosting ? "Posting..." : isBalanced ? "Post Draft Voucher" : "Voucher Unbalanced"}
-          </Button>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start mt-4">
+        {/* ── Left Column: Voucher Form ─────────────────────────────────── */}
+        <div className="xl:col-span-8 space-y-6">
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
-        {/* Left Column: Voucher Details (8 cols) */}
-        <div className="xl:col-span-8 space-y-8">
-
-          <Card className="rounded-[2.5rem] border-zinc-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-zinc-900 border-b border-white/5 py-8 px-10">
+          {/* Card: Entry Details */}
+          <Card>
+            <CardHeader className="bg-zinc-900 rounded-t-xl py-5 px-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
-                    {currentConfig && <currentConfig.icon size={24} />}
+                <div className="flex items-center gap-3">
+                  <div className="size-9 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                    {currentConfig && <currentConfig.icon size={18} />}
                   </div>
                   <div>
-                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Transaction Classification</p>
-                    <h2 className="text-2xl font-black text-white italic">{currentConfig?.label} Entry</h2>
+                    <p className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
+                      Classification
+                    </p>
+                    <h2 className="text-lg font-bold text-white">
+                      {currentConfig?.label} Entry
+                    </h2>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Period Context</p>
-                  <p className="text-white font-black italic">{new Date().getFullYear()} Global Ledger</p>
+                  <p className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
+                    Fiscal Year
+                  </p>
+                  <p className="text-white font-semibold">
+                    {new Date().getFullYear()}
+                  </p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-10 space-y-10">
 
-              {/* ── Classification Context ──────────────────────────── */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 rounded-[2rem] bg-zinc-50 border border-zinc-100">
-                <div className="space-y-2">
-                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Entry Date</Label>
-                  <Input type="date" {...register("date")} className="h-12 bg-white rounded-xl border-zinc-200 font-bold" />
+            <CardContent className="p-6 space-y-6">
+              {/* Date & Narration */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 rounded-xl bg-zinc-50 border border-zinc-100">
+                <div className="space-y-1.5">
+                  <RequiredLabel>Entry Date</RequiredLabel>
+                  <Input
+                    type="date"
+                    {...register("date")}
+                    className="bg-white"
+                  />
+                  <FieldError message={errors.date?.message} />
                 </div>
-                <div className="md:col-span-2 space-y-2">
-                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Transaction Narration</Label>
-                  <Input {...register("narration")} placeholder="Professional explanation of this ledger entry..." className="h-12 bg-white rounded-xl border-zinc-200 font-medium" />
+                <div className="md:col-span-2 space-y-1.5">
+                  <OptionalLabel>Transaction Narration</OptionalLabel>
+                  <Input
+                    {...register("narration")}
+                    placeholder="e.g. Received payment from buyer for Invoice #1001"
+                    className="bg-white"
+                  />
+                  <HelperText>
+                    A brief description of this transaction. Helps during audit.
+                  </HelperText>
                 </div>
               </div>
 
-              {/* ── Sub-Ledger Logic ───────────────────────────────── */}
-              {(activeCategory === "BUYER_DUE" || activeCategory === "RECEIPT") && (
-                <div className="space-y-3">
-                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                    <Info size={14} className="text-zinc-900" /> Attached Buyer Entity
-                  </Label>
-                  <Controller
-                    name="buyerId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) => field.onChange(val === "__none__" ? undefined : val)}
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="h-12 bg-white rounded-xl border-zinc-200 font-medium">
-                          <SelectValue placeholder="Select Buyer Profile..." />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
-                          <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
-                            — No Buyer Selected —
-                          </SelectItem>
-                          {buyers.map((b) => (
-                            <SelectItem key={b.id} value={b.id}>
-                              {b.name} ({b.location})
+              {/* Buyer sub-ledger (BUYER_DUE / RECEIPT only) */}
+              {(activeCategory === "BUYER_DUE" ||
+                activeCategory === "RECEIPT") && (
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Buyer</OptionalLabel>
+                    <Controller
+                      name="buyerId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select a buyer..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No buyer attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-              )}
+                            {buyers.map((b) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                                {b.location ? ` (${b.location})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific buyer for sub-ledger tracking.
+                      Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
-              {(activeCategory === "SUPPLIER_DUE" || activeCategory === "PAYMENT") && (
-                <div className="space-y-3">
-                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                    <Info size={14} className="text-zinc-900" /> Attached Supplier Entity
-                  </Label>
-                  <Controller
-                    name="supplierId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) => field.onChange(val === "__none__" ? undefined : val)}
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="h-12 bg-white rounded-xl border-zinc-200 font-medium">
-                          <SelectValue placeholder="Select Supplier Profile..." />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
-                          <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
-                            — No Supplier Selected —
-                          </SelectItem>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+              {/* Supplier sub-ledger (SUPPLIER_DUE / PAYMENT only) */}
+              {(activeCategory === "SUPPLIER_DUE" ||
+                activeCategory === "PAYMENT") && (
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Supplier</OptionalLabel>
+                    <Controller
+                      name="supplierId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select a supplier..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No supplier attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-              )}
+                            {suppliers.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific supplier for sub-ledger
+                      tracking. Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
-              {/* ── Ledger Items (The Grid) ────────────────────────── */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                  <h3 className="text-xs font-black text-zinc-900 uppercase tracking-widest flex items-center gap-2">
-                    <FileText size={14} /> Voucher Lines
-                  </h3>
+              {/* ── Voucher Lines ─────────────────────────────────────── */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                      <FileText size={14} />
+                      Voucher Lines
+                      <span className="text-red-500">*</span>
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      Minimum 2 lines required. Total debits must equal total
+                      credits.
+                    </p>
+                  </div>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
+                    size="sm"
                     onClick={handleAddLine}
-                    className="text-[10px] font-black text-zinc-500 uppercase tracking-widest hover:text-zinc-900 gap-2"
+                    className="gap-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                   >
-                    <Plus size={14} /> Add Segment
+                    <Plus size={14} />
+                    Add Line
                   </Button>
                 </div>
 
-                <div className="space-y-4">
+                {/* Lines */}
+                <div className="space-y-3">
                   {fields.map((field, index) => (
-                    <div key={field.id} className="group relative grid grid-cols-12 gap-4 items-end p-4 rounded-3xl border border-zinc-100 bg-white hover:border-zinc-300 transition-all">
-
-                      {/* Account Selection — shadcn Select */}
-                      <div className="col-span-12 md:col-span-5 space-y-2">
-                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Ledger Account</Label>
+                    <div
+                      key={field.id}
+                      className="grid grid-cols-12 gap-3 items-start p-4 rounded-xl border border-zinc-200 bg-white hover:border-zinc-300 transition-colors"
+                    >
+                      {/* Account Head — required */}
+                      <div className="col-span-12 md:col-span-5 space-y-1.5">
+                        <RequiredLabel>Ledger Account</RequiredLabel>
                         <Controller
                           name={`lines.${index}.accountHeadId`}
                           control={control}
@@ -323,92 +488,127 @@ export default function BookkeepingCreatePage() {
                               onValueChange={selectField.onChange}
                               value={selectField.value || ""}
                             >
-                              <SelectTrigger className="h-12 rounded-xl border-zinc-200 font-medium bg-white">
-                                <SelectValue placeholder="Account Head..." />
+                              <SelectTrigger
+                                className={cn(
+                                  "bg-white",
+                                  errors.lines?.[index]?.accountHeadId &&
+                                  "border-red-400 focus:ring-red-400"
+                                )}
+                              >
+                                <SelectValue placeholder="Select account head..." />
                               </SelectTrigger>
-                              <SelectContent className="rounded-xl border-zinc-200 shadow-xl max-h-[240px]">
+                              <SelectContent className="max-h-[240px]">
                                 {accounts.map((a) => (
                                   <SelectItem key={a.id} value={a.id}>
                                     {a.name}
+                                    {a.code ? ` — ${a.code}` : ""}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                           )}
                         />
-                        {errors.lines?.[index]?.accountHeadId && (
-                          <p className="text-[10px] text-red-500 font-bold px-1">
-                            {errors.lines[index]?.accountHeadId?.message}
-                          </p>
-                        )}
+                        <FieldError
+                          message={
+                            errors.lines?.[index]?.accountHeadId?.message
+                          }
+                        />
                       </div>
 
-                      {/* Side Toggle */}
-                      <div className="col-span-12 md:col-span-3 space-y-2">
-                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Entry Side</Label>
-                        <div className="flex rounded-xl overflow-hidden border border-zinc-200">
+                      {/* Debit / Credit toggle — required */}
+                      <div className="col-span-6 md:col-span-3 space-y-1.5">
+                        <RequiredLabel>Entry Side</RequiredLabel>
+                        <div className="flex rounded-lg overflow-hidden border border-zinc-200">
                           <button
                             type="button"
-                            onClick={() => setValue(`lines.${index}.type`, "DEBIT")}
-                            className={cn("flex-1 h-12 text-[10px] font-black uppercase tracking-widest transition-all", watchLines[index]?.type === "DEBIT" ? "bg-zinc-900 text-white" : "bg-white text-zinc-400 hover:bg-zinc-50")}
-                          >DR</button>
+                            onClick={() =>
+                              setValue(`lines.${index}.type`, "DEBIT")
+                            }
+                            className={cn(
+                              "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
+                              watchLines[index]?.type === "DEBIT"
+                                ? "bg-zinc-900 text-white"
+                                : "bg-white text-zinc-400 hover:bg-zinc-50"
+                            )}
+                          >
+                            Dr
+                          </button>
                           <button
                             type="button"
-                            onClick={() => setValue(`lines.${index}.type`, "CREDIT")}
-                            className={cn("flex-1 h-12 text-[10px] font-black uppercase tracking-widest transition-all", watchLines[index]?.type === "CREDIT" ? "bg-zinc-900 text-white" : "bg-white text-zinc-400 hover:bg-zinc-50")}
-                          >CR</button>
+                            onClick={() =>
+                              setValue(`lines.${index}.type`, "CREDIT")
+                            }
+                            className={cn(
+                              "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
+                              watchLines[index]?.type === "CREDIT"
+                                ? "bg-zinc-900 text-white"
+                                : "bg-white text-zinc-400 hover:bg-zinc-50"
+                            )}
+                          >
+                            Cr
+                          </button>
                         </div>
                       </div>
 
-                      {/* Amount */}
-                      <div className="col-span-10 md:col-span-3 space-y-2">
-                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Value (৳)</Label>
+                      {/* Amount — required */}
+                      <div className="col-span-4 md:col-span-3 space-y-1.5">
+                        <RequiredLabel>Amount (৳)</RequiredLabel>
                         <Input
                           type="number"
                           step="any"
-                          {...register(`lines.${index}.amount`, { valueAsNumber: true })}
-                          className="h-12 rounded-xl border-zinc-200 font-mono font-black italic text-lg"
+                          placeholder="0.00"
+                          {...register(`lines.${index}.amount`, {
+                            valueAsNumber: true,
+                          })}
+                          className={cn(
+                            "font-mono bg-white",
+                            errors.lines?.[index]?.amount &&
+                            "border-red-400 focus:ring-red-400"
+                          )}
                         />
-                        {errors.lines?.[index]?.amount && (
-                          <p className="text-[10px] text-red-500 font-bold px-1">
-                            {errors.lines[index]?.amount?.message}
-                          </p>
-                        )}
+                        <FieldError
+                          message={errors.lines?.[index]?.amount?.message}
+                        />
                       </div>
 
-                      {/* Remove */}
-                      <div className="col-span-2 md:col-span-1 flex justify-center pb-1">
+                      {/* Remove button */}
+                      <div className="col-span-2 md:col-span-1 pt-6 flex justify-center">
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => remove(index)}
                           disabled={fields.length <= 2}
-                          className="h-12 w-12 rounded-xl text-zinc-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-all"
+                          className="h-9 w-9 rounded-lg text-zinc-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-all"
+                          title="Remove this line"
                         >
-                          <Trash2 size={18} />
+                          <Trash2 size={16} />
                         </Button>
                       </div>
 
-                      {/* Bank Sub-ledger — shadcn Select */}
-                      <div className="col-span-12 pt-2 border-t border-zinc-50 flex items-center gap-4">
-                        <div className="flex-1 flex gap-4 items-center">
-                          <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest whitespace-nowrap">Bank Sub-ledger:</span>
-                          <div className="w-64">
+                      {/* Bank sub-ledger — optional, full row */}
+                      <div className="col-span-12 pt-2 border-t border-zinc-50">
+                        <div className="flex items-center gap-3">
+                          <OptionalLabel>Bank Sub-ledger</OptionalLabel>
+                          <div className="w-56">
                             <Controller
                               name={`lines.${index}.bankId`}
                               control={control}
                               render={({ field: bankField }) => (
                                 <Select
-                                  onValueChange={(val) => bankField.onChange(val === "__none__" ? undefined : val)}
+                                  onValueChange={(val) =>
+                                    bankField.onChange(
+                                      val === "__none__" ? undefined : val
+                                    )
+                                  }
                                   value={bankField.value || "__none__"}
                                 >
-                                  <SelectTrigger className="h-9 rounded-lg border-zinc-200 bg-white text-xs font-medium text-zinc-500">
+                                  <SelectTrigger className="h-8 bg-white text-xs">
                                     <SelectValue placeholder="N/A" />
                                   </SelectTrigger>
-                                  <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
-                                    <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
-                                      N/A
+                                  <SelectContent>
+                                    <SelectItem value="__none__">
+                                      N/A — Not a bank transaction
                                     </SelectItem>
                                     {banks.map((b) => (
                                       <SelectItem key={b.id} value={b.id}>
@@ -420,85 +620,142 @@ export default function BookkeepingCreatePage() {
                               )}
                             />
                           </div>
+                          <span className="text-[11px] text-zinc-400">
+                            Only fill if this line involves a specific bank
+                            account.
+                          </span>
                         </div>
                       </div>
-
                     </div>
                   ))}
                 </div>
               </div>
-
             </CardContent>
           </Card>
-
         </div>
 
-        {/* Right Column: Summaries & Controls (4 cols) */}
-        <div className="xl:col-span-4 space-y-8">
+        {/* ── Right Column: Balance Status & Category ───────────────────── */}
+        <div className="xl:col-span-4 space-y-4">
 
-          <Card className="rounded-[2.5rem] bg-zinc-900 text-white p-10 space-y-8 shadow-2xl shadow-zinc-200 sticky top-10">
-            <div className="space-y-1">
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Double Entry Verification</p>
-              <h3 className="text-3xl font-black italic">Voucher Status</h3>
-            </div>
-
-            <div className="space-y-6">
-              <div className="flex justify-between items-center py-4 border-b border-white/5">
-                <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Total Debits</span>
-                <span className="text-2xl font-black font-mono italic">৳ {totals.debit.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between items-center py-4 border-b border-white/5">
-                <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Total Credits</span>
-                <span className="text-2xl font-black font-mono italic">৳ {totals.credit.toLocaleString()}</span>
+          {/* Balance Checker */}
+          <Card className="bg-zinc-900 text-white sticky top-10">
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
+                  Double Entry Check
+                </p>
+                <h3 className="text-xl font-bold mt-1">Voucher Balance</h3>
               </div>
 
-              <div className={cn(
-                "p-6 rounded-[2rem] border transition-all duration-700",
-                isBalanced ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-zinc-800 border-zinc-700 text-zinc-400"
-              )}>
-                <div className="flex items-center gap-4">
-                  <div className={cn("size-10 rounded-xl flex items-center justify-center", isBalanced ? "bg-emerald-500 text-white" : "bg-zinc-700")}>
-                    {isBalanced ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest">{isBalanced ? "Voucher Balanced" : "Balance Mismatch"}</p>
-                    <p className="text-lg font-black italic">{isBalanced ? "Verification Success" : `৳ ${Math.abs(totals.debit - totals.credit).toLocaleString()} Variance`}</p>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-3 border-b border-white/10">
+                  <span className="text-zinc-400 text-sm font-medium">
+                    Total Debits
+                  </span>
+                  <span className="font-mono font-bold text-lg">
+                    ৳ {totals.debit.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-3 border-b border-white/10">
+                  <span className="text-zinc-400 text-sm font-medium">
+                    Total Credits
+                  </span>
+                  <span className="font-mono font-bold text-lg">
+                    ৳ {totals.credit.toLocaleString()}
+                  </span>
+                </div>
+
+                <div
+                  className={cn(
+                    "p-4 rounded-xl border transition-all duration-500",
+                    isBalanced
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                      : "bg-zinc-800 border-zinc-700 text-zinc-500"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        "size-8 rounded-lg flex items-center justify-center",
+                        isBalanced ? "bg-emerald-500 text-white" : "bg-zinc-700 text-zinc-500"
+                      )}
+                    >
+                      {isBalanced ? (
+                        <CheckCircle2 size={18} />
+                      ) : (
+                        <AlertTriangle size={18} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider">
+                        {isBalanced ? "Balanced" : "Not Balanced"}
+                      </p>
+                      <p className="text-sm font-bold">
+                        {isBalanced
+                          ? "Ready to save"
+                          : `৳ ${Math.abs(totals.debit - totals.credit).toLocaleString()} variance`}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="space-y-4 pt-4">
-              <p className="text-[10px] font-bold text-zinc-500 leading-relaxed uppercase tracking-widest">Entry Templates</p>
-              <div className="grid grid-cols-2 gap-3">
-                {Object.entries(categoryConfigs).map(([key, config]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setValue("category", key as any)}
-                    className={cn(
-                      "p-4 rounded-2xl border text-left transition-all active:scale-95 group",
-                      activeCategory === key ? "bg-white border-white text-zinc-900 shadow-xl" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                    )}
-                  >
-                    <config.icon size={18} className={cn("mb-3", activeCategory === key ? "text-zinc-900" : "text-zinc-500 group-hover:text-zinc-300")} />
-                    <p className="text-[10px] font-black uppercase tracking-widest leading-none">{config.label}</p>
-                  </button>
-                ))}
+              {/* Category Selector */}
+              <div className="space-y-3 pt-2">
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
+                  Entry Type{" "}
+                  <span className="text-red-400 ml-0.5">*</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(categoryConfigs).map(([key, config]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setValue("category", key as any)}
+                      title={config.desc}
+                      className={cn(
+                        "p-3 rounded-xl border text-left transition-all active:scale-95 group",
+                        activeCategory === key
+                          ? "bg-white border-white text-zinc-900 shadow-lg"
+                          : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-300"
+                      )}
+                    >
+                      <config.icon
+                        size={16}
+                        className={cn(
+                          "mb-2",
+                          activeCategory === key
+                            ? "text-zinc-900"
+                            : "text-zinc-500"
+                        )}
+                      />
+                      <p className="text-[10px] font-semibold uppercase tracking-wider leading-none">
+                        {config.label}
+                      </p>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            </CardContent>
           </Card>
 
-          <div className="bg-zinc-50 border border-zinc-200 rounded-[2.5rem] p-10 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Standard Guideline</h4>
-              <Info size={14} className="text-zinc-400" />
+          {/* Guideline note */}
+          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5">
+            <div className="flex items-start gap-3">
+              <Scale className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-semibold text-zinc-700 mb-1">
+                  How it works
+                </p>
+                <p className="text-xs text-zinc-500 leading-relaxed">
+                  Entries are saved as{" "}
+                  <span className="font-semibold text-zinc-700">DRAFT</span>{" "}
+                  and do not affect account balances until they are formally{" "}
+                  <span className="font-semibold text-zinc-700">POSTED</span>{" "}
+                  through the bookkeeping command center.
+                </p>
+              </div>
             </div>
-            <p className="text-[11px] font-medium text-zinc-500 leading-relaxed italic">
-              Entries are created as <span className="text-zinc-900 font-black uppercase tracking-widest">DRAFT</span>.
-              They do not impact the general ledger balances until they are formally
-              <span className="text-zinc-900 font-black uppercase tracking-widest"> POSTED</span> through the audit trail or bookkeeping command center.
-            </p>
           </div>
         </div>
       </div>
