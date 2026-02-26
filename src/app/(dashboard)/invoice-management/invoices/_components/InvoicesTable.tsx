@@ -17,7 +17,8 @@ import { Invoice } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import InvoiceActions from "./InvoiceActions";
 import StatsCard from "@/components/dashboard/StatsCard";
-import { FileText, Tag, Layers, Box } from "lucide-react";
+import { FileText, Tag, Layers, Box, Trash2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   data: Invoice[];
@@ -43,6 +44,9 @@ type Props = {
   onDuplicate: (row: Invoice) => void;
   onExport: (row: Invoice) => void;
   onDelete: (row: Invoice) => void;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
+  onRestore?: (row: Invoice) => void;
 };
 
 const InvoicesTable = ({
@@ -69,6 +73,9 @@ const InvoicesTable = ({
   onDuplicate,
   onExport,
   onDelete,
+  showDeleted = false,
+  onToggleDeleted = () => { },
+  onRestore = () => { },
 }: Props) => {
   const columns = useMemo(
     () => [
@@ -122,12 +129,14 @@ const InvoicesTable = ({
               onDuplicate={() => onDuplicate(row)}
               onExport={() => onExport(row)}
               onDelete={() => onDelete(row)}
+              showDeleted={showDeleted}
+              onRestore={() => onRestore(row)}
             />
           </div>
         ),
       },
     ],
-    [onDelete, onEdit, onDuplicate, onExport, onView],
+    [onDelete, onEdit, onDuplicate, onExport, onView, onRestore, showDeleted],
   );
 
   return (
@@ -171,6 +180,18 @@ const InvoicesTable = ({
             onClick={onSearchSubmit}
           >
             Search
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "px-4 gap-2 rounded-lg font-medium",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Invoices" : "Show Deleted Invoices"}
+          >
+            <Trash2 className="h-4 w-4" />
+            {showDeleted ? "Exit Trash" : "Trash"}
           </Button>
         </div>
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">

@@ -25,6 +25,7 @@ const CompanyProfilePage = () => {
   const [deleteTarget, setDeleteTarget] = useState<CompanyProfile | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleted, setShowDeleted] = useState(false);
   const [patchItem] = usePatchMutation();
 
   const {
@@ -36,6 +37,9 @@ const CompanyProfilePage = () => {
     path: "company-profiles",
     page,
     limit: 10,
+    filters: {
+      ...(showDeleted ? { isDeleted: true } : {}),
+    },
   });
 
   const profiles = useMemo<CompanyProfile[]>(
@@ -138,6 +142,25 @@ const CompanyProfilePage = () => {
     }
   }, [deleteTarget, patchItem, refetch]);
 
+  const handleRestore = useCallback(async (profile: CompanyProfile) => {
+    try {
+      await patchItem({
+        path: `company-profiles/${profile.id}`,
+        body: { isDeleted: false },
+        invalidate: ["company-profiles"],
+      }).unwrap();
+      notify.success("Company profile restored successfully");
+      refetch();
+    } catch (err: any) {
+      notify.error(err.message || "Failed to restore company profile");
+    }
+  }, [patchItem, refetch]);
+
+  const handleToggleDeleted = useCallback(() => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
+  }, []);
+
   return (
     <div className="space-y-4">
       <CompanyProfilesTable
@@ -156,6 +179,9 @@ const CompanyProfilePage = () => {
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onDelete={handleDelete}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+        onRestore={handleRestore}
       />
 
       <CustomModal

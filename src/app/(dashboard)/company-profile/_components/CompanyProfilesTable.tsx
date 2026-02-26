@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { ChevronDown, ArrowUpDown } from "lucide-react";
+import { ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,6 +36,9 @@ type Props = {
   onPageChange: (page: number) => void;
   onRowClick: (row: CompanyProfile) => void;
   onDelete: (row: CompanyProfile) => void;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
+  onRestore?: (row: CompanyProfile) => void;
 };
 
 const CompanyProfilesTable = ({
@@ -54,6 +57,9 @@ const CompanyProfilesTable = ({
   onPageChange,
   onRowClick,
   onDelete,
+  showDeleted = false,
+  onToggleDeleted = () => { },
+  onRestore = () => { },
 }: Props) => {
   const sortOptions = [
     { label: "Company Name (A-Z)", field: "name", dir: "asc" },
@@ -107,11 +113,10 @@ const CompanyProfilesTable = ({
         header: "Status",
         accessor: (row: CompanyProfile) => (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              row.status === "active"
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "active"
                 ? "bg-emerald-100 text-emerald-700"
                 : "bg-slate-200 text-slate-700"
-            }`}
+              }`}
           >
             {row.status === "active" ? "Active" : "Inactive"}
           </span>
@@ -121,11 +126,16 @@ const CompanyProfilesTable = ({
         header: "Actions",
         className: "text-left w-40 pr-4",
         accessor: (row: CompanyProfile) => (
-          <CompanyActions id={row.id} onDelete={() => onDelete(row)} />
+          <CompanyActions
+            id={row.id}
+            onDelete={() => onDelete(row)}
+            showDeleted={showDeleted}
+            onRestore={() => onRestore(row)}
+          />
         ),
       },
     ],
-    [onDelete],
+    [onDelete, onRestore, showDeleted],
   );
 
   return (
@@ -147,6 +157,18 @@ const CompanyProfilesTable = ({
           >
             Search
           </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-4 gap-2 rounded-lg font-medium",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Companies" : "Show Deleted Companies"}
+          >
+            <Trash2 className="h-4 w-4" />
+            {showDeleted ? "Exit Trash" : "Trash"}
+          </Button>
         </div>
 
         {/* Right: Filters Group */}
@@ -159,14 +181,14 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   typeFilter !== "all" &&
-                    "bg-blue-50 border-blue-200 text-blue-700",
+                  "bg-blue-50 border-blue-200 text-blue-700",
                 )}
               >
                 <span>
                   {typeFilter === "all"
                     ? "All Types"
                     : companyTypeOptions.find((o) => o.value === typeFilter)
-                        ?.label || typeFilter}
+                      ?.label || typeFilter}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
@@ -207,14 +229,14 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   statusFilter !== "all" &&
-                    "bg-amber-50 border-amber-200 text-amber-700",
+                  "bg-amber-50 border-amber-200 text-amber-700",
                 )}
               >
                 <span>
                   {statusFilter === "all"
                     ? "All Status"
                     : statusOptions.find((o) => o.value === statusFilter)
-                        ?.label || statusFilter}
+                      ?.label || statusFilter}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
@@ -257,7 +279,7 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   (sort.field !== "name" || sort.dir !== "asc") &&
-                    "bg-purple-50 border-purple-200 text-purple-700",
+                  "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -265,9 +287,9 @@ const CompanyProfilesTable = ({
                   {sort.field === "name" && sort.dir === "asc"
                     ? "Sort By"
                     : sortOptions.find(
-                        (opt) =>
-                          opt.field === sort.field && opt.dir === sort.dir,
-                      )?.label}
+                      (opt) =>
+                        opt.field === sort.field && opt.dir === sort.dir,
+                    )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>

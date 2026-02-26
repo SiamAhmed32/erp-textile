@@ -1,5 +1,5 @@
 import React from "react";
-import { Eye, SquarePen, Copy, FileDown, Trash2 } from "lucide-react";
+import { Eye, SquarePen, Copy, FileDown, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -8,6 +8,8 @@ type Props = {
   onDuplicate: () => void;
   onExport: () => void;
   onDelete: () => void;
+  showDeleted?: boolean;
+  onRestore?: () => void;
 };
 
 const InvoiceActions = ({
@@ -16,14 +18,31 @@ const InvoiceActions = ({
   onDuplicate,
   onExport,
   onDelete,
+  showDeleted = false,
+  onRestore = () => { },
 }: Props) => {
-  const actions = [
-    { icon: Eye, label: "View", onClick: onView },
-    { icon: SquarePen, label: "Edit", onClick: onEdit },
-    { icon: Copy, label: "Duplicate", onClick: onDuplicate },
-    { icon: FileDown, label: "Export PDF", onClick: onExport },
-    { icon: Trash2, label: "Delete", onClick: onDelete, isDestructive: true },
-  ];
+  const actions = showDeleted
+    ? [
+      { icon: Eye, label: "View", onClick: onView },
+      {
+        icon: RotateCcw,
+        label: "Restore",
+        onClick: onRestore,
+        isSuccess: true,
+      },
+    ]
+    : [
+      { icon: Eye, label: "View", onClick: onView },
+      { icon: SquarePen, label: "Edit", onClick: onEdit },
+      { icon: Copy, label: "Duplicate", onClick: onDuplicate },
+      { icon: FileDown, label: "Export PDF", onClick: onExport },
+      {
+        icon: Trash2,
+        label: "Delete",
+        onClick: onDelete,
+        isDestructive: true,
+      },
+    ];
 
   return (
     <div className="flex items-center justify-end gap-1">
@@ -35,11 +54,12 @@ const InvoiceActions = ({
             size="icon"
             variant="ghost"
             title={action.label}
-            className={`h-7 w-7 transition-colors ${
-              action.isDestructive
+            className={`h-7 w-7 transition-colors ${(action as any).isDestructive
                 ? "text-slate-500 hover:text-red-600 hover:bg-red-50"
-                : "text-slate-500 hover:text-secondary hover:bg-secondary/10"
-            }`}
+                : (action as any).isSuccess
+                  ? "text-slate-500 hover:text-green-600 hover:bg-green-50"
+                  : "text-slate-500 hover:text-secondary hover:bg-secondary/10"
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               action.onClick();
