@@ -55,7 +55,8 @@ const UserAnalytics: React.FC = () => {
                                     tickLine={false}
                                     axisLine={false}
                                     tickFormatter={(str) => {
-                                        const date = new Date(str);
+                                        const [y, m, d] = str.split("-").map(Number);
+                                        const date = new Date(y, m - 1, d);
                                         return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
                                     }}
                                 />
@@ -66,6 +67,10 @@ const UserAnalytics: React.FC = () => {
                                 />
                                 <Tooltip
                                     contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                                    labelFormatter={(str) => {
+                                        const [y, m, d] = String(str).split("-").map(Number);
+                                        return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                                    }}
                                 />
                                 <Line
                                     type="linear"

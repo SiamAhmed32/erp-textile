@@ -6,7 +6,8 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
-import { PrimaryHeading } from "@/components/reusables";
+import { PrimaryHeading, CustomModal } from "@/components/reusables";
+import { Button } from "@/components/ui/button";
 
 const OrderPage = () => {
   const router = useRouter();
@@ -15,10 +16,12 @@ const OrderPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [showDeleted, setShowDeleted] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [deliveryDateFrom, setDeliveryDateFrom] = useState("");
   const [deliveryDateTo, setDeliveryDateTo] = useState("");
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [patchItem] = usePatchMutation();
 
   useEffect(() => {
@@ -43,6 +46,7 @@ const OrderPage = () => {
       ...(dateTo ? { dateTo } : {}),
       ...(deliveryDateFrom ? { deliveryDateFrom } : {}),
       ...(deliveryDateTo ? { deliveryDateTo } : {}),
+      ...(showDeleted ? { isDeleted: true } : {}),
     },
   });
 
@@ -104,10 +108,18 @@ const OrderPage = () => {
   );
 
   const handleDelete = useCallback(
-    async (row: Order) => {
+    (row: Order) => {
+      setDeletingOrder(row);
+    },
+    [],
+  );
+
+  const confirmDelete = useCallback(
+    async () => {
+      if (!deletingOrder) return;
       try {
         await patchItem({
-          path: `orders/${row.id}`,
+          path: `orders/${deletingOrder.id}`,
           body: { isDeleted: true },
           invalidate: ["orders"],
         }).unwrap();
@@ -117,10 +129,36 @@ const OrderPage = () => {
           "Delete Order Error:",
           err.message || "Failed to delete order",
         );
+      } finally {
+        setDeletingOrder(null);
+      }
+    },
+    [patchItem, refetch, deletingOrder],
+  );
+
+  const handleRestore = useCallback(
+    async (row: Order) => {
+      try {
+        await patchItem({
+          path: `orders/${row.id}`,
+          body: { isDeleted: false },
+          invalidate: ["orders"],
+        }).unwrap();
+        refetch();
+      } catch (err: any) {
+        console.error(
+          "Restore Order Error:",
+          err.message || "Failed to restore order",
+        );
       }
     },
     [patchItem, refetch],
   );
+
+  const handleToggleDeleted = useCallback(() => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
+  }, []);
 
   const handleSearchSubmit = useCallback(() => {
     setDebouncedSearch(search);
@@ -128,37 +166,73 @@ const OrderPage = () => {
   }, [search]);
 
   return (
-    <OrdersTable
-      data={orders}
-      loading={loading}
-      error={
-        (ordersError as any)?.data?.message || (ordersError as any)?.error || ""
-      }
-      page={page}
-      totalPages={totalPages}
-      search={search}
-      statusFilter={statusFilter}
-      typeFilter={typeFilter}
-      dateFrom={dateFrom}
-      dateTo={dateTo}
-      deliveryDateFrom={deliveryDateFrom}
-      deliveryDateTo={deliveryDateTo}
-      onSearchChange={setSearch}
-      onSearchSubmit={handleSearchSubmit}
-      onStatusFilterChange={setStatusFilter}
-      onTypeFilterChange={setTypeFilter}
-      onDateFromChange={setDateFrom}
-      onDateToChange={setDateTo}
-      onDeliveryDateFromChange={setDeliveryDateFrom}
-      onDeliveryDateToChange={setDeliveryDateTo}
-      onPageChange={setPage}
-      onRowClick={handleRowClick}
-      onView={handleView}
-      onEdit={handleEdit}
-      onDuplicate={handleDuplicate}
-      onExport={handleExport}
-      onDelete={handleDelete}
-    />
+    <>
+      <OrdersTable
+        data={orders}
+        loading={loading}
+        error={
+          (ordersError as any)?.data?.message || (ordersError as any)?.error || ""
+        }
+        page={page}
+        totalPages={totalPages}
+        search={search}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        deliveryDateFrom={deliveryDateFrom}
+        deliveryDateTo={deliveryDateTo}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
+        onStatusFilterChange={setStatusFilter}
+        onTypeFilterChange={setTypeFilter}
+        onDateFromChange={setDateFrom}
+        onDateToChange={setDateTo}
+        onDeliveryDateFromChange={setDeliveryDateFrom}
+        onDeliveryDateToChange={setDeliveryDateTo}
+        onPageChange={setPage}
+        onRowClick={handleRowClick}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDuplicate={handleDuplicate}
+        onExport={handleExport}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+      />
+
+      <CustomModal
+        open={!!deletingOrder}
+        onOpenChange={(open) => !open && setDeletingOrder(null)}
+        title="Confirm Delete"
+        maxWidth="400px"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete order{" "}
+            <span className="font-semibold text-foreground">
+              {deletingOrder?.orderNumber}
+            </span>
+            ? This is a soft delete operation.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingOrder(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
+    </>
   );
 };
 

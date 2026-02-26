@@ -51,10 +51,14 @@ const BuyerAnalytics: React.FC = () => {
                             <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis
-                                    dataKey="name"
+                                    dataKey="date"
                                     fontSize={12}
                                     tickLine={false}
                                     axisLine={false}
+                                    tickFormatter={(str) => {
+                                        const [y, m, d] = str.split("-").map(Number);
+                                        return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                                    }}
                                 />
                                 <YAxis
                                     fontSize={12}
@@ -65,6 +69,10 @@ const BuyerAnalytics: React.FC = () => {
                                 <Tooltip
                                     cursor={{ fill: "transparent" }}
                                     contentStyle={{ borderRadius: "8px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                                    labelFormatter={(str) => {
+                                        const [y, m, d] = String(str).split("-").map(Number);
+                                        return new Date(y, m - 1, d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                                    }}
                                 />
                                 <Bar
                                     dataKey="count"

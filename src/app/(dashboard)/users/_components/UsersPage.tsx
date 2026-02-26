@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/services/types";
 import {
-  useGetUsersQuery,
+  useGetAllQuery,
+  usePutMutation,
+} from "@/store/services/commonApi";
+import {
   useUpdateUserMutation,
-  useDeleteUserMutation,
 } from "@/store/services/authApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
 import { PageHeader, CustomModal } from "@/components/reusables";
-import { Plus, Search, ChevronDown, ArrowUpDown } from "lucide-react";
+import { Plus, Search, ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
 import { User } from "./types";
 import { notify } from "@/lib/notifications";
 import {
@@ -37,16 +39,21 @@ const UsersPage = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [showDeleted, setShowDeleted] = useState(false);
 
-  const { data, isLoading } = useGetUsersQuery({
+  const { data, isLoading, refetch } = useGetAllQuery({
+    path: "users",
+    page,
+    limit: 10,
     search: search || undefined,
+    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
     filters: {
       ...(roleFilter !== "all" ? { role: roleFilter } : {}),
+      ...(showDeleted ? { isDeleted: true } : {}),
     },
-    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
   });
   const [updateUser] = useUpdateUserMutation();
-  const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [putItem] = usePutMutation();
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const isAuthorized =
@@ -83,15 +90,36 @@ const UsersPage = () => {
   const handleDelete = async () => {
     if (!deletingUser) return;
     try {
-      await deleteUser({
-        id: deletingUser.id,
+      await putItem({
+        path: `users/${deletingUser.id}`,
         body: { isDeleted: true },
+        invalidate: ["users"],
       }).unwrap();
       notify.success("User deleted successfully (soft delete)");
       setDeletingUser(null);
+      refetch();
     } catch (error: any) {
       notify.error(error?.data?.message || "Failed to delete user");
     }
+  };
+
+  const handleRestore = async (user: User) => {
+    try {
+      await putItem({
+        path: `users/${user.id}`,
+        body: { isDeleted: false },
+        invalidate: ["users"],
+      }).unwrap();
+      notify.success("User restored successfully");
+      refetch();
+    } catch (error: any) {
+      notify.error(error?.data?.message || "Failed to restore user");
+    }
+  };
+
+  const handleToggleDeleted = () => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
   };
 
   return (
@@ -134,6 +162,18 @@ const UsersPage = () => {
           >
             Search
           </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-4 gap-2 rounded-lg font-medium",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={handleToggleDeleted}
+            title={showDeleted ? "Show Active Users" : "Show Deleted Users"}
+          >
+            <Trash2 className="h-4 w-4" />
+            {showDeleted ? "Exit Trash" : "Trash"}
+          </Button>
         </div>
 
         {/* Right: Filters Group */}
@@ -146,7 +186,7 @@ const UsersPage = () => {
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   roleFilter !== "all" &&
-                    "bg-blue-50 border-blue-200 text-blue-700",
+                  "bg-blue-50 border-blue-200 text-blue-700",
                 )}
               >
                 <span>
@@ -185,7 +225,7 @@ const UsersPage = () => {
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   (sort.field !== "username" || sort.dir !== "asc") &&
-                    "bg-purple-50 border-purple-200 text-purple-700",
+                  "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -193,9 +233,9 @@ const UsersPage = () => {
                   {sort.field === "username" && sort.dir === "asc"
                     ? "Sort By"
                     : sortOptions.find(
-                        (opt) =>
-                          opt.field === sort.field && opt.dir === sort.dir,
-                      )?.label}
+                      (opt) =>
+                        opt.field === sort.field && opt.dir === sort.dir,
+                    )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -228,13 +268,15 @@ const UsersPage = () => {
       </div>
 
       <UsersTable
-        data={data?.data || data || []}
+        data={(data as any)?.data || []}
         loading={isLoading}
         page={page}
-        totalPages={data?.lastPage || 1}
+        totalPages={(data as any)?.meta?.pagination?.totalPages || 1}
         onPageChange={setPage}
         onEdit={setEditingUser}
         onDelete={setDeletingUser}
+        showDeleted={showDeleted}
+        onRestore={handleRestore}
       />
 
       <UserCreateModal
@@ -266,16 +308,14 @@ const UsersPage = () => {
             <Button
               variant="outline"
               onClick={() => setDeletingUser(null)}
-              disabled={isDeleting}
             >
               Cancel
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              Delete
             </Button>
           </div>
         </div>
