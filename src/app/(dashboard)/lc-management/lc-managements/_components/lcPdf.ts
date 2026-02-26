@@ -121,7 +121,7 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
 
   // ── Row 3: Destination (left) + IDs (right) ──
   doc.text("Destination", margin + 2, y);
-  doc.text(`:  ${lc.destination || "Customers Factory."}`, margin + 30, y);
+  doc.text(`:  ${lc.destination || "Buyers Factory."}`, margin + 30, y);
 
   // Right side IDs
   let idy = y - 2;
@@ -256,16 +256,16 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
 
   // Right side weights
   const firstItem = order?.orderItems?.[0] as any;
-  const netW = 
-    firstItem?.fabricItem?.totalNetWeight || 
-    firstItem?.labelItem?.netWeightTotal || 
-    firstItem?.cartonItem?.totalNetWeight || 
+  const netW =
+    firstItem?.fabricItem?.totalNetWeight ||
+    firstItem?.labelItem?.netWeightTotal ||
+    firstItem?.cartonItem?.totalNetWeight ||
     "0.00";
-  
-  const grossW = 
-    firstItem?.fabricItem?.totalGrossWeight || 
-    firstItem?.labelItem?.grossWeightTotal || 
-    firstItem?.cartonItem?.totalGrossWeight || 
+
+  const grossW =
+    firstItem?.fabricItem?.totalGrossWeight ||
+    firstItem?.labelItem?.grossWeightTotal ||
+    firstItem?.cartonItem?.totalGrossWeight ||
     "0.00";
 
   doc.setFont("helvetica", "bold");
@@ -371,7 +371,7 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   const buyerAddr = buyer?.address || "";
   const buyerLoc = buyer?.location || "";
   const displayAddr = [buyerAddr, buyerLoc].filter(Boolean).join(", ");
-  
+
   if (displayAddr) {
     const addrLines = doc.splitTextToSize(displayAddr, pw - margin * 2 - 20);
     doc.text(addrLines, lx, y + 6);
@@ -382,10 +382,10 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
 
   // ── Table ──
   const firstItem = order?.orderItems?.[0] as any;
-  const grossW = 
-    firstItem?.fabricItem?.totalGrossWeight || 
-    firstItem?.labelItem?.grossWeightTotal || 
-    firstItem?.cartonItem?.totalGrossWeight || 
+  const grossW =
+    firstItem?.fabricItem?.totalGrossWeight ||
+    firstItem?.labelItem?.grossWeightTotal ||
+    firstItem?.cartonItem?.totalGrossWeight ||
     "0.00";
 
   autoTable(doc, {

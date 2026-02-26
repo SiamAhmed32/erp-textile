@@ -7,7 +7,7 @@ import { FileDown } from 'lucide-react';
 const auditItems = [
     {
         id: 'JE-041',
-        type: 'Customer Due',
+        type: 'Buyer Due',
         party: 'Rahim Corp',
         date: '18 Feb 2026',
         amount: 75000,
@@ -136,8 +136,8 @@ const AuditTrailPage = () => {
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {[
-                                { type: 'Customer Due', color: 'bg-amber-50 text-amber-600', updates: 'Customer Ledger ↑' },
-                                { type: 'Receipt', color: 'bg-emerald-50 text-emerald-600', updates: 'Customer Ledger ↓ + Cash ↑' },
+                                { type: 'Buyer Due', color: 'bg-amber-50 text-amber-600', updates: 'Buyer Ledger ↑' },
+                                { type: 'Receipt', color: 'bg-emerald-50 text-emerald-600', updates: 'Buyer Ledger ↓ + Cash ↑' },
                                 { type: 'Supplier Due', color: 'bg-amber-50 text-amber-600', updates: 'Supplier Ledger ↑' },
                                 { type: 'Payment', color: 'bg-red-50 text-red-600', updates: 'Supplier Ledger ↓ + Cash ↓' },
                                 { type: 'Journal', color: 'bg-indigo-50 text-primary', updates: 'Any account heads' },

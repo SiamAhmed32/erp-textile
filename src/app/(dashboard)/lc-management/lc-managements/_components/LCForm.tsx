@@ -71,11 +71,10 @@ const InputGroup = ({
         placeholder={placeholder}
         value={value ?? ""}
         onChange={(e) => onChange(id, e.target.value)}
-        className={`h-11 transition-all duration-200 border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary/20 ${
-          error
+        className={`h-11 transition-all duration-200 border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary/20 ${error
             ? "border-destructive ring-destructive/20"
             : "hover:border-primary/40"
-        }`}
+          }`}
       />
     </div>
     {error && (
@@ -426,7 +425,7 @@ const LCForm = ({
                   <InputGroup
                     id="destination"
                     label="Destination Port/Factory"
-                    placeholder="e.g. Customers Factory"
+                    placeholder="e.g. Buyers Factory"
                     value={data.destination}
                     error={errors.destination}
                     onChange={onChange}
@@ -639,11 +638,10 @@ const LCForm = ({
                   </Label>
                   <textarea
                     id="remarks"
-                    className={`w-full min-h-[250px] p-6 rounded-3xl border border-slate-200 bg-slate-50/50 text-sm ring-offset-background placeholder:text-muted-foreground focus:bg-white focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all outline-none leading-relaxed ${
-                      errors.remarks
+                    className={`w-full min-h-[250px] p-6 rounded-3xl border border-slate-200 bg-slate-50/50 text-sm ring-offset-background placeholder:text-muted-foreground focus:bg-white focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all outline-none leading-relaxed ${errors.remarks
                         ? "border-destructive ring-destructive/20"
                         : ""
-                    }`}
+                      }`}
                     placeholder="Enter the full certification text or terms that should appear on generated documents..."
                     value={data.remarks}
                     onChange={(e) => onChange("remarks", e.target.value)}

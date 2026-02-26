@@ -13,6 +13,7 @@ import {
     Wallet,
     Contact,
     Building,
+    Landmark,
 } from "lucide-react";
 
 export const navMain = [
@@ -82,6 +83,11 @@ export const navMain = [
             },
 
             {
+                title: "Buyer Ledger",
+                url: "/accounting/buyer-ledger",
+                icon: Users,
+            },
+            {
                 title: "Supplier Ledger",
                 url: "/accounting/supplier-ledger",
                 icon: Building,
@@ -95,6 +101,11 @@ export const navMain = [
                 title: "MOI (Cash Book)",
                 url: "/accounting/cash-book",
                 icon: ReceiptText,
+            },
+            {
+                title: "Bank Management",
+                url: "/accounting/banks",
+                icon: Landmark,
             },
             {
                 title: "Loan Management",

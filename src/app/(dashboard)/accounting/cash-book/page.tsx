@@ -6,13 +6,26 @@ import {
   CustomModal,
   InputField,
   DateRangeFilter,
+  PageHeader
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
-import StatsCard from "@/components/dashboard/StatsCard";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Wallet, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import {
+  Wallet,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  Search,
+  Plus,
+  History,
+  UserCircle2,
+  Coins,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ChevronRight,
+  Filter
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -57,7 +70,7 @@ const employees: EmployeeIOU[] = [
   },
 ];
 
-const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
+const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const initialFormData = {
   employeeName: "",
@@ -75,9 +88,7 @@ function EmployeeFormModal({
 }) {
   const [formData, setFormData] = useState(initialFormData);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -93,16 +104,11 @@ function EmployeeFormModal({
   return (
     <CustomModal
       open={open}
-      onOpenChange={(val) => {
-        if (!val) {
-          onClose();
-          resetForm();
-        }
-      }}
-      title="Add New Employee Record"
+      onOpenChange={(val) => !val && onClose()}
+      title={<div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">Payroll Context — <span className="text-zinc-900">Advance Registration</span></div>}
       maxWidth="600px"
     >
-      <form onSubmit={handleSubmit} className="space-y-1">
+      <form onSubmit={handleSubmit} className="space-y-6 py-4">
         <InputField
           label="Employee Full Name"
           name="employeeName"
@@ -111,7 +117,7 @@ function EmployeeFormModal({
           placeholder="e.g. Tanvir Ahmed"
           required
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2">
+        <div className="grid grid-cols-2 gap-4">
           <InputField
             label="Designation"
             name="designation"
@@ -135,20 +141,18 @@ function EmployeeFormModal({
           onChange={handleChange}
           placeholder="0.00"
         />
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
           <Button
             type="button"
-            variant="outline"
-            onClick={() => {
-              onClose();
-              resetForm();
-            }}
+            variant="ghost"
+            className="h-12 px-8 rounded-xl font-bold text-zinc-500 hover:bg-zinc-100"
+            onClick={onClose}
           >
             Cancel
           </Button>
           <Button
             type="submit"
-            className="px-8 bg-black text-white hover:bg-black/90"
+            className="h-12 px-10 rounded-xl bg-zinc-900 text-white font-bold hover:bg-black transition-all"
           >
             Register Employee
           </Button>
@@ -166,41 +170,79 @@ export default function CashBookPage() {
   const listColumns = useMemo(
     () => [
       {
-        header: "Employee",
+        header: "Beneficiary / Employee",
         accessor: (row: EmployeeIOU) => (
-          <div className="font-semibold text-foreground">{row.name}</div>
+          <div className="flex items-center gap-4 py-1">
+            <div className="size-10 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center font-black text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
+              {row.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black text-zinc-900 text-[14px] uppercase tracking-tight italic">{row.name}</span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{row.designation}</span>
+            </div>
+          </div>
         ),
       },
       {
-        header: "Designation",
-        accessor: (row: EmployeeIOU) => row.designation,
+        header: "Life-To-Date Issuance",
+        accessor: (row: EmployeeIOU) => (
+          <div className="flex flex-col">
+            <span className="text-[14px] font-mono font-black text-zinc-900">
+              {fmt(row.totalIssuedAmount)}
+            </span>
+            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Total Advanced</span>
+          </div>
+        ),
       },
       {
-        header: "Total Advance",
-        accessor: (row: EmployeeIOU) => fmt(row.totalIssuedAmount),
+        header: "Liquidated (Settled)",
+        accessor: (row: EmployeeIOU) => (
+          <div className="flex flex-col">
+            <span className="text-[14px] font-mono font-black text-emerald-600">
+              {fmt(row.totalReturnedAmount)}
+            </span>
+            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Salary Adjustments</span>
+          </div>
+        ),
       },
       {
-        header: "Settled",
-        accessor: (row: EmployeeIOU) => fmt(row.totalReturnedAmount),
+        header: "Net Outstanding IOU",
+        accessor: (row: EmployeeIOU) => (
+          <div className="flex flex-col">
+            <span className={cn(
+              "text-[15px] font-black font-mono italic",
+              row.outstandingAmount > 0 ? "text-rose-600" : "text-zinc-300"
+            )}>
+              {fmt(row.outstandingAmount)}
+            </span>
+            {row.outstandingAmount > 0 ? (
+              <span className="text-[9px] font-black text-rose-400/80 uppercase tracking-widest mt-0.5 animate-pulse">Pending Collection</span>
+            ) : (
+              <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mt-0.5">Clear Account</span>
+            )}
+          </div>
+        ),
       },
       {
-        header: "Current IOU",
-        accessor: (row: EmployeeIOU) => fmt(row.outstandingAmount),
-      },
-      {
-        header: "Last Activity",
-        accessor: (row: EmployeeIOU) => row.lastTransaction,
+        header: "Recent Trace",
+        accessor: (row: EmployeeIOU) => (
+          <div className="flex items-center gap-2 text-zinc-400 font-bold text-[11px]">
+            <History size={12} />
+            {row.lastTransaction}
+          </div>
+        ),
       },
       {
         header: "Action",
+        className: "text-right pr-6",
         accessor: (row: EmployeeIOU) => (
           <Link href={`/accounting/cash-book/${row.id}`}>
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl border border-transparent hover:border-zinc-200"
             >
-              <Eye className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         ),
@@ -210,72 +252,95 @@ export default function CashBookPage() {
   );
 
   return (
-    <Container className="pb-10">
-      <div className="space-y-4">
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatsCard
-            title="Total Employees"
-            value={employees.length}
-            icon={Wallet}
-            color="blue"
-          />
-          <StatsCard
-            title="Total Advanced"
-            value="৳ 28,000"
-            icon={Wallet}
-            color="orange"
-          />
-          <StatsCard
-            title="Settled Amount"
-            value="৳ 13,000"
-            icon={CheckCircle2}
-            color="green"
-          />
-          <StatsCard
-            title="Outstanding Amount"
-            value="৳ 15,000"
-            icon={AlertCircle}
-            color="red"
+    <Container className="pb-10 space-y-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-[0.2em] text-[10px]">
+            <Coins className="w-3 h-3" />
+            <span>Liquidity & Employee Treasury</span>
+          </div>
+          <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">Petty Cash Book</h1>
+          <p className="text-zinc-500 text-sm font-medium">Internal cash reconciliation, office expenses, and employee advance tracking.</p>
+        </div>
+
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          className="h-12 px-8 bg-zinc-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Employee Record
+        </Button>
+      </div>
+
+      {/* Premium Stat Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Beneficiaries</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-zinc-900">{employees.length}</span>
+            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Active Leads</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Total Advanced</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-zinc-900 italic">৳ 28,000</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Salary Liquidation</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-emerald-600 italic">৳ 13,000</span>
+            <div className="flex items-center text-emerald-500"><ArrowUpRight size={16} /></div>
+          </div>
+        </div>
+        <div className="bg-rose-50 border border-rose-100 rounded-[2rem] p-6 space-y-4">
+          <p className="text-rose-400 text-[10px] font-black uppercase tracking-widest text-rose-400">Net Exposure (IOUs)</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-rose-600 italic">৳ 15,000</span>
+            <div className="flex items-center text-rose-500"><AlertCircle size={16} /></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Premium Toolbar */}
+      <div className="bg-zinc-50/50 border border-zinc-200 rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 group w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+          <Input
+            placeholder="Search beneficiary by name or role..."
+            className="h-12 pl-11 border-zinc-200 bg-white rounded-2xl focus:ring-zinc-900 font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        {/* Toolbar */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-            <Input
-              placeholder="Search by employee name or designation..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Button
-              className="bg-black text-white hover:bg-black/80"
-              onClick={() => {}}
-            >
-              Search
-            </Button>
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="hidden lg:block">
             <DateRangeFilter
               start={dateRange.start}
               end={dateRange.end}
               onFilterChange={setDateRange}
               placeholder="Activity Dates"
             />
-            <Button
-              className="bg-black text-white hover:bg-black/90"
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              Add Employee
-            </Button>
           </div>
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 text-zinc-600 font-bold gap-2">
+            <Filter className="w-4 h-4" />
+            Refine
+          </Button>
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 text-zinc-600 font-bold gap-2">
+            <History className="w-4 h-4" />
+            Audit
+          </Button>
         </div>
+      </div>
 
-        {/* Employee Table */}
+      <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
         <CustomTable
           data={employees}
           columns={listColumns}
-          scrollAreaHeight="h-[calc(100vh-320px)]"
+          scrollAreaHeight="h-[calc(100vh-480px)]"
+          rowClassName="group hover:bg-zinc-50 transition-colors cursor-default"
         />
       </div>
 

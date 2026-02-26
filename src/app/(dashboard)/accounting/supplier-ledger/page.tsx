@@ -1,25 +1,36 @@
 "use client";
 
-import StatsCard from "@/components/dashboard/StatsCard";
+import React, { useMemo, useState } from "react";
 import { Container, CustomModal, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { useGetAllQuery } from "@/store/services/commonApi";
-import { AlertCircle, ArrowUpCircle, Building, Plus } from "lucide-react";
-import { useMemo, useState } from "react";
-import SupplierToolbar from "./_components/SupplierToolbar";
-import { Supplier } from "./_components/types";
-
-const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
-
-import { usePostMutation } from "@/store/services/commonApi";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
+import {
+  AlertCircle,
+  ArrowUpCircle,
+  Building,
+  Plus,
+  Search,
+  ChevronDown,
+  ArrowUpDown,
+  History,
+  Mail,
+  Phone,
+  MapPin,
+  Briefcase,
+  ShieldCheck,
+  ChevronRight,
+  Users
+} from "lucide-react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
-import { SupplierFormData, SupplierFormSchema } from "./_components/types";
+import { Supplier, SupplierFormData, SupplierFormSchema } from "./_components/types";
+
+const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 function SupplierFormModal({
   open,
@@ -29,7 +40,6 @@ function SupplierFormModal({
   onClose: () => void;
 }) {
   const [postItem] = usePostMutation();
-
   const {
     register,
     handleSubmit,
@@ -60,158 +70,59 @@ function SupplierFormModal({
         body: data,
         invalidate: ["suppliers"],
       }).unwrap();
-
-      toast.success("Supplier created successfully");
+      toast.success("Supplier entity onboarded successfully");
       handleClose();
     } catch (error: any) {
-      console.error("Failed to create supplier:", error);
-      const errorMsg =
-        error?.data?.message || error?.message || "Failed to create supplier";
-      toast.error(errorMsg);
+      toast.error(error?.data?.message || "Failed to onboard supplier");
     }
   };
 
   return (
     <CustomModal
       open={open}
-      onOpenChange={(val) => {
-        if (!val) {
-          handleClose();
-        }
-      }}
-      title="Add New Supplier"
+      onOpenChange={(val) => !val && handleClose()}
+      title={<div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">Onboarding — <span className="text-zinc-900">New Supply Partner</span></div>}
       maxWidth="650px"
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>
-              Supplier Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...register("name")}
-              placeholder="e.g. Karim Traders"
-              className={cn("mt-1.5", errors.name && "border-red-500")}
-            />
-            {errors.name && (
-              <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
-            )}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Legal Entity Name</Label>
+            <Input {...register("name")} placeholder="Karim Traders Ltd." className="h-12 rounded-xl mt-1" />
           </div>
-          <div>
-            <Label>
-              Supplier Code <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...register("supplierCode")}
-              placeholder="e.g. SUPP-004"
-              className={cn("mt-1.5", errors.supplierCode && "border-red-500")}
-            />
-            {errors.supplierCode && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.supplierCode.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Email Address <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              type="email"
-              {...register("email")}
-              placeholder="vendor@example.com"
-              className={cn("mt-1.5", errors.email && "border-red-500")}
-            />
-            {errors.email && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.email.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Phone Number <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...register("phone")}
-              placeholder="e.g. +8801712345678"
-              className={cn("mt-1.5", errors.phone && "border-red-500")}
-            />
-            {errors.phone && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Location <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...register("location")}
-              placeholder="e.g. Dhaka"
-              className={cn("mt-1.5", errors.location && "border-red-500")}
-            />
-            {errors.location && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.location.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Opening Liability (৳)</Label>
-            <Input
-              type="number"
-              step="0.01"
-              {...register("openingLiability")}
-              placeholder="0.00"
-              className={cn(
-                "mt-1.5",
-                errors.openingLiability && "border-red-500",
-              )}
-            />
-            {errors.openingLiability && (
-              <p className="text-xs text-red-500 mt-1">
-                {errors.openingLiability.message}
-              </p>
-            )}
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Reference Code</Label>
+            <Input {...register("supplierCode")} placeholder="SUPP-XXX" className="h-12 rounded-xl mt-1" />
           </div>
         </div>
-
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Primary Email</Label>
+            <Input {...register("email")} type="email" placeholder="vendor@corp.com" className="h-12 rounded-xl mt-1" />
+          </div>
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Direct Contact</Label>
+            <Input {...register("phone")} placeholder="+880..." className="h-12 rounded-xl mt-1" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Operational Hub</Label>
+            <Input {...register("location")} placeholder="Dhaka, BD" className="h-12 rounded-xl mt-1" />
+          </div>
+          <div className="col-span-1">
+            <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Opening Credit (৳)</Label>
+            <Input {...register("openingLiability")} type="number" placeholder="0.00" className="h-12 rounded-xl mt-1" />
+          </div>
+        </div>
         <div>
-          <Label htmlFor="address">
-            Company Details / Address <span className="text-red-500">*</span>
-          </Label>
-          <textarea
-            {...register("address")}
-            placeholder="Supplier office address..."
-            className={cn(
-              "font-primary input_field w-full px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition border-borderBg min-h-[80px] mt-1.5 rounded-lg",
-              errors.address && "border-red-500 focus:ring-red-500",
-            )}
-          />
-          {errors.address && (
-            <p className="text-xs text-red-500 mt-1">
-              {errors.address.message}
-            </p>
-          )}
+          <Label className="text-[10px] uppercase font-black tracking-widest text-zinc-400">Registered Address</Label>
+          <textarea {...register("address")} className="w-full h-24 rounded-xl border border-zinc-200 p-4 mt-1 focus:ring-2 focus:ring-zinc-900 focus:outline-none" placeholder="..." />
         </div>
-
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="px-8 bg-black text-white hover:bg-black/90"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving..." : "Create Supplier"}
+        <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
+          <Button type="button" variant="ghost" className="h-12 px-8 rounded-xl font-bold" onClick={handleClose}>Cancel</Button>
+          <Button type="submit" disabled={isSubmitting} className="h-12 px-10 rounded-xl bg-zinc-900 text-white font-bold hover:bg-black">
+            {isSubmitting ? "Onboarding..." : "Establish Partnership"}
           </Button>
         </div>
       </form>
@@ -223,193 +134,206 @@ export default function SupplierLedgerPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
-    field: "name",
-    dir: "asc",
-  });
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({ field: "name", dir: "asc" });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  // Fetch suppliers from backend
   const { data: supplierResponse, isLoading } = useGetAllQuery({
     path: "suppliers",
     limit: 100,
     search: search !== "" ? search : undefined,
     sort: sort ? `${sort.dir === "desc" ? "-" : ""}${sort.field}` : undefined,
-    filters: {
-      ...(statusFilter !== "all" ? { status: statusFilter } : {}),
-    },
   });
 
-  // Handle standard response wrapper { data: [...] }
   const suppliers: Supplier[] = (supplierResponse as any)?.data || [];
 
   const columns = useMemo(
     () => [
       {
-        header: "Supplier",
+        header: "Partner Entity",
         accessor: (row: Supplier) => (
-          <div>
-            <div className="font-semibold text-foreground">{row.name}</div>
-            <div className="text-xs text-slate-500">{row.email}</div>
+          <div className="flex items-center gap-4 py-1">
+            <div className="size-10 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center font-black text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
+              {row.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div className="flex flex-col">
+              <span className="font-black text-zinc-900 text-[14px] uppercase tracking-tight">{row.name}</span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[9px] font-black text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 border border-zinc-200">{row.supplierCode || "NO-CODE"}</span>
+                <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1 uppercase">
+                  <MapPin size={10} /> {row.location}
+                </span>
+              </div>
+            </div>
           </div>
         ),
       },
       {
-        header: "Code",
+        header: "Communications",
         accessor: (row: Supplier) => (
-          <span className="font-mono text-xs">{row.supplierCode || "N/A"}</span>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-500 lowercase">
+              <Mail size={12} className="text-zinc-300" /> {row.email}
+            </div>
+            <div className="flex items-center gap-2 text-[11px] font-bold text-zinc-500">
+              <Phone size={12} className="text-zinc-300" /> {row.phone}
+            </div>
+          </div>
         ),
       },
       {
-        header: "Phone",
+        header: "Financial Status",
         accessor: (row: Supplier) => (
-          <span className="text-slate-600">{row.phone}</span>
+          <div className="flex flex-col">
+            <span className="text-[14px] font-mono font-black text-rose-600 italic">
+              {fmt(row.openingLiability || 0)}
+            </span>
+            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Accounts Payable</span>
+          </div>
         ),
       },
       {
-        header: "Location",
+        header: "Audit Link",
         accessor: (row: Supplier) => (
-          <span className="text-slate-600">{row.location}</span>
-        ),
-      },
-      {
-        header: "Opening Balance",
-        accessor: (row: Supplier) => fmt(row.openingLiability || 0),
-      },
-      {
-        header: "Status",
-        accessor: (row: Supplier) => (
-          <span
-            className={cn(
-              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-              !row.isDeleted
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-red-50 text-red-600",
+          <div className="flex items-center gap-2">
+            {!row.isDeleted ? (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[9px] border border-emerald-100 uppercase tracking-widest">
+                <ShieldCheck size={11} /> Verified
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-zinc-100 text-zinc-400 font-black text-[9px] border border-zinc-200 uppercase tracking-widest">
+                Suspended
+              </div>
             )}
+          </div>
+        ),
+      },
+      {
+        header: "Ref",
+        className: "text-right pr-6",
+        accessor: (row: Supplier) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl"
           >
-            {!row.isDeleted ? "ACTIVE" : "INACTIVE"}
-          </span>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         ),
       },
     ],
     [],
   );
 
-  const renderExpandedRow = (row: Supplier) => {
-    if (expanded !== row.id) return null;
-    return (
-      <div className="bg-slate-50/50 p-6 border-t border-slate-100 animate-in slide-in-from-top-2 duration-300">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="h-px flex-1 bg-slate-200" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-            Supplier Details
-          </span>
-          <div className="h-px flex-1 bg-slate-200" />
+  return (
+    <Container className="pb-10 space-y-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-[0.2em] text-[10px]">
+            <Briefcase className="w-3 h-3" />
+            <span>Supply Chain Finance</span>
+          </div>
+          <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">Payable Registry</h1>
+          <p className="text-zinc-500 text-sm font-medium">Global supplier ledger, credit aging, and payment reconciliation portals.</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">
-              Address
-            </p>
-            <p className="text-sm font-medium text-slate-700">{row.address}</p>
+        <Button
+          onClick={() => setIsAddModalOpen(true)}
+          className="h-12 px-8 bg-zinc-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Onboard Partner
+        </Button>
+      </div>
+
+      {/* Premium Stat Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4 shadow-sm">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest text-zinc-400">Total Partners</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-zinc-900">{suppliers.length}</span>
+            <span className="text-[10px] font-black text-emerald-500 uppercase">Synced</span>
           </div>
-          <div>
-            <p className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-1">
-              Created At
-            </p>
-            <p className="text-sm font-medium text-slate-700">
-              {new Date(row.createdAt).toLocaleDateString()}
-            </p>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4 shadow-sm">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest text-zinc-400">Active Supply</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-zinc-900 italic">{suppliers.filter(s => !s.isDeleted).length}</span>
+            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Entities</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4 shadow-sm">
+          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest text-zinc-400">Aggregate Liability</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black text-rose-600 italic">৳ 1.2M</span>
+          </div>
+        </div>
+        <div className="bg-zinc-900 rounded-[2rem] p-6 space-y-4 text-white shadow-2xl shadow-zinc-200">
+          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Settled (MTD)</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-black italic">৳ 450K</span>
           </div>
         </div>
       </div>
-    );
-  };
 
-  return (
-    <Container className="pb-10">
-      <PageHeader
-        title="Supplier Ledger"
-        breadcrumbItems={[
-          //{ label: "Dashboard", href: "/" },
-          { label: "Accounting", href: "/accounting" },
-          { label: "Supplier Ledger" },
-        ]}
-        actions={
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-sm px-6 rounded-lg"
-            onClick={() => setIsAddModalOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Supplier
+      <div className="bg-zinc-50/50 border border-zinc-200 rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 group w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+          <Input
+            placeholder="Search partner by name, code or location..."
+            className="h-12 pl-11 border-zinc-200 bg-white rounded-2xl focus:ring-zinc-900 font-medium"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 bg-white font-black text-zinc-600 gap-2">
+            <ArrowUpDown className="w-4 h-4 text-zinc-400" />
+            Sort Matrix
           </Button>
-        }
-      />
-
-      <div className="space-y-4">
-        {/* Stats Cards - 4 column grid matching InvoicesTable */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatsCard
-            title="Total Suppliers"
-            value={suppliers.length}
-            icon={Building}
-            color="blue"
-          />
-          <StatsCard
-            title="Active Suppliers"
-            value={suppliers.filter((s) => !s.isDeleted).length}
-            icon={Building}
-            color="green"
-          />
-          <StatsCard
-            title="Total Liability"
-            value="৳ 0.00"
-            icon={AlertCircle}
-            color="orange"
-          />
-          <StatsCard
-            title="Paid Amount"
-            value="৳ 0.00"
-            icon={ArrowUpCircle}
-            color="red"
-          />
+          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 bg-white text-zinc-600 font-bold gap-2">
+            <History className="w-4 h-4" />
+            Audit
+          </Button>
         </div>
+      </div>
 
-        {/* Standardized Toolbar - Matching reference layout */}
-        <SupplierToolbar
-          search={search}
-          setSearch={setSearch}
-          status={statusFilter}
-          setStatus={setStatusFilter}
-          sort={sort}
-          setSort={setSort}
+      <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+        <CustomTable
+          data={suppliers}
+          columns={columns}
+          onRowClick={(row) => setExpanded(expanded === row.id ? null : row.id)}
+          rowClassName="group cursor-pointer hover:bg-zinc-50 transition-colors"
+          scrollAreaHeight="h-[calc(100vh-480px)]"
         />
-
-        {/* Supplier Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-          <CustomTable
-            data={suppliers}
-            columns={columns}
-            onRowClick={(row) =>
-              setExpanded(expanded === row.id ? null : row.id)
-            }
-            rowClassName="cursor-pointer"
-            scrollAreaHeight="h-[calc(100vh-320px)]"
-          />
-          {isLoading && (
-            <div className="p-8 text-center text-slate-500 animate-pulse">
-              Loading suppliers...
-            </div>
-          )}
-        </div>
-        {suppliers.map(
-          (s) =>
-            expanded === s.id && (
-              <div key={`exp-${s.id}`}>{renderExpandedRow(s)}</div>
-            ),
+        {isLoading && (
+          <div className="p-12 text-center text-zinc-400 animate-pulse font-black uppercase tracking-widest text-xs">
+            Decrypting Partner Data...
+          </div>
         )}
       </div>
+
+      {suppliers.map(s => expanded === s.id && (
+        <div key={`exp-${s.id}`} className="bg-zinc-50/50 p-10 border-t border-zinc-100 animate-in slide-in-from-top-4 duration-500">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Registered Office</p>
+              <p className="text-sm font-bold text-zinc-700 leading-relaxed italic">{s.address}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Partnership Since</p>
+              <p className="text-sm font-bold text-zinc-700 italic">{new Date(s.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Global Exposure</p>
+              <p className="text-lg font-black text-rose-600 italic">HIGH RISK</p>
+            </div>
+            <div className="flex items-end justify-end">
+              <Button className="h-10 px-6 rounded-xl bg-zinc-900 text-white font-black text-[10px] tracking-widest uppercase italic">Full Audit Report</Button>
+            </div>
+          </div>
+        </div>
+      ))}
 
       <SupplierFormModal
         open={isAddModalOpen}

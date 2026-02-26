@@ -1,691 +1,506 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Container,
-  InputField,
-  SelectBox,
-  PrimaryHeading,
 } from "@/components/reusables";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  AlertTriangle,
   ArrowLeft,
-  Info,
-  CheckCircle2,
-  AlertCircle,
   Bookmark,
-  History,
-  FileText,
-  Landmark,
-  Undo2,
-  Receipt,
-  Send,
   Building,
-  Save,
-  X,
+  CheckCircle2,
+  FileText,
+  Info,
+  Plus,
+  Receipt,
+  Scale,
+  Send,
+  Trash2,
+  Undo2
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useMemo, useRef } from "react";
+import { Controller, SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import toast from "react-hot-toast";
+import { z } from "zod";
 
-/* ─── Types ──────────────────────────────────────────────── */
-interface FormHeaderProps {
-  title: string;
-  sub: string;
-  icon: React.ReactNode;
-  color: "amber" | "emerald" | "purple" | "indigo";
-}
+/* ─── Validation Schema ────────────────────────────────────── */
+const journalEntrySchema = z.object({
+  date: z.string().nonempty("Date is required"),
+  category: z.enum(["BUYER_DUE", "RECEIPT", "SUPPLIER_DUE", "PAYMENT", "JOURNAL", "CONTRA"]),
+  narration: z.string().optional(),
+  buyerId: z.string().uuid().optional(),
+  supplierId: z.string().uuid().optional(),
+  companyProfileId: z.string().uuid(),
+  lines: z.array(z.object({
+    accountHeadId: z.string().uuid("Required"),
+    type: z.enum(["DEBIT", "CREDIT"]),
+    amount: z.number().positive("Must be > 0"),
+    bankId: z.string().uuid().optional(),
+  })).min(2, "At least 2 lines required")
+});
 
-/* ─── Sub-Components ─────────────────────────────────────── */
+type JournalFormValues = z.infer<typeof journalEntrySchema>;
 
-function HighlightBox({
-  color,
-  text,
-  icon,
-}: {
-  color: string;
-  text: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "p-4 rounded-xl border flex gap-3 items-start",
-        color === "amber"
-          ? "bg-amber-50/50 border-amber-100 text-amber-900"
-          : color === "emerald"
-            ? "bg-emerald-50/50 border-emerald-100 text-emerald-900"
-            : "bg-indigo-50/50 border-indigo-100 text-indigo-900",
-      )}
-    >
-      {icon && <div className="mt-0.5">{icon}</div>}
-      <p className="text-[11px] font-medium leading-relaxed">{text}</p>
-    </div>
-  );
-}
-
-function LedgerPreview({
-  entries,
-}: {
-  entries: { head: string; type: string; amount: string; note: string }[];
-}) {
-  return (
-    <div className="space-y-3 mt-6">
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-slate-100" />
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-          Transaction Balance Preview
-        </span>
-        <div className="h-px flex-1 bg-slate-100" />
-      </div>
-      <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-slate-50/30">
-        {entries.map((entry, i) => (
-          <div
-            key={i}
-            className="px-4 py-3 border-b border-slate-100 last:border-0 flex justify-between items-center group hover:bg-white transition-colors"
-          >
-            <div className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "text-[8px] font-black px-1.5 py-0.5 rounded border",
-                  entry.type === "DR"
-                    ? "bg-amber-50 border-amber-100 text-amber-600"
-                    : "bg-emerald-50 border-emerald-100 text-emerald-600",
-                )}
-              >
-                {entry.type}
-              </span>
-              <div>
-                <p className="text-xs font-bold text-slate-700">{entry.head}</p>
-                <p className="text-[9px] text-slate-400 italic font-medium">
-                  {entry.note}
-                </p>
-              </div>
-            </div>
-            <span className="font-mono text-xs font-black text-slate-900 tracking-tighter">
-              ৳ {entry.amount}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Tab Types ──────────────────────────────────────────── */
-const tabs = [
-  {
-    group: "Customer",
-    items: [
-      { key: "custdue", label: "📋 Customer Due" },
-      { key: "receipt", label: "📥 Receipt" },
-    ],
-  },
-  {
-    group: "Supplier",
-    items: [
-      { key: "suppdue", label: "📋 Supplier Due" },
-      { key: "payment", label: "📤 Payment" },
-    ],
-  },
-  {
-    group: "General",
-    items: [
-      { key: "journal", label: "📓 Journal" },
-      { key: "contra", label: "↩ Contra" },
-    ],
-  },
-];
-
-/* ─── Mock Data ───────────────────────────────────────────── */
-const custDues: Record<string, string> = {
-  rahim: "Outstanding: ৳ 40,000. Last payment received 5 days ago.",
-  nadia: "Outstanding: ৳ 18,000. Next installment due in 2 days.",
-  bashir: "Outstanding: ৳ 36,000 (Overdue). Restricted from new credit.",
+/* ─── UI Constants ────────────────────────────────────────── */
+const categoryConfigs: Record<string, { label: string; icon: any; color: string; desc: string }> = {
+  BUYER_DUE: { label: "Buyer Due", icon: Bookmark, color: "amber", desc: "Recognize sales revenue and buyer obligation." },
+  RECEIPT: { label: "Receipt", icon: Receipt, color: "emerald", desc: "Record payment received from a buyer." },
+  SUPPLIER_DUE: { label: "Supplier Due", icon: Building, color: "purple", desc: "Recognize purchase expense and supplier obligation." },
+  PAYMENT: { label: "Payment", icon: Send, color: "indigo", desc: "Record payment sent to a supplier." },
+  JOURNAL: { label: "Journal", icon: FileText, color: "zinc", desc: "Standard adjustment for payroll, depreciation, etc." },
+  CONTRA: { label: "Contra", icon: Undo2, color: "sky", desc: "Transfer funds between your own cash and bank accounts." }
 };
 
 export default function BookkeepingCreatePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("custdue");
-  const [custHint, setCustHint] = useState("");
-  const [formData, setFormData] = useState<any>({
-    date: "2026-02-19",
-    refId: "AUTO-DRAFT-001",
-    customer: "",
-    supplier: "",
-    account: "",
-    method: "",
-    amount: "",
-    memo: "",
-    drAccount: "",
-    debitAmount: "",
-    crAccount: "",
-    creditAmount: "",
-    type: "",
-    from: "",
-    to: "",
-    head: "",
-    instrument: "",
+  const [postEntry, { isLoading: isPosting }] = usePostMutation();
+
+  // ── Ref guard: prevents StrictMode double-firing append ──
+  const isAppendingRef = useRef(false);
+
+  // Fetch required data
+  const { data: accountsData } = useGetAllQuery({ path: "accounting/accountHeads", limit: 1000 });
+  const { data: buyersData } = useGetAllQuery({ path: "buyers", limit: 1000 });
+  const { data: suppliersData } = useGetAllQuery({ path: "suppliers", limit: 1000 });
+  const { data: banksData } = useGetAllQuery({ path: "accounting/banks", limit: 1000 });
+
+  const accounts = (accountsData?.data || []) as any[];
+  const buyers = (buyersData?.data || []) as any[];
+  const suppliers = (suppliersData?.data || []) as any[];
+  const banks = (banksData?.data || []) as any[];
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors }
+  } = useForm<JournalFormValues>({
+    resolver: zodResolver(journalEntrySchema),
+    defaultValues: {
+      date: new Date().toISOString().split("T")[0],
+      category: "JOURNAL",
+      lines: [
+        { accountHeadId: "", type: "DEBIT", amount: 0 },
+        { accountHeadId: "", type: "CREDIT", amount: 0 }
+      ],
+      companyProfileId: "3d0afbda-6b2b-4013-895c-7680da86376e"
+    }
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-  };
+  const { fields, append, remove } = useFieldArray({ control, name: "lines" });
+  const activeCategory = watch("category");
+  const watchLines = watch("lines");
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-    if (name === "customer") {
-      setCustHint(custDues[value.toLowerCase().split(" ")[0]] || "");
+  // ── Guarded append: safe against StrictMode double-fire ──
+  const handleAddLine = useCallback(() => {
+    if (isAppendingRef.current) return;
+    isAppendingRef.current = true;
+    append({ accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined });
+    // Release the guard after a tick
+    setTimeout(() => {
+      isAppendingRef.current = false;
+    }, 50);
+  }, [append]);
+
+  const totals = useMemo(() => {
+    return watchLines.reduce((acc, line) => {
+      const amt = Number(line.amount) || 0;
+      if (line.type === "DEBIT") acc.debit += amt;
+      else acc.credit += amt;
+      return acc;
+    }, { debit: 0, credit: 0 });
+  }, [watchLines]);
+
+  const isBalanced = totals.debit === totals.credit && totals.debit > 0;
+
+  const onSubmit: SubmitHandler<JournalFormValues> = async (data) => {
+    if (!isBalanced) {
+      toast.error("Voucher is not balanced. Debits must equal Credits.");
+      return;
+    }
+
+    try {
+      await postEntry({
+        path: "accounting/journal-entries",
+        body: data,
+        invalidate: ["accounting/journal-entries"]
+      }).unwrap();
+
+      toast.success("Voucher created as draft successfully");
+      router.push("/accounting/daily-bookkeeping");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to establish journal entry.");
     }
   };
 
-  const getTabTitle = () => {
-    for (const g of tabs) {
-      const match = g.items.find((t) => t.key === activeTab);
-      if (match) return match.label.substring(3); // Remove icon
-    }
-    return "New Entry";
-  };
-
-  const getTabIcon = () => {
-    switch (activeTab) {
-      case "custdue":
-        return <Bookmark className="size-5" />;
-      case "receipt":
-        return <Receipt className="size-5" />;
-      case "suppdue":
-        return <Building className="size-5" />;
-      case "payment":
-        return <Send className="size-5" />;
-      case "journal":
-        return <FileText className="size-5" />;
-      case "contra":
-        return <Undo2 className="size-5" />;
-      default:
-        return <Bookmark className="size-5" />;
-    }
-  };
+  const currentConfig = categoryConfigs[activeCategory];
 
   return (
-    <Container className="py-6 space-y-6 !max-w-[1200px] pb-20 font-outfit">
-      {/* Header Area */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Button variant="outline" size="sm" asChild>
+    <Container className="py-8 space-y-10 !max-w-[1200px] pb-32 font-outfit">
+      {/* ── Header ─────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="space-y-4">
+          <Button variant="ghost" size="sm" asChild className="text-zinc-500 hover:text-zinc-900 -ml-2">
             <Link href="/accounting/daily-bookkeeping">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Return to Bookkeeping
             </Link>
           </Button>
-          <PrimaryHeading className="!text-black">Create Entry</PrimaryHeading>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-[0.2em] text-[10px]">
+              <Scale className="w-3 h-3" />
+              <span>Financial Posting Engine</span>
+            </div>
+            <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">New Voucher</h1>
+            <p className="text-zinc-500 text-sm font-medium">Draft a new transaction according to double-entry standards.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 mt-2 sm:mt-0">
-          <Button
-            variant="outline"
-            onClick={() => router.push("/accounting/daily-bookkeeping")}
-            className="h-10 px-6 font-bold"
-          >
-            Cancel
+
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="h-12 px-8 rounded-2xl border-zinc-200 font-bold text-zinc-600 hover:bg-zinc-50" onClick={() => router.back()}>
+            Discard
           </Button>
-          <Button className="h-10 px-6 bg-black text-white hover:bg-black/90 font-bold flex items-center gap-2">
-            <Save className="size-4" /> Post Entry
+          <Button
+            onClick={handleSubmit(onSubmit)}
+            disabled={isPosting}
+            className={cn(
+              "h-12 px-10 rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl",
+              isBalanced ? "bg-zinc-900 text-white hover:bg-black" : "bg-zinc-100 text-zinc-400 cursor-not-allowed border border-zinc-200"
+            )}
+          >
+            {isPosting ? "Posting..." : isBalanced ? "Post Draft Voucher" : "Voucher Unbalanced"}
           </Button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Entry Type Selector (Card) */}
-        <Card>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-500">
-              Entry Type Selection
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {tabs
-                .flatMap((g) => g.items)
-                .map((t) => (
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 items-start">
+        {/* Left Column: Voucher Details (8 cols) */}
+        <div className="xl:col-span-8 space-y-8">
+
+          <Card className="rounded-[2.5rem] border-zinc-200 shadow-sm overflow-hidden">
+            <CardHeader className="bg-zinc-900 border-b border-white/5 py-8 px-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="size-12 rounded-2xl bg-white/10 flex items-center justify-center text-white">
+                    {currentConfig && <currentConfig.icon size={24} />}
+                  </div>
+                  <div>
+                    <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Transaction Classification</p>
+                    <h2 className="text-2xl font-black text-white italic">{currentConfig?.label} Entry</h2>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em]">Period Context</p>
+                  <p className="text-white font-black italic">{new Date().getFullYear()} Global Ledger</p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-10 space-y-10">
+
+              {/* ── Classification Context ──────────────────────────── */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 rounded-[2rem] bg-zinc-50 border border-zinc-100">
+                <div className="space-y-2">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Entry Date</Label>
+                  <Input type="date" {...register("date")} className="h-12 bg-white rounded-xl border-zinc-200 font-bold" />
+                </div>
+                <div className="md:col-span-2 space-y-2">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Transaction Narration</Label>
+                  <Input {...register("narration")} placeholder="Professional explanation of this ledger entry..." className="h-12 bg-white rounded-xl border-zinc-200 font-medium" />
+                </div>
+              </div>
+
+              {/* ── Sub-Ledger Logic ───────────────────────────────── */}
+              {(activeCategory === "BUYER_DUE" || activeCategory === "RECEIPT") && (
+                <div className="space-y-3">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    <Info size={14} className="text-zinc-900" /> Attached Buyer Entity
+                  </Label>
+                  <Controller
+                    name="buyerId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) => field.onChange(val === "__none__" ? undefined : val)}
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="h-12 bg-white rounded-xl border-zinc-200 font-medium">
+                          <SelectValue placeholder="Select Buyer Profile..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
+                          <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
+                            — No Buyer Selected —
+                          </SelectItem>
+                          {buyers.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name} ({b.location})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              )}
+
+              {(activeCategory === "SUPPLIER_DUE" || activeCategory === "PAYMENT") && (
+                <div className="space-y-3">
+                  <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                    <Info size={14} className="text-zinc-900" /> Attached Supplier Entity
+                  </Label>
+                  <Controller
+                    name="supplierId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) => field.onChange(val === "__none__" ? undefined : val)}
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="h-12 bg-white rounded-xl border-zinc-200 font-medium">
+                          <SelectValue placeholder="Select Supplier Profile..." />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
+                          <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
+                            — No Supplier Selected —
+                          </SelectItem>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              )}
+
+              {/* ── Ledger Items (The Grid) ────────────────────────── */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-xs font-black text-zinc-900 uppercase tracking-widest flex items-center gap-2">
+                    <FileText size={14} /> Voucher Lines
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleAddLine}
+                    className="text-[10px] font-black text-zinc-500 uppercase tracking-widest hover:text-zinc-900 gap-2"
+                  >
+                    <Plus size={14} /> Add Segment
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {fields.map((field, index) => (
+                    <div key={field.id} className="group relative grid grid-cols-12 gap-4 items-end p-4 rounded-3xl border border-zinc-100 bg-white hover:border-zinc-300 transition-all">
+
+                      {/* Account Selection — shadcn Select */}
+                      <div className="col-span-12 md:col-span-5 space-y-2">
+                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Ledger Account</Label>
+                        <Controller
+                          name={`lines.${index}.accountHeadId`}
+                          control={control}
+                          render={({ field: selectField }) => (
+                            <Select
+                              onValueChange={selectField.onChange}
+                              value={selectField.value || ""}
+                            >
+                              <SelectTrigger className="h-12 rounded-xl border-zinc-200 font-medium bg-white">
+                                <SelectValue placeholder="Account Head..." />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl border-zinc-200 shadow-xl max-h-[240px]">
+                                {accounts.map((a) => (
+                                  <SelectItem key={a.id} value={a.id}>
+                                    {a.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.lines?.[index]?.accountHeadId && (
+                          <p className="text-[10px] text-red-500 font-bold px-1">
+                            {errors.lines[index]?.accountHeadId?.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Side Toggle */}
+                      <div className="col-span-12 md:col-span-3 space-y-2">
+                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Entry Side</Label>
+                        <div className="flex rounded-xl overflow-hidden border border-zinc-200">
+                          <button
+                            type="button"
+                            onClick={() => setValue(`lines.${index}.type`, "DEBIT")}
+                            className={cn("flex-1 h-12 text-[10px] font-black uppercase tracking-widest transition-all", watchLines[index]?.type === "DEBIT" ? "bg-zinc-900 text-white" : "bg-white text-zinc-400 hover:bg-zinc-50")}
+                          >DR</button>
+                          <button
+                            type="button"
+                            onClick={() => setValue(`lines.${index}.type`, "CREDIT")}
+                            className={cn("flex-1 h-12 text-[10px] font-black uppercase tracking-widest transition-all", watchLines[index]?.type === "CREDIT" ? "bg-zinc-900 text-white" : "bg-white text-zinc-400 hover:bg-zinc-50")}
+                          >CR</button>
+                        </div>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="col-span-10 md:col-span-3 space-y-2">
+                        <Label className="text-zinc-400 text-[10px] font-black uppercase tracking-widest px-1">Value (৳)</Label>
+                        <Input
+                          type="number"
+                          step="any"
+                          {...register(`lines.${index}.amount`, { valueAsNumber: true })}
+                          className="h-12 rounded-xl border-zinc-200 font-mono font-black italic text-lg"
+                        />
+                        {errors.lines?.[index]?.amount && (
+                          <p className="text-[10px] text-red-500 font-bold px-1">
+                            {errors.lines[index]?.amount?.message}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Remove */}
+                      <div className="col-span-2 md:col-span-1 flex justify-center pb-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          disabled={fields.length <= 2}
+                          className="h-12 w-12 rounded-xl text-zinc-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-all"
+                        >
+                          <Trash2 size={18} />
+                        </Button>
+                      </div>
+
+                      {/* Bank Sub-ledger — shadcn Select */}
+                      <div className="col-span-12 pt-2 border-t border-zinc-50 flex items-center gap-4">
+                        <div className="flex-1 flex gap-4 items-center">
+                          <span className="text-[10px] font-black text-zinc-300 uppercase tracking-widest whitespace-nowrap">Bank Sub-ledger:</span>
+                          <div className="w-64">
+                            <Controller
+                              name={`lines.${index}.bankId`}
+                              control={control}
+                              render={({ field: bankField }) => (
+                                <Select
+                                  onValueChange={(val) => bankField.onChange(val === "__none__" ? undefined : val)}
+                                  value={bankField.value || "__none__"}
+                                >
+                                  <SelectTrigger className="h-9 rounded-lg border-zinc-200 bg-white text-xs font-medium text-zinc-500">
+                                    <SelectValue placeholder="N/A" />
+                                  </SelectTrigger>
+                                  <SelectContent className="rounded-xl border-zinc-200 shadow-xl">
+                                    <SelectItem value="__none__" className="text-zinc-400 italic text-xs">
+                                      N/A
+                                    </SelectItem>
+                                    {banks.map((b) => (
+                                      <SelectItem key={b.id} value={b.id}>
+                                        {b.bankName}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
+
+        </div>
+
+        {/* Right Column: Summaries & Controls (4 cols) */}
+        <div className="xl:col-span-4 space-y-8">
+
+          <Card className="rounded-[2.5rem] bg-zinc-900 text-white p-10 space-y-8 shadow-2xl shadow-zinc-200 sticky top-10">
+            <div className="space-y-1">
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Double Entry Verification</p>
+              <h3 className="text-3xl font-black italic">Voucher Status</h3>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex justify-between items-center py-4 border-b border-white/5">
+                <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Total Debits</span>
+                <span className="text-2xl font-black font-mono italic">৳ {totals.debit.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center py-4 border-b border-white/5">
+                <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px]">Total Credits</span>
+                <span className="text-2xl font-black font-mono italic">৳ {totals.credit.toLocaleString()}</span>
+              </div>
+
+              <div className={cn(
+                "p-6 rounded-[2rem] border transition-all duration-700",
+                isBalanced ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" : "bg-zinc-800 border-zinc-700 text-zinc-400"
+              )}>
+                <div className="flex items-center gap-4">
+                  <div className={cn("size-10 rounded-xl flex items-center justify-center", isBalanced ? "bg-emerald-500 text-white" : "bg-zinc-700")}>
+                    {isBalanced ? <CheckCircle2 size={24} /> : <AlertTriangle size={24} />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">{isBalanced ? "Voucher Balanced" : "Balance Mismatch"}</p>
+                    <p className="text-lg font-black italic">{isBalanced ? "Verification Success" : `৳ ${Math.abs(totals.debit - totals.credit).toLocaleString()} Variance`}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <p className="text-[10px] font-bold text-zinc-500 leading-relaxed uppercase tracking-widest">Entry Templates</p>
+              <div className="grid grid-cols-2 gap-3">
+                {Object.entries(categoryConfigs).map(([key, config]) => (
                   <button
-                    key={t.key}
-                    onClick={() => {
-                      setActiveTab(t.key);
-                      setCustHint("");
-                    }}
+                    key={key}
+                    type="button"
+                    onClick={() => setValue("category", key as any)}
                     className={cn(
-                      "px-4 py-2 rounded-lg text-xs font-bold transition-all border",
-                      activeTab === t.key
-                        ? "bg-black border-black text-white shadow-md shadow-slate-200"
-                        : "bg-white border-slate-200 text-slate-600 hover:border-slate-400",
+                      "p-4 rounded-2xl border text-left transition-all active:scale-95 group",
+                      activeCategory === key ? "bg-white border-white text-zinc-900 shadow-xl" : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500"
                     )}
                   >
-                    {t.label}
+                    <config.icon size={18} className={cn("mb-3", activeCategory === key ? "text-zinc-900" : "text-zinc-500 group-hover:text-zinc-300")} />
+                    <p className="text-[10px] font-black uppercase tracking-widest leading-none">{config.label}</p>
                   </button>
                 ))}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </Card>
 
-        {/* Main Form Details */}
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-3 border-b border-slate-100 pb-4 mb-4">
-            <div className="p-2 bg-slate-100 rounded-lg text-slate-900">
-              {getTabIcon()}
+          <div className="bg-zinc-50 border border-zinc-200 rounded-[2.5rem] p-10 space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Standard Guideline</h4>
+              <Info size={14} className="text-zinc-400" />
             </div>
-            <CardTitle>Transaction Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Form contents... unchanged from previous implementation */}
-            {/* Common Header Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-              <InputField
-                label="Posting Date"
-                name="date"
-                type="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-              />
-              <InputField
-                label="Reference ID"
-                name="refId"
-                value={formData.refId}
-                onChange={handleChange}
-                disabled
-                className="bg-slate-50 font-mono text-slate-400"
-              />
-            </div>
-
-            {/* Dynamic Content based on Tab */}
-            {activeTab === "custdue" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="amber"
-                  icon={<Info size={16} />}
-                  text="Recording a sale where payment is deferred. This will increase the customer's outstanding balance."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                  <SelectBox
-                    label="Customer"
-                    name="customer"
-                    value={formData.customer}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "Rahim Corp", name: "Rahim Corp" },
-                      { _id: "Nadia Ent", name: "Nadia Ent" },
-                    ]}
-                    required
-                  />
-                  <InputField
-                    label="Due Amount (৳)"
-                    name="amount"
-                    value={formData.amount}
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <InputField
-                  label="Narration / Memo"
-                  name="memo"
-                  value={formData.memo}
-                  placeholder="Explain the transaction context..."
-                  onChange={handleChange}
-                />
-                <LedgerPreview
-                  entries={[
-                    {
-                      head: "Accounts Receivable",
-                      type: "DR",
-                      amount: "75,000",
-                      note: "Customer Asset Increase",
-                    },
-                    {
-                      head: "Sales Revenue",
-                      type: "CR",
-                      amount: "75,000",
-                      note: "Income Realized",
-                    },
-                  ]}
-                />
-              </div>
-            )}
-
-            {activeTab === "receipt" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="emerald"
-                  icon={<CheckCircle2 size={16} />}
-                  text="Settling customer dues. This will decrease their outstanding balance and increase your cash/bank."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                  <SelectBox
-                    label="Customer"
-                    name="customer"
-                    value={formData.customer}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "Rahim Corp", name: "Rahim Corp" },
-                      { _id: "Nadia Ent", name: "Nadia Ent" },
-                    ]}
-                    required
-                  />
-                  <SelectBox
-                    label="Payment Method"
-                    name="method"
-                    value={formData.method}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "cash", name: "Cash in Hand" },
-                      { _id: "bank", name: "Bank Transfer" },
-                    ]}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-                  <InputField
-                    label="Paid Amount (৳)"
-                    name="amount"
-                    value={formData.amount}
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                  />
-                  <div className="flex items-end pb-1">
-                    {custHint && <HighlightBox color="amber" text={custHint} />}
-                  </div>
-                </div>
-                <InputField
-                  label="Narration"
-                  name="memo"
-                  value={formData.memo}
-                  placeholder="e.g. Cleared invoice #402"
-                  onChange={handleChange}
-                />
-                <LedgerPreview
-                  entries={[
-                    {
-                      head: "Cash / Bank",
-                      type: "DR",
-                      amount: "50,000",
-                      note: "Liquid Asset Increase",
-                    },
-                    {
-                      head: "Accounts Receivable",
-                      type: "CR",
-                      amount: "50,000",
-                      note: "Customer Due Reduced",
-                    },
-                  ]}
-                />
-              </div>
-            )}
-
-            {activeTab === "suppdue" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="purple"
-                  icon={<Info size={16} />}
-                  text="Recording a purchase where payment is deferred. This will increase your accounts payable."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Supplier"
-                    name="supplier"
-                    value={formData.supplier}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "Habib", name: "Habib Textiles" },
-                      { _id: "Global", name: "Global Yarns" },
-                    ]}
-                    required
-                  />
-                  <InputField
-                    label="Total Amount (৳)"
-                    name="amount"
-                    value={formData.amount}
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Ledger Head (Debit)"
-                    name="head"
-                    value={formData.head}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "inventory", name: "Inventory Purchase" },
-                      { _id: "supplies", name: "Office Supplies" },
-                    ]}
-                  />
-                  <InputField
-                    label="Narration"
-                    name="memo"
-                    value={formData.memo}
-                    placeholder="Describe the purchase..."
-                    onChange={handleChange}
-                  />
-                </div>
-                <LedgerPreview
-                  entries={[
-                    {
-                      head: "Expense / Inventory",
-                      type: "DR",
-                      amount: "1,20,000",
-                      note: "Cost Recognized",
-                    },
-                    {
-                      head: "Accounts Payable",
-                      type: "CR",
-                      amount: "1,20,000",
-                      note: "Liability Increased",
-                    },
-                  ]}
-                />
-              </div>
-            )}
-
-            {activeTab === "payment" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="indigo"
-                  icon={<CheckCircle2 size={16} />}
-                  text="Paying a vendor. This will decrease your accounts payable and decrease your cash/bank balance."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Supplier"
-                    name="supplier"
-                    value={formData.supplier}
-                    onChange={handleSelectChange}
-                    options={[{ _id: "Habib", name: "Habib Textiles" }]}
-                    required
-                  />
-                  <InputField
-                    label="Payment Amount (৳)"
-                    name="amount"
-                    value={formData.amount}
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Payment Account"
-                    name="account"
-                    value={formData.account}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "cash", name: "Cash in Hand" },
-                      { _id: "bank", name: "City Bank - 902" },
-                    ]}
-                  />
-                  <InputField
-                    label="Instrument No (Cheque/TRX)"
-                    name="instrument"
-                    value={formData.instrument}
-                    placeholder="Optional"
-                    onChange={handleChange}
-                  />
-                </div>
-                <LedgerPreview
-                  entries={[
-                    {
-                      head: "Accounts Payable",
-                      type: "DR",
-                      amount: "80,000",
-                      note: "Liability Reduced",
-                    },
-                    {
-                      head: "Cash / Bank Account",
-                      type: "CR",
-                      amount: "80,000",
-                      note: "Liquid Asset Reduction",
-                    },
-                  ]}
-                />
-              </div>
-            )}
-
-            {activeTab === "journal" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="indigo"
-                  icon={<Info size={16} />}
-                  text="Standard double-entry adjustment. Use this for payroll, depreciation, or correction of errors."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50/50 border border-slate-100">
-                  <div className="space-y-4">
-                    <SelectBox
-                      label="Debit Account"
-                      name="drAccount"
-                      value={formData.drAccount}
-                      onChange={handleSelectChange}
-                      options={[
-                        { _id: "salary", name: "Salary Expense" },
-                        { _id: "rent", name: "Office Rent" },
-                      ]}
-                      required
-                    />
-                    <InputField
-                      label="Debit Amount (৳)"
-                      name="debitAmount"
-                      value={formData.debitAmount}
-                      placeholder="0.00"
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <SelectBox
-                      label="Credit Account"
-                      name="crAccount"
-                      value={formData.crAccount}
-                      onChange={handleSelectChange}
-                      options={[
-                        { _id: "cash", name: "Cash in Hand" },
-                        { _id: "salaryPayable", name: "Salary Payable" },
-                      ]}
-                      required
-                    />
-                    <InputField
-                      label="Credit Amount (৳)"
-                      name="creditAmount"
-                      value={formData.creditAmount}
-                      placeholder="0.00"
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <InputField
-                  label="Narration"
-                  name="memo"
-                  value={formData.memo}
-                  placeholder="Full explanation of the entry..."
-                  onChange={handleChange}
-                />
-              </div>
-            )}
-
-            {activeTab === "contra" && (
-              <div className="space-y-6">
-                <HighlightBox
-                  color="emerald"
-                  icon={<Info size={16} />}
-                  text="Use contra entries for transferring funds between your own accounts (e.g., Bank deposit, cash withdrawal)."
-                />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Transaction Type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "deposit", name: "Cash to Bank (Deposit)" },
-                      { _id: "withdrawal", name: "Bank to Cash (Withdrawal)" },
-                      { _id: "transfer", name: "Bank to Bank (Transfer)" },
-                    ]}
-                  />
-                  <InputField
-                    label="Amount (৳)"
-                    name="amount"
-                    value={formData.amount}
-                    placeholder="0.00"
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <SelectBox
-                    label="Transfer From"
-                    name="from"
-                    value={formData.from}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "cash", name: "Cash in Hand" },
-                      { _id: "bank", name: "City Bank" },
-                    ]}
-                  />
-                  <SelectBox
-                    label="Transfer To"
-                    name="to"
-                    value={formData.to}
-                    onChange={handleSelectChange}
-                    options={[
-                      { _id: "bank", name: "City Bank" },
-                      { _id: "cash", name: "Cash in Hand" },
-                    ]}
-                  />
-                </div>
-                <LedgerPreview
-                  entries={[
-                    {
-                      head: "Target Account",
-                      type: "DR",
-                      amount: "25,000",
-                      note: "Internal Inflow",
-                    },
-                    {
-                      head: "Source Account",
-                      type: "CR",
-                      amount: "25,000",
-                      note: "Internal Outflow",
-                    },
-                  ]}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <p className="text-[11px] font-medium text-zinc-500 leading-relaxed italic">
+              Entries are created as <span className="text-zinc-900 font-black uppercase tracking-widest">DRAFT</span>.
+              They do not impact the general ledger balances until they are formally
+              <span className="text-zinc-900 font-black uppercase tracking-widest"> POSTED</span> through the audit trail or bookkeeping command center.
+            </p>
+          </div>
+        </div>
       </div>
     </Container>
   );

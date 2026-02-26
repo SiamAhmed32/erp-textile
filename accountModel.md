@@ -9,7 +9,7 @@
 
 ```prisma
 enum JournalEntryType {
-  CUSTOMER_DUE
+  BUYER_DUE
   RECEIPT
   SUPPLIER_DUE
   PAYMENT

@@ -106,12 +106,12 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
     doc.setFontSize(9);
     let currentY = 45;
 
-    // Left Column: Customer Info
+    // Left Column: Buyer Info
     doc.setFont("helvetica", "bold");
-    const buyerName = buyer?.name || "CUSTOMER NAME";
+    const buyerName = buyer?.name || "BUYER NAME";
     doc.text(buyerName.toUpperCase(), 14, currentY);
     doc.setFont("helvetica", "normal");
-    const buyerAddress = buyer?.address || "CUSTOMER ADDRESS";
+    const buyerAddress = buyer?.address || "BUYER ADDRESS";
     const buyerLocation = buyer?.location ? `, ${buyer.location}` : "";
     const fullAddress = `${buyerAddress}${buyerLocation}`;
     const splitAddress = doc.splitTextToSize(fullAddress, 85);
@@ -184,22 +184,22 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-                {
-                  content: item.fabricItem.styleNo || "-",
-                  rowSpan: rows.length,
-                  styles: { halign: "center", valign: "middle" },
-                },
-                {
-                  content: item.fabricItem.discription || "-",
-                  rowSpan: rows.length,
-                  styles: { halign: "center", valign: "middle" },
-                },
-                {
-                  content: item.fabricItem.width || "-",
-                  rowSpan: rows.length,
-                  styles: { halign: "center", valign: "middle" },
-                },
-              ]
+              {
+                content: item.fabricItem.styleNo || "-",
+                rowSpan: rows.length,
+                styles: { halign: "center", valign: "middle" },
+              },
+              {
+                content: item.fabricItem.discription || "-",
+                rowSpan: rows.length,
+                styles: { halign: "center", valign: "middle" },
+              },
+              {
+                content: item.fabricItem.width || "-",
+                rowSpan: rows.length,
+                styles: { halign: "center", valign: "middle" },
+              },
+            ]
             : [];
 
         tableBody.push([
@@ -235,12 +235,12 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-                {
-                  content: item.cartonItem.orderNo || "-",
-                  rowSpan: rows.length,
-                  styles: { halign: "center", valign: "middle" },
-                },
-              ]
+              {
+                content: item.cartonItem.orderNo || "-",
+                rowSpan: rows.length,
+                styles: { halign: "center", valign: "middle" },
+              },
+            ]
             : [];
 
         tableBody.push([
@@ -277,12 +277,12 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-                {
-                  content: item.labelItem.styleNo || "-",
-                  rowSpan: rows.length,
-                  styles: { halign: "center", valign: "middle" },
-                },
-              ]
+              {
+                content: item.labelItem.styleNo || "-",
+                rowSpan: rows.length,
+                styles: { halign: "center", valign: "middle" },
+              },
+            ]
             : [];
 
         tableBody.push([

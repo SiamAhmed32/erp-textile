@@ -167,7 +167,6 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                                         <SelectItem key={acc.id} value={acc.id}>
                                             <div className="flex items-center gap-2">
                                                 <span className="font-semibold text-zinc-700">{acc.name}</span>
-                                                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-50 px-1 border rounded">{acc.code}</span>
                                             </div>
                                         </SelectItem>
                                     ))}
@@ -178,7 +177,7 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                 </div>
 
                 {/* ── Basic Info ──────────────────────────────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1.5">
                         <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Account Name</Label>
                         <Input
@@ -187,15 +186,6 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                             className={cn("h-11 border-zinc-200 focus:ring-zinc-900 font-semibold", errors.name && "border-red-500")}
                         />
                         {errors.name && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.name.message}</p>}
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Unique Code</Label>
-                        <Input
-                            {...register("code")}
-                            placeholder="e.g. 1010-01"
-                            className={cn("h-11 border-zinc-200 font-mono font-bold", errors.code && "border-red-500")}
-                        />
-                        {errors.code && <p className="text-[10px] text-red-500 font-bold uppercase">{errors.code.message}</p>}
                     </div>
                 </div>
 

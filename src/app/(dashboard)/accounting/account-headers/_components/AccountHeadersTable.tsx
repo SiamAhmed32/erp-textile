@@ -3,10 +3,15 @@
 import React, { useMemo } from "react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { AccountHeader } from "./types";
-import { SquarePen, Trash2, Eye, GitFork, ShieldCheck, Banknote } from "lucide-react";
+import {
+    SquarePen,
+    Eye,
+    ShieldCheck,
+    FolderTree,
+    FileCode2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { takaSign } from "@/lib/constants";
 
 type Props = {
     data: AccountHeader[];
@@ -29,96 +34,108 @@ const AccountHeadersTable = ({
     onDelete,
     onView,
 }: Props) => {
+
     const columns = useMemo(
         () => [
             {
-                header: "Account Code",
-                accessor: (row: AccountHeader) => (
-                    <div className="flex flex-col">
-                        <span className="font-mono text-[13px] font-bold text-zinc-900">{row.code || "N/A"}</span>
-                        {row.isControlAccount && (
-                            <span className="text-[9px] text-zinc-400 font-bold tracking-widest uppercase mt-0.5 px-1.5 py-0.5 border border-zinc-200 rounded bg-zinc-50 flex items-center gap-1 w-fit">
-                                <ShieldCheck className="h-2.5 w-2.5" />
-                                Control
-                            </span>
-                        )}
-                    </div>
-                ),
-            },
-            {
-                header: "Account Name",
-                accessor: (row: AccountHeader) => (
-                    <div className="flex flex-col">
-                        <div className="font-bold text-zinc-900 text-[14px] tracking-tight">{row.name}</div>
-                        {row.parent && (
-                            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-0.5">
-                                <GitFork className="h-3 w-3" />
-                                <span>Sub-account of: <span className="font-semibold text-zinc-500">{row.parent.name}</span></span>
+                header: "Ledger Hierarchy",
+                accessor: (row: AccountHeader) => {
+                    const isChild = !!row.parentId;
+                    return (
+                        <div className={cn(
+                            "flex items-center py-1 gap-3",
+                            isChild ? "ml-8" : "ml-0"
+                        )}>
+                            {/* Visual guide for children */}
+                            {isChild && (
+                                <div className="absolute left-10 w-px h-full bg-zinc-200 -top-4" />
+                            )}
+                            {isChild && (
+                                <div className="absolute left-10 w-3 h-px bg-zinc-200" />
+                            )}
+
+                            <div className={cn(
+                                "size-9 rounded-xl flex items-center justify-center shrink-0 border transition-all",
+                                row.isControlAccount
+                                    ? "bg-zinc-900 border-zinc-900 text-white shadow-lg shadow-zinc-200"
+                                    : "bg-zinc-50 border-zinc-200 text-zinc-400 group-hover:bg-white"
+                            )}>
+                                {row.isControlAccount ? <FolderTree className="w-4 h-4" /> : <FileCode2 className="w-4 h-4" />}
                             </div>
-                        )}
-                    </div>
-                ),
+
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-2">
+                                    <span className={cn(
+                                        "font-black tracking-tight uppercase leading-none",
+                                        row.isControlAccount ? "text-zinc-900 text-[14px]" : "text-zinc-600 text-[13px]"
+                                    )}>
+                                        {row.name}
+                                    </span>
+                                    {row.isControlAccount && (
+                                        <div className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-100 text-[8px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200">
+                                            <ShieldCheck className="w-2.5 h-2.5" />
+                                            Anchor
+                                        </div>
+                                    )}
+                                </div>
+                                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em] mt-1">
+                                    {row.isControlAccount ? "Control Header" : "Sub-Ledger Head"}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                },
             },
             {
                 header: "Financial Group",
                 accessor: (row: AccountHeader) => {
                     const type = row.type?.toUpperCase();
-                    let badgeClass = "";
-
-                    switch (type) {
-                        case "ASSET":
-                            badgeClass = "bg-sky-50 text-sky-700 border-sky-100";
-                            break;
-                        case "LIABILITY":
-                            badgeClass = "bg-rose-50 text-rose-700 border-rose-100";
-                            break;
-                        case "INCOME":
-                        case "REVENUE":
-                            badgeClass = "bg-emerald-50 text-emerald-700 border-emerald-100";
-                            break;
-                        case "EXPENSE":
-                            badgeClass = "bg-amber-50 text-amber-700 border-amber-100";
-                            break;
-                        case "EQUITY":
-                            badgeClass = "bg-violet-50 text-violet-700 border-violet-100";
-                            break;
-                        default:
-                            badgeClass = "bg-zinc-50 text-zinc-700 border-zinc-200";
-                    }
+                    const config: Record<string, string> = {
+                        ASSET: "bg-sky-900 text-sky-50 border-sky-800 shadow-sky-100",
+                        LIABILITY: "bg-rose-900 text-rose-50 border-rose-800 shadow-rose-100",
+                        INCOME: "bg-emerald-900 text-emerald-50 border-emerald-800 shadow-emerald-100",
+                        REVENUE: "bg-emerald-900 text-emerald-50 border-emerald-800 shadow-emerald-100",
+                        EXPENSE: "bg-amber-900 text-amber-50 border-amber-800 shadow-amber-100",
+                        EQUITY: "bg-violet-900 text-violet-50 border-violet-800 shadow-violet-100",
+                    };
 
                     return (
-                        <span
-                            className={cn(
-                                "inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold border uppercase tracking-widest",
-                                badgeClass
-                            )}
-                        >
-                            {type}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <span className={cn(
+                                "inline-flex items-center rounded-lg px-2.5 py-1 text-[9px] font-black border uppercase tracking-widest shadow-sm",
+                                config[type] || "bg-zinc-900 text-white"
+                            )}>
+                                {type}
+                            </span>
+                        </div>
                     );
                 },
             },
             {
-                header: "Opening Balance",
+                header: "Position",
                 className: "text-right",
                 accessor: (row: AccountHeader) => (
-                    <div className="flex flex-col items-end">
-                        <div className="text-[14px] font-mono font-black text-zinc-900">
-                            ৳ {row.openingBalance?.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                    <div className="flex flex-col items-end py-1">
+                        <div className="text-[15px] font-mono font-black text-zinc-900 tracking-tight">
+                            ৳ {row.openingBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Opening Bal</span>
+                            <div className="size-1 rounded-full bg-zinc-200" />
+                            <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest italic font-mono">BDT</span>
                         </div>
                     </div>
                 ),
             },
             {
-                header: "Actions",
-                className: "text-right pr-4",
+                header: "Utility",
+                className: "text-right pr-6",
                 accessor: (row: AccountHeader) => (
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex justify-end gap-2">
                         <Button
                             size="icon"
                             variant="ghost"
-                            title="Quick View"
-                            className="h-8 w-8 text-slate-400 hover:text-secondary hover:bg-secondary/10 transition-all rounded-lg"
+                            className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl border border-transparent hover:border-zinc-200"
                             onClick={() => onView(row)}
                         >
                             <Eye className="h-4 w-4" />
@@ -126,26 +143,16 @@ const AccountHeadersTable = ({
                         <Button
                             size="icon"
                             variant="ghost"
-                            title="Modify Account"
-                            className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all rounded-lg"
+                            className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl border border-transparent hover:border-zinc-200"
                             onClick={() => onEdit(row)}
                         >
                             <SquarePen className="h-4 w-4" />
-                        </Button>
-                        <Button
-                            size="icon"
-                            variant="ghost"
-                            title="Archive"
-                            className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all rounded-lg"
-                            onClick={() => onDelete(row)}
-                        >
-                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
                 ),
             },
         ],
-        [onEdit, onDelete, onView]
+        [onEdit, onView]
     );
 
     return (
@@ -153,13 +160,14 @@ const AccountHeadersTable = ({
             data={data}
             columns={columns}
             isLoading={loading}
-            skeletonRows={8}
+            skeletonRows={10}
             pagination={{
                 currentPage: page,
                 totalPages,
                 onPageChange,
             }}
-            scrollAreaHeight="h-[calc(100vh-320px)]"
+            scrollAreaHeight="h-[calc(100vh-420px)]"
+            rowClassName="group hover:bg-zinc-50/50 transition-all cursor-default relative overflow-visible"
         />
     );
 };

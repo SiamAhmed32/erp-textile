@@ -41,7 +41,7 @@ export const mockAccountingStats: AccountingStat[] = [
     {
         label: "Total Receivables",
         value: "$11,990.81",
-        subLabel: "From 2 customers",
+        subLabel: "From 2 buyers",
         trend: 'up',
         color: "green",
         icon: "TrendingUp"

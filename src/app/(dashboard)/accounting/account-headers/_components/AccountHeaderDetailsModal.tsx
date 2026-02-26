@@ -68,7 +68,7 @@ const AccountHeaderDetailsModal = ({ open, onOpenChange, header }: Props) => {
                         )}
                     </div>
 
-                    {/* Name + Code */}
+                    {/* Name */}
                     <div className="flex items-start justify-between gap-4">
                         <div>
                             <h2 className="text-xl font-bold text-zinc-900 tracking-tight leading-tight">
@@ -81,16 +81,6 @@ const AccountHeaderDetailsModal = ({ open, onOpenChange, header }: Props) => {
                                     <span className="font-semibold text-zinc-600">{header.parent.name}</span>
                                 </div>
                             )}
-                        </div>
-
-                        {/* Ledger code — monospaced, subtle */}
-                        <div className="shrink-0 text-right">
-                            <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-                                Ledger Code
-                            </p>
-                            <span className="font-mono text-sm font-bold text-zinc-700 bg-white border border-zinc-200 px-2.5 py-1 rounded-md inline-block">
-                                {header.code}
-                            </span>
                         </div>
                     </div>
 
