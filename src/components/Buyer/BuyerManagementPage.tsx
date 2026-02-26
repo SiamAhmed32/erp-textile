@@ -13,7 +13,7 @@ import { Buyer, BuyerFormData } from "./types";
 import { BuyerList } from "./BuyerList";
 import { BuyerForm } from "./BuyerForm";
 import { BuyerViewModal } from "./BuyerViewModal";
-import { DeleteConfirmDialog } from "@/components/shared/DeleteConfirmDialog";
+import { CustomModal } from "@/components/reusables";
 import {
   useGetAllQuery,
   usePatchMutation,
@@ -60,6 +60,7 @@ export function BuyerManagementPage() {
   >({});
   const [deleteTarget, setDeleteTarget] = React.useState<Buyer | null>(null);
   const [viewTarget, setViewTarget] = React.useState<Buyer | null>(null);
+  const [showDeleted, setShowDeleted] = React.useState(false);
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
@@ -73,8 +74,10 @@ export function BuyerManagementPage() {
     page,
     limit: 10,
     search: search || undefined,
-    sortBy: sort.field,
-    sortOrder: sort.dir,
+    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
+    filters: {
+      ...(showDeleted ? { isDeleted: true } : {}),
+    },
   });
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const totalPages = (buyersPayload as any)?.meta?.pagination?.totalPages || 1;
@@ -132,6 +135,30 @@ export function BuyerManagementPage() {
     } finally {
       setDeleteTarget(null);
     }
+  };
+
+  const handleRestore = async (buyer: Buyer) => {
+    try {
+      await putItem({
+        path: `buyers/${buyer.id}`,
+        body: { isDeleted: false },
+        invalidate: ["buyers"],
+      }).unwrap();
+      refetch();
+    } catch (err: any) {
+      const message =
+        err?.data?.error?.message ||
+        err?.data?.message ||
+        err?.error ||
+        err?.message ||
+        "Failed to restore buyer";
+      console.error("Restore Buyer Error:", message);
+    }
+  };
+
+  const handleToggleDeleted = () => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
   };
 
   const handleFormChange = (field: keyof BuyerFormData, value: string) => {
@@ -209,6 +236,9 @@ export function BuyerManagementPage() {
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+        onRestore={handleRestore}
       />
 
       {loading && (
@@ -231,13 +261,36 @@ export function BuyerManagementPage() {
         onEdit={handleEdit}
       />
 
-      <DeleteConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Delete Buyer?"
-        description="This will soft delete the buyer and remove it from active lists."
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={confirmDelete}
-      />
+      <CustomModal
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Confirm Delete"
+        maxWidth="400px"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete buyer{" "}
+            <span className="font-semibold text-foreground">
+              {deleteTarget?.name}
+            </span>
+            ? This is a soft delete operation.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
     </Container>
   );
 }

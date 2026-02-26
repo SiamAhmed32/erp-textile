@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, Trash2 } from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,9 @@ type Props = {
   onDuplicate: (row: Order) => void;
   onExport: (row: Order) => void;
   onDelete: (row: Order) => void;
+  onRestore: (row: Order) => void;
+  showDeleted: boolean;
+  onToggleDeleted: () => void;
 };
 
 const OrdersTable = ({
@@ -76,6 +79,9 @@ const OrdersTable = ({
   onDuplicate,
   onExport,
   onDelete,
+  onRestore,
+  showDeleted,
+  onToggleDeleted,
 }: Props) => {
   // Helper to extract sub-items from an order
   const extractItems = (order: Order) => {
@@ -323,12 +329,14 @@ const OrdersTable = ({
               onDuplicate={() => onDuplicate(row)}
               onExport={() => onExport(row)}
               onDelete={() => onDelete(row)}
+              onRestore={() => onRestore(row)}
+              isDeletedView={showDeleted}
             />
           </div>
         ),
       },
     ],
-    [onDelete, onDuplicate, onEdit, onExport, onView],
+    [onDelete, onDuplicate, onEdit, onExport, onRestore, onView, showDeleted],
   );
 
   return (
@@ -345,6 +353,15 @@ const OrdersTable = ({
             onClick={onSearchSubmit}
           >
             Search
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={showDeleted ? "" : "text-slate-500"}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Orders" : "Show Deleted Orders"}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            {showDeleted ? "Exit Trash" : "Trash"}
           </Button>
         </div>
         <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">

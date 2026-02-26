@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, SquarePen, Trash2, ArrowUpDown } from "lucide-react";
+import { Search, Eye, SquarePen, Trash2, ArrowUpDown, RotateCcw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +27,9 @@ type Props = {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
+  onRestore?: (buyer: Buyer) => void;
 };
 
 export function BuyerList({
@@ -41,6 +44,9 @@ export function BuyerList({
   page,
   totalPages,
   onPageChange,
+  showDeleted = false,
+  onToggleDeleted = () => { },
+  onRestore = () => { },
 }: Props) {
   const sortOptions = [
     { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
@@ -125,35 +131,53 @@ export function BuyerList({
             >
               <Eye className="h-4 w-4" />
             </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              title="Edit Buyer"
-              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row);
-              }}
-            >
-              <SquarePen className="h-4 w-4" />
-            </Button>
-            <Button
-              size="icon"
-              variant="ghost"
-              title="Delete"
-              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(row);
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {!showDeleted && (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Edit Buyer"
+                  className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(row);
+                  }}
+                >
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Delete"
+                  className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(row);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            {showDeleted && (
+              <Button
+                size="icon"
+                variant="ghost"
+                title="Restore"
+                className="h-7 w-7 text-slate-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(row);
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ),
       },
     ],
-    [onView, onEdit, onDelete],
+    [onView, onEdit, onDelete, onRestore, showDeleted],
   );
 
   return (
@@ -169,8 +193,23 @@ export function BuyerList({
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium">
+          <Button
+            variant="outline"
+            className="h-11 px-6 bg-white border-slate-200 font-medium"
+          >
             Search
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-4 gap-2 rounded-lg font-medium",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Buyers" : "Show Deleted Buyers"}
+          >
+            <Trash2 className="h-4 w-4" />
+            {showDeleted ? "Exit Trash" : "Trash"}
           </Button>
         </div>
 
@@ -182,8 +221,8 @@ export function BuyerList({
                 variant="outline"
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  (sort.field !== "createdAt" || sort.dir !== "desc") &&
-                    "bg-purple-50 border-purple-200 text-purple-700",
+                  (sort.field !== "name" || sort.dir !== "asc") &&
+                  "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -191,9 +230,9 @@ export function BuyerList({
                   {sort.field === "createdAt" && sort.dir === "desc"
                     ? "Sort By"
                     : sortOptions.find(
-                        (opt) =>
-                          opt.field === sort.field && opt.dir === sort.dir,
-                      )?.label}
+                      (opt) =>
+                        opt.field === sort.field && opt.dir === sort.dir,
+                    )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>

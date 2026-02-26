@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   User as UserIcon,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,8 @@ type Props = {
   onPageChange: (page: number) => void;
   onEdit: (user: User) => void;
   onDelete: (user: User) => void;
+  showDeleted?: boolean;
+  onRestore?: (user: User) => void;
 };
 
 const UsersTable = ({
@@ -31,8 +34,10 @@ const UsersTable = ({
   page,
   totalPages,
   onPageChange,
-  onEdit = () => {},
-  onDelete = () => {},
+  onEdit = () => { },
+  onDelete = () => { },
+  showDeleted = false,
+  onRestore = () => { },
 }: Props) => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const isAuthorized =
@@ -145,31 +150,46 @@ const UsersTable = ({
                 row.role !== "super_admin") &&
               (currentUser?.role === "super_admin" || row.role !== "admin") && (
                 <>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    title="Edit User"
-                    className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
-                    onClick={() => onEdit(row)}
-                  >
-                    <SquarePen className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    title="Delete"
-                    className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-                    onClick={() => onDelete(row)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  {!showDeleted && (
+                    <>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Edit User"
+                        className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                        onClick={() => onEdit(row)}
+                      >
+                        <SquarePen className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title="Delete"
+                        className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        onClick={() => onDelete(row)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  {showDeleted && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Restore"
+                      className="h-7 w-7 text-slate-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                      onClick={() => onRestore(row)}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  )}
                 </>
               )}
           </div>
         ),
       },
     ],
-    [onEdit, onDelete, currentUser?.id, currentUser?.role, isAuthorized],
+    [onEdit, onDelete, onRestore, currentUser?.id, currentUser?.role, isAuthorized, showDeleted],
   );
 
   return (
