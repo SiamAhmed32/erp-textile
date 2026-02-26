@@ -36,64 +36,32 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-/* ─── Mock ──────────────────────────────────────────────── */
-interface ScheduleItem {
-  no: number;
-  date: string;
-  principalAmount: number;
-  interest: number;
-  total: number;
-  balance: number;
-  status: "paid" | "upcoming" | "overdue";
-}
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
+import { toast } from "sonner";
 
+/* ─── Types ──────────────────────────────────────────────── */
 interface Loan {
   id: string;
-  lender: string;
-  type: "bank" | "director" | "personal";
+  lenderName: string;
+  loanType: string;
   interestRate: number;
   principalAmount: number;
-  paidAmount: number;
-  outstandingAmount: number;
   startDate: string;
   status: "active" | "settled";
-  schedule: ScheduleItem[];
+  repayments: any[];
 }
-
-const loans: Loan[] = [
-  {
-    id: "L1",
-    lender: "National Bank Limited",
-    type: "bank",
-    interestRate: 9.5,
-    principalAmount: 500000,
-    paidAmount: 133716,
-    outstandingAmount: 366284,
-    startDate: "Jan 2025",
-    status: "active",
-    schedule: [], // truncated for brevity
-  },
-  {
-    id: "L2",
-    lender: "Mr. Rahman (Director)",
-    type: "director",
-    interestRate: 0,
-    principalAmount: 200000,
-    paidAmount: 66667,
-    outstandingAmount: 133333,
-    startDate: "Jul 2025",
-    status: "active",
-    schedule: [], // truncated for brevity
-  },
-];
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const initialFormData = {
   lenderName: "",
-  lenderType: "",
+  loanType: "",
   interestRate: "",
-  principal: "",
+  principalAmount: "",
+  startDate: new Date().toISOString().split("T")[0],
+  endDate: "",
+  remarks: "",
+  companyProfileId: "",
 };
 
 function StakeholderFormModal({
@@ -104,6 +72,21 @@ function StakeholderFormModal({
   onClose: () => void;
 }) {
   const [formData, setFormData] = useState(initialFormData);
+  const [createLoan, { isLoading }] = usePostMutation();
+
+  const { data: companiesPayload } = useGetAllQuery({
+    path: "company-profiles",
+    limit: 100,
+  });
+
+  const companies = useMemo(() => ((companiesPayload as any)?.data || []) as any[], [companiesPayload]);
+
+  // Auto-select first company profile if none selected
+  React.useEffect(() => {
+    if (companies.length > 0 && !formData.companyProfileId) {
+      setFormData(prev => ({ ...prev, companyProfileId: companies[0].id }));
+    }
+  }, [companies, formData.companyProfileId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -112,10 +95,34 @@ function StakeholderFormModal({
 
   const resetForm = () => setFormData(initialFormData);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onClose();
-    resetForm();
+    try {
+      const payload: any = {
+        ...formData,
+        principalAmount: parseFloat(String(formData.principalAmount).replace(/[^0-9.]/g, "")) || 0,
+        interestRate: parseFloat(String(formData.interestRate).replace(/[^0-9.]/g, "")) || 0,
+      };
+
+      if (!payload.endDate) delete payload.endDate;
+      if (!payload.loanType) delete payload.loanType;
+      if (!payload.remarks) delete payload.remarks;
+
+      await createLoan({
+        path: "accounting/loans",
+        body: {
+          ...payload,
+          companyProfileId: payload.companyProfileId || companies[0]?.id
+        },
+        invalidate: ["accounting/loans"],
+      }).unwrap();
+
+      toast.success("Debt stakeholder registered successfully");
+      onClose();
+      resetForm();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to register loan");
+    }
   };
 
   return (
@@ -137,8 +144,8 @@ function StakeholderFormModal({
         <div className="grid grid-cols-2 gap-4">
           <SelectBox
             label="Liability Type"
-            name="lenderType"
-            value={formData.lenderType}
+            name="loanType"
+            value={formData.loanType}
             onChange={handleChange as any}
             options={[
               { _id: "bank", name: "Commercial Bank" },
@@ -154,18 +161,54 @@ function StakeholderFormModal({
             placeholder="0.00"
           />
         </div>
-        <InputField
-          label="Total Principal (৳)"
-          name="principal"
-          value={formData.principal}
-          onChange={handleChange}
-          placeholder="0.00"
+        <SelectBox
+          label="Associated Business Profile"
+          name="companyProfileId"
+          value={formData.companyProfileId}
+          onChange={handleChange as any}
+          options={companies.map(c => ({ _id: c.id, name: c.name }))}
+          placeholder="Select Company Profile"
           required
+        />
+        <div className="grid grid-cols-2 gap-4">
+          <InputField
+            label="Total Principal (৳)"
+            name="principalAmount"
+            value={formData.principalAmount}
+            onChange={handleChange}
+            placeholder="0.00"
+            required
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <InputField
+              label="Disbursement Date"
+              name="startDate"
+              type="date"
+              value={formData.startDate}
+              onChange={handleChange}
+              required
+            />
+            <InputField
+              label="Maturity / End Date"
+              name="endDate"
+              type="date"
+              value={formData.endDate}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+        <InputField
+          label="Remarks / Notes"
+          name="remarks"
+          value={formData.remarks}
+          onChange={handleChange}
+          placeholder="Optional notes..."
         />
         <div className="flex justify-end gap-3 pt-6 border-t border-zinc-100">
           <Button
             type="button"
             variant="ghost"
+            disabled={isLoading}
             className="h-12 px-8 rounded-xl font-bold text-zinc-500 hover:bg-zinc-100"
             onClick={onClose}
           >
@@ -173,9 +216,10 @@ function StakeholderFormModal({
           </Button>
           <Button
             type="submit"
+            disabled={isLoading}
             className="h-12 px-10 rounded-xl bg-zinc-900 text-white font-bold hover:bg-black transition-all"
           >
-            Save Stakeholder
+            {isLoading ? "Saving..." : "Save Stakeholder"}
           </Button>
         </div>
       </form>
@@ -186,125 +230,123 @@ function StakeholderFormModal({
 export default function LoanManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sort, setSort] = useState({ field: "lender", dir: "asc" });
+  const [sort, setSort] = useState({ field: "createdAt", dir: "desc" });
+
+  const { data: loansResponse, isLoading: isLoadingLoans } = useGetAllQuery({
+    path: "accounting/loans",
+    search: search || undefined,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
+  });
+
+  const loans = useMemo(() => {
+    return ((loansResponse as any)?.data || []) as Loan[];
+  }, [loansResponse]);
 
   const sortOptions = [
-    { label: "Lender Name (A-Z)", field: "lender", dir: "asc" },
-    { label: "Lender Name (Z-A)", field: "lender", dir: "desc" },
+    { label: "Date Added (Newest)", field: "createdAt", dir: "desc" },
+    { label: "Date Added (Oldest)", field: "createdAt", dir: "asc" },
+    { label: "Lender Name (A-Z)", field: "lenderName", dir: "asc" },
     { label: "Principal: High to Low", field: "principalAmount", dir: "desc" },
-    { label: "Principal: Low to High", field: "principalAmount", dir: "asc" },
-    { label: "Outstanding: High to Low", field: "outstandingAmount", dir: "desc" },
   ];
 
-  const filteredLoans = useMemo(() => {
-    const result = loans.filter((l) => {
-      const matchesSearch = l.lender.toLowerCase().includes(search.toLowerCase()) || l.type.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === "all" || l.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-
-    result.sort((a: any, b: any) => {
-      const fieldA = a[sort.field];
-      const fieldB = b[sort.field];
-      if (typeof fieldA === "string") {
-        return sort.dir === "asc" ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA);
-      }
-      return sort.dir === "asc" ? fieldA - fieldB : fieldB - fieldA;
-    });
-
-    return result;
-  }, [search, statusFilter, sort]);
 
   const listColumns = useMemo(
     () => [
       {
         header: "Lender Entity",
         accessor: (row: Loan) => (
-          <div className="flex items-center gap-4 py-1">
+          <div className="flex items-center gap-3 py-1">
             <div className={cn(
-              "size-10 rounded-2xl flex items-center justify-center border font-black text-[12px]",
-              row.type === "bank" ? "bg-zinc-900 border-zinc-900 text-white shadow-lg shadow-zinc-200" :
-                row.type === "director" ? "bg-indigo-50 border-indigo-100 text-indigo-700" :
+              "size-9 rounded-lg flex items-center justify-center border font-semibold text-[10px]",
+              row.loanType === "bank" ? "bg-zinc-900 border-zinc-900 text-white shadow-sm" :
+                row.loanType === "director" ? "bg-indigo-50 border-indigo-100 text-indigo-700" :
                   "bg-amber-50 border-amber-100 text-amber-700"
             )}>
-              {row.type === "bank" ? <Landmark size={18} /> :
-                row.type === "director" ? <Briefcase size={18} /> : <UserCircle2 size={18} />}
+              {row.loanType === "bank" ? <Landmark size={14} /> :
+                row.loanType === "director" ? <Briefcase size={14} /> : <UserCircle2 size={14} />}
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-zinc-900 text-[14px] uppercase tracking-tight">{row.lender}</span>
-              <span className="text-[10px] font-bold text-zinc-400 flex items-center gap-1.5 mt-0.5">
-                <ShieldAlert size={12} className="text-zinc-300" />
-                {row.type.toUpperCase()} DEBT
+              <span className="font-semibold text-zinc-900 text-sm whitespace-nowrap">{row.lenderName}</span>
+              <span className="text-xs text-zinc-500 whitespace-nowrap mt-0.5">
+                {row.loanType ? row.loanType.charAt(0).toUpperCase() + row.loanType.slice(1) : 'Other'} Debt
               </span>
             </div>
           </div>
         ),
       },
       {
-        header: "Investment Matrix",
+        header: "Principal",
         accessor: (row: Loan) => (
           <div className="flex flex-col">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[14px] font-mono font-black text-zinc-900 italic">
-                ৳ {row.principalAmount.toLocaleString()}
-              </span>
-              <span className="text-[10px] font-black text-zinc-400">@ {row.interestRate}%</span>
-            </div>
-            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Principal Origin</span>
+            <span className="text-sm font-semibold text-zinc-900">
+              ৳ {Number(row.principalAmount).toLocaleString()}
+            </span>
+            <span className="text-xs text-zinc-500 mt-0.5">
+              {row.interestRate}% Interest
+            </span>
           </div>
         ),
       },
       {
         header: "Outstanding Balance",
-        accessor: (row: Loan) => (
-          <div className="flex flex-col">
-            <span className="text-[15px] font-black text-rose-600 font-mono italic">
-              ৳ {row.outstandingAmount.toLocaleString()}
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <div className="w-20 h-1 bg-zinc-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500"
-                  style={{ width: `${(row.paidAmount / row.principalAmount) * 100}%` }}
-                />
-              </div>
-              <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
-                {Math.round((row.paidAmount / row.principalAmount) * 100)}% Settled
+        accessor: (row: Loan) => {
+          const paidPrincipal = row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) || 0;
+          const outstanding = Number(row.principalAmount) - paidPrincipal;
+          const settledPct = Math.min(100, Math.round((paidPrincipal / Number(row.principalAmount)) * 100)) || 0;
+
+          return (
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-rose-600">
+                ৳ {outstanding.toLocaleString()}
               </span>
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="w-16 h-1 bg-emerald-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{ width: `${settledPct}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-zinc-500 font-medium">
+                  {settledPct}%
+                </span>
+              </div>
             </div>
-          </div>
-        ),
+          );
+        },
       },
       {
-        header: "Lifecycle",
-        accessor: (row: Loan) => (
-          <div className="flex items-center gap-2">
-            {row.status === "settled" ? (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[10px] border border-emerald-100 uppercase tracking-widest">
-                <CheckCircle2 className="w-3 h-3" />
-                Closed
-              </div>
-            ) : (
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-50 text-amber-700 font-black text-[10px] border border-amber-100 uppercase tracking-widest">
-                <TrendingDown className="w-3 h-3" />
-                Amortizing
-              </div>
-            )}
-          </div>
-        ),
+        header: "Status",
+        accessor: (row: Loan) => {
+          const paidPrincipal = row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) || 0;
+          const isSettled = paidPrincipal >= Number(row.principalAmount);
+          return (
+            <div>
+              {isSettled ? (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
+                  <CheckCircle2 className="w-3 h-3" /> Settled
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold border border-amber-100">
+                  <TrendingDown className="w-3 h-3" /> Amortizing
+                </span>
+              )}
+            </div>
+          );
+        },
       },
       {
         header: "Action",
         className: "text-right pr-6",
         accessor: (row: Loan) => (
-          <Link href={`/accounting/loan-management/${row.id}`}>
+          <Link href={`/accounting/loan-management/${row.id}`} className="inline-flex justify-end">
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl border border-transparent hover:border-zinc-200"
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all font-medium"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="w-3.5 h-3.5" />
+              View
             </Button>
           </Link>
         ),
@@ -313,84 +355,92 @@ export default function LoanManagementPage() {
     [],
   );
 
-  return (
-    <Container className="pb-10 space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Landmark className="w-3 h-3" />
-            <span>Liability & Equity Treasury</span>
-          </div>
-          <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">Debt Portfolio</h1>
-          <p className="text-zinc-500 text-sm font-medium">Manage long-term liabilities, stakeholder loans, and amortization schedules.</p>
-        </div>
+  const stats = useMemo(() => {
+    const totalPrincipal = loans.reduce((sum, l) => sum + Number(l.principalAmount), 0);
+    const totalPaid = loans.reduce((sum, l) =>
+      sum + (l.repayments?.reduce((s, r) => s + Number(r.principal), 0) || 0)
+      , 0);
+    const netExposure = totalPrincipal - totalPaid;
+    const settledPct = totalPrincipal > 0 ? Math.round((totalPaid / totalPrincipal) * 100) : 0;
 
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="h-12 px-8 bg-zinc-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-95 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          New Stakeholder
-        </Button>
-      </div>
+    return { totalPrincipal, totalPaid, netExposure, settledPct };
+  }, [loans]);
+
+  return (
+    <Container className="pb-10 space-y-6">
+      <PageHeader
+        title="Debt Portfolio"
+        breadcrumbItems={[
+          { label: "Accounting", href: "/accounting/overview" },
+          { label: "Debt Portfolio" },
+        ]}
+        actions={
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="h-9 px-4 bg-zinc-900 text-white font-bold rounded-md hover:bg-black transition-all flex items-center gap-2 text-sm shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Stakeholder
+          </Button>
+        }
+      />
 
       {/* Premium Stat Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Active Credits</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-900">{loans.length}</span>
-            <span className="text-[10px] font-black text-emerald-500 uppercase">Operational</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Active Credits</p>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold text-zinc-900">{loans.length}</span>
+            <span className="text-[10px] font-bold text-emerald-500 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
           </div>
         </div>
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Total Principal</p>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Total Principal</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-900 italic">৳ 7.5M</span>
+            <span className="text-2xl font-bold text-zinc-900 font-mono">৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M</span>
           </div>
         </div>
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Portfolio Settlement</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-emerald-600 italic">28%</span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic">Weighted Avg</span>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Portfolio Settlement</p>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold text-emerald-600 font-mono">{stats.settledPct}%</span>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Weighted Avg</span>
           </div>
         </div>
-        <div className="bg-zinc-900 rounded-[2rem] p-6 space-y-4 text-white">
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Net Exposure</p>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl text-white space-y-3">
+          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Net Exposure</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black italic">৳ 4.9M</span>
+            <span className="text-2xl font-bold font-mono">৳ {(stats.netExposure / 1000000).toFixed(1)}M</span>
           </div>
         </div>
       </div>
 
-      {/* Premium Toolbar */}
-      <div className="bg-zinc-50/50 border border-zinc-200 rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
+      {/* Toolbar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input
             placeholder="Search lender entity or liability type..."
-            className="h-12 pl-11 border-zinc-200 bg-white rounded-2xl focus:ring-zinc-900 font-medium"
+            className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md shadow-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-12 flex-1 md:flex-none px-6 rounded-2xl border-zinc-200 bg-white font-black text-zinc-600 gap-2">
+              <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-medium gap-2 shadow-sm">
                 <ArrowUpDown className="w-4 h-4 text-zinc-400" />
                 <span>{sortOptions.find(o => o.field === sort.field && o.dir === sort.dir)?.label || "Sort"}</span>
-                <ChevronDown className="w-3 h-3 ml-2 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="rounded-2xl border-zinc-200 shadow-2xl p-2 w-56">
+            <DropdownMenuContent align="end" className="w-56">
               {sortOptions.map((opt, idx) => (
                 <DropdownMenuItem
                   key={idx}
                   onClick={() => setSort({ field: opt.field, dir: opt.dir as any })}
-                  className="rounded-xl font-bold py-2 text-zinc-600 hover:bg-zinc-50"
+                  className="text-sm font-medium"
                 >
                   {opt.label}
                 </DropdownMenuItem>
@@ -398,18 +448,23 @@ export default function LoanManagementPage() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 text-zinc-600 font-bold gap-2">
-            <History className="w-4 h-4" />
+          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-medium gap-2 shadow-sm">
+            <History className="w-4 h-4 text-zinc-400" />
             Audit
           </Button>
+
+          <p className="text-xs font-medium text-zinc-500 bg-white px-3 py-2 rounded-md border border-zinc-200 shadow-sm ml-2 hidden sm:block">
+            Showing {loans.length} Records
+          </p>
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
         <CustomTable
-          data={filteredLoans}
+          data={loans}
           columns={listColumns}
-          scrollAreaHeight="h-[calc(100vh-480px)]"
+          isLoading={isLoadingLoans}
+          scrollAreaHeight="h-[calc(100vh-420px)]"
           rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default"
         />
       </div>

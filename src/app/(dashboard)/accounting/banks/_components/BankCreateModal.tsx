@@ -20,10 +20,9 @@ export default function BankCreateModal({
 
     const handleSubmit = async (values: BankFormValues) => {
         try {
-            const companyProfileId = "3d0afbda-6b2b-4013-895c-7680da86376e";
             await postItem({
                 path: "accounting/banks",
-                body: { ...values, companyProfileId },
+                body: values,
                 invalidate: ["accounting/banks"],
             }).unwrap();
             toast.success("Bank created successfully");

@@ -23,7 +23,11 @@ const tags = [
 	'lc-managements',
 	'suppliers',
 	'accounting',
-	'accounting/accountHeads'
+	'accounting/accountHeads',
+	'accounting/ledger/supplier',
+	'accounting/ledger/buyer',
+	'accounting/loans',
+	'accounting/loans/repayments',
 ];
 
 export const mainApi = createApi({

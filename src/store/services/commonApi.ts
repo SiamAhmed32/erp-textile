@@ -4,6 +4,14 @@
 import { BASE_LIMIT } from "@/lib/constants";
 import mainApi from "./mainApi";
 
+// Helper to strip UUIDs from paths to use as safe Redux tags
+const sanitizeTag = (path: string) => {
+  return path
+    .split("/")
+    .filter((segment) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment))
+    .join("/");
+};
+
 export const userApi = mainApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
@@ -12,7 +20,7 @@ export const userApi = mainApi.injectEndpoints({
         url: `${path}/get/count`,
         params: { ...filters },
       }),
-      providesTags: (_result, _error, { path }) => [path],
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
     }),
 
     getAll: builder.query({
@@ -55,21 +63,20 @@ export const userApi = mainApi.injectEndpoints({
           params,
         };
       },
-      providesTags: (_result, _error, { path }) => [path],
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
     }),
 
     getById: builder.query({
       query: ({ path, id }) => `${path}/${id}`,
       providesTags: (_result, _error, { path, invalidate = [] }) => {
-        const baseTag = path.split("/")[0];
-        return [baseTag, ...invalidate];
+        return [sanitizeTag(path), ...invalidate];
       },
     }),
 
     getByParentCategory: builder.query({
       query: ({ path, parentCategoryId }) =>
         `${path}?parentCategory=${parentCategoryId}`,
-      providesTags: (_result, _error, { path }) => [path.split("/")[0]],
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
     }),
 
     post: builder.mutation({
@@ -80,8 +87,7 @@ export const userApi = mainApi.injectEndpoints({
         formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
-        const baseTag = path.split("/")[0];
-        return ["filters", baseTag, ...invalidate];
+        return ["filters", sanitizeTag(path), ...invalidate];
       },
     }),
 
@@ -93,8 +99,7 @@ export const userApi = mainApi.injectEndpoints({
         formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
-        const baseTag = path.split("/")[0];
-        return ["filters", baseTag, ...invalidate];
+        return ["filters", sanitizeTag(path), ...invalidate];
       },
     }),
 
@@ -106,8 +111,7 @@ export const userApi = mainApi.injectEndpoints({
         formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
-        const baseTag = path.split("/")[0];
-        return ["filters", baseTag, ...invalidate];
+        return ["filters", sanitizeTag(path), ...invalidate];
       },
     }),
 
@@ -119,8 +123,7 @@ export const userApi = mainApi.injectEndpoints({
         formData,
       }),
       invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
-        const baseTag = path.split("/")[0];
-        return ["filters", baseTag, ...invalidate];
+        return ["filters", sanitizeTag(path), ...invalidate];
       },
     }),
   }),

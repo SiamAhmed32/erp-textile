@@ -8,7 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Bank, BankFormSchema, BankFormValues } from "./types";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Building2 } from "lucide-react";
+import { useGetAllQuery } from "@/store/services/commonApi";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface BankFormProps {
     initialData?: Bank | null;
@@ -26,6 +34,8 @@ export default function BankForm({
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm<BankFormValues>({
         resolver: zodResolver(BankFormSchema),
@@ -35,8 +45,24 @@ export default function BankForm({
             branchName: initialData?.branchName || "",
             swiftCode: initialData?.swiftCode || "",
             routingNumber: initialData?.routingNumber || "",
+            companyProfileId: initialData?.companyProfileId || "",
         },
     });
+
+    const { data: companiesPayload } = useGetAllQuery({
+        path: "company-profiles",
+        limit: 100,
+    });
+
+    const companies = React.useMemo(() => ((companiesPayload as any)?.data || []) as any[], [companiesPayload]);
+    const selectedCompanyId = watch("companyProfileId");
+
+    // Auto-select first company profile if none selected
+    React.useEffect(() => {
+        if (companies.length > 0 && !selectedCompanyId && !initialData) {
+            setValue("companyProfileId", companies[0].id);
+        }
+    }, [companies, selectedCompanyId, setValue, initialData]);
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -103,6 +129,35 @@ export default function BankForm({
                             className={cn("h-11 border-zinc-200 font-mono", errors.routingNumber && "border-red-500")}
                         />
                     </div>
+                </div>
+
+                {/* ── Business Context ───────────────────────────────────── */}
+                <div className="space-y-1.5">
+                    <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
+                        <Building2 className="w-3 h-3 text-zinc-400" />
+                        Associated Business Profile <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                        value={selectedCompanyId}
+                        onValueChange={(val) => setValue("companyProfileId", val, { shouldValidate: true })}
+                    >
+                        <SelectTrigger className={cn(
+                            "h-11 border-zinc-200",
+                            errors.companyProfileId && "border-red-500 focus-visible:ring-red-500"
+                        )}>
+                            <SelectValue placeholder="Select business profile" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white">
+                            {companies.map((company) => (
+                                <SelectItem key={company.id} value={company.id}>
+                                    {company.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {errors.companyProfileId && (
+                        <p className="text-[10px] text-red-500 font-bold">{errors.companyProfileId.message}</p>
+                    )}
                 </div>
             </div>
 

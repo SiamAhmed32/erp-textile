@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Container } from "@/components/reusables";
+import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import StatsCard from "@/components/dashboard/StatsCard";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   Landmark,
@@ -13,171 +12,138 @@ import {
   ArrowLeft,
   Banknote,
   FileDown,
+  PlusCircle,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
+import { useGetByIdQuery, usePostMutation } from "@/store/services/commonApi";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { CustomModal, InputField } from "@/components/reusables";
+import { cn } from "@/lib/utils";
 
-/* ─── Mock ──────────────────────────────────────────────── */
-interface ScheduleItem {
-  no: number;
+/* ─── Types ──────────────────────────────────────────────── */
+interface LoanRepayment {
+  id: string;
+  installmentNo: number;
   date: string;
-  principalAmount: number;
+  principal: number;
   interest: number;
-  total: number;
-  balance: number;
-  status: "paid" | "upcoming" | "overdue";
+  totalPaid: number;
+  remainingBalance: number;
 }
 
 interface Loan {
   id: string;
-  lender: string;
-  type: "bank" | "director" | "personal";
+  lenderName: string;
+  loanType: string;
   interestRate: number;
   principalAmount: number;
-  paidAmount: number;
-  outstandingAmount: number;
   startDate: string;
-  status: "active" | "settled";
-  schedule: ScheduleItem[];
+  remarks: string;
+  repayments: LoanRepayment[];
 }
 
-const loans: Loan[] = [
-  {
-    id: "L1",
-    lender: "National Bank Limited",
-    type: "bank",
-    interestRate: 9.5,
-    principalAmount: 500000,
-    paidAmount: 133716,
-    outstandingAmount: 366284,
-    startDate: "Jan 2025",
-    status: "active",
-    schedule: [
-      {
-        no: 1,
-        date: "Mar 2025",
-        principalAmount: 10000,
-        interest: 3958,
-        total: 13958,
-        balance: 490000,
-        status: "paid",
-      },
-      {
-        no: 2,
-        date: "Jun 2025",
-        principalAmount: 10000,
-        interest: 3879,
-        total: 13879,
-        balance: 480000,
-        status: "paid",
-      },
-      {
-        no: 3,
-        date: "Sep 2025",
-        principalAmount: 10000,
-        interest: 3800,
-        total: 13800,
-        balance: 470000,
-        status: "paid",
-      },
-      {
-        no: 4,
-        date: "Dec 2025",
-        principalAmount: 10000,
-        interest: 3721,
-        total: 13721,
-        balance: 460000,
-        status: "paid",
-      },
-      {
-        no: 5,
-        date: "Mar 2026",
-        principalAmount: 10000,
-        interest: 3642,
-        total: 13642,
-        balance: 450000,
-        status: "upcoming",
-      },
-      {
-        no: 6,
-        date: "Jun 2026",
-        principalAmount: 10000,
-        interest: 3563,
-        total: 13563,
-        balance: 440000,
-        status: "upcoming",
-      },
-    ],
-  },
-  {
-    id: "L2",
-    lender: "Mr. Rahman (Director)",
-    type: "director",
-    interestRate: 0,
-    principalAmount: 200000,
-    paidAmount: 66667,
-    outstandingAmount: 133333,
-    startDate: "Jul 2025",
-    status: "active",
-    schedule: [
-      {
-        no: 1,
-        date: "Oct 2025",
-        principalAmount: 33333,
-        interest: 0,
-        total: 33333,
-        balance: 166667,
-        status: "paid",
-      },
-      {
-        no: 2,
-        date: "Jan 2026",
-        principalAmount: 33334,
-        interest: 0,
-        total: 33334,
-        balance: 133333,
-        status: "paid",
-      },
-      {
-        no: 3,
-        date: "Apr 2026",
-        principalAmount: 33333,
-        interest: 0,
-        total: 33333,
-        balance: 100000,
-        status: "upcoming",
-      },
-      {
-        no: 4,
-        date: "Jul 2026",
-        principalAmount: 33333,
-        interest: 0,
-        total: 33333,
-        balance: 66667,
-        status: "upcoming",
-      },
-      {
-        no: 5,
-        date: "Oct 2026",
-        principalAmount: 33334,
-        interest: 0,
-        total: 33334,
-        balance: 33333,
-        status: "upcoming",
-      },
-      {
-        no: 6,
-        date: "Jan 2027",
-        principalAmount: 33333,
-        interest: 0,
-        total: 33333,
-        balance: 0,
-        status: "upcoming",
-      },
-    ],
-  },
-];
+const fmt = (n: number) => "৳ " + Math.abs(Number(n)).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
-const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
+function RepaymentModal({
+  open,
+  onClose,
+  loanId,
+  nextInstallment,
+}: {
+  open: boolean;
+  onClose: () => void;
+  loanId: string;
+  nextInstallment: number;
+}) {
+  const [formData, setFormData] = React.useState({
+    installmentNo: String(nextInstallment),
+    date: new Date().toISOString().split("T")[0],
+    principal: "",
+    interest: "0",
+  });
+  const [recordRepayment, { isLoading }] = usePostMutation();
+
+  const handleChange = (e: any) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await recordRepayment({
+        path: `accounting/loans/${loanId}/repayments`,
+        body: {
+          ...formData,
+          installmentNo: Number(formData.installmentNo),
+          principal: Number(formData.principal),
+          interest: Number(formData.interest),
+        },
+        invalidate: [`accounting/loans`],
+      }).unwrap();
+
+      toast.success("Repayment recorded successfully");
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to record repayment");
+    }
+  };
+
+  return (
+    <CustomModal
+      open={open}
+      onOpenChange={(val) => !val && onClose()}
+      title={<div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">Treasury — <span className="text-zinc-900">Record Repayment</span></div>}
+      maxWidth="500px"
+    >
+      <form onSubmit={handleSubmit} className="space-y-5 py-2">
+        <div className="grid grid-cols-2 gap-4">
+          <InputField
+            label="Installment #"
+            name="installmentNo"
+            type="number"
+            value={formData.installmentNo}
+            onChange={handleChange}
+            required
+          />
+          <InputField
+            label="Payment Date"
+            name="date"
+            type="date"
+            value={formData.date}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <InputField
+            label="Principal Paid (৳)"
+            name="principal"
+            value={formData.principal}
+            onChange={handleChange}
+            placeholder="0.00"
+            required
+          />
+          <InputField
+            label="Interest Paid (৳)"
+            name="interest"
+            value={formData.interest}
+            onChange={handleChange}
+            placeholder="0.00"
+          />
+        </div>
+        <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
+          <Button type="button" variant="ghost" disabled={isLoading} onClick={onClose}>Cancel</Button>
+          <Button type="submit" disabled={isLoading} className="bg-zinc-900 text-white font-bold px-8">
+            {isLoading ? "Processing..." : "Record Payment"}
+          </Button>
+        </div>
+      </form>
+    </CustomModal>
+  );
+}
 
 export default function LoanDetailPage({
   params,
@@ -185,150 +151,246 @@ export default function LoanDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
-  const loan = loans.find((l) => l.id === id);
+  const [isRepaymentModalOpen, setIsRepaymentModalOpen] = React.useState(false);
+
+  const { data: loanResponse, isLoading: isLoadingLoan } = useGetByIdQuery({
+    path: `accounting/loans`,
+    id: id,
+  });
+
+  const loan = (loanResponse as any)?.data as Loan;
 
   const detailColumns = useMemo(
     () => [
       {
         header: "#",
-        accessor: (row: ScheduleItem) => row.no,
+        accessor: (row: LoanRepayment) => (
+          <span className="font-semibold text-zinc-500 text-sm">#{row.installmentNo}</span>
+        ),
       },
       {
-        header: "Due Date",
-        accessor: (row: ScheduleItem) => row.date,
+        header: "Payment Date",
+        accessor: (row: LoanRepayment) => (
+          <span className="text-zinc-700 font-medium text-sm">{format(new Date(row.date), "dd MMM yyyy")}</span>
+        ),
       },
       {
         header: "Principal",
-        accessor: (row: ScheduleItem) => (
-          <span className="font-mono font-bold text-slate-700">
-            {fmt(row.principalAmount)}
+        accessor: (row: LoanRepayment) => (
+          <span className="font-semibold text-zinc-900 text-sm">
+            {fmt(Number(row.principal))}
           </span>
         ),
       },
       {
         header: "Interest",
-        accessor: (row: ScheduleItem) => (
-          <span className="text-amber-600 font-medium">
-            {row.interest > 0 ? fmt(row.interest) : "—"}
+        accessor: (row: LoanRepayment) => (
+          <span className="text-amber-600 font-medium text-sm">
+            {Number(row.interest) > 0 ? fmt(Number(row.interest)) : "—"}
           </span>
         ),
       },
       {
-        header: "Total",
-        accessor: (row: ScheduleItem) => (
-          <span className="font-bold text-slate-900">{fmt(row.total)}</span>
+        header: "Total Paid",
+        accessor: (row: LoanRepayment) => (
+          <span className="font-semibold text-emerald-600 text-sm">{fmt(Number(row.totalPaid))}</span>
         ),
       },
       {
-        header: "Balance",
-        accessor: (row: ScheduleItem) => (
-          <span className="text-slate-500">{fmt(row.balance)}</span>
-        ),
-      },
-      {
-        header: "Status",
-        accessor: (row: ScheduleItem) => (
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              row.status === "paid"
-                ? "bg-emerald-50 text-emerald-600"
-                : row.status === "overdue"
-                  ? "bg-red-50 text-red-600"
-                  : "bg-slate-100 text-slate-500"
-            }`}
-          >
-            {row.status.toUpperCase()}
-          </span>
+        header: "Remaining Balance",
+        accessor: (row: LoanRepayment) => (
+          <span className="text-zinc-500 font-medium text-sm">{fmt(Number(row.remainingBalance))}</span>
         ),
       },
     ],
     [],
   );
 
+  const stats = useMemo(() => {
+    if (!loan) return { paid: 0, interestPaid: 0, outstanding: 0 };
+    const paid = loan.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) || 0;
+    const interestPaid = loan.repayments?.reduce((sum, r) => sum + Number(r.interest), 0) || 0;
+    const outstanding = Math.max(0, Number(loan.principalAmount) - paid);
+    return { paid, interestPaid, outstanding };
+  }, [loan]);
+
+  if (isLoadingLoan) {
+    return (
+      <Container className="py-20 text-center">
+        <div className="animate-pulse text-zinc-400 font-black uppercase tracking-widest">Securing Treasury Data...</div>
+      </Container>
+    );
+  }
+
   if (!loan) {
     return (
-      <Container className="pb-10 text-center py-20">
-        <p className="text-muted-foreground">Loan record not found.</p>
+      <Container className="pb-10 text-center py-24">
+        <div className="size-16 bg-zinc-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-zinc-100">
+          <ShieldAlert className="size-8 text-zinc-300" />
+        </div>
+        <h2 className="text-xl font-bold text-zinc-900">Stakeholder Record Missing</h2>
+        <p className="text-zinc-500 mt-2 max-w-sm mx-auto">This debt facility might have been archived or the ID is incorrect in the treasury system.</p>
         <Link href="/accounting/loan-management">
-          <Button variant="outline" size="sm" className="mt-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+          <Button variant="outline" className="mt-8 rounded-xl h-11 px-8 font-bold border-zinc-200">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Return to Portfolio
           </Button>
         </Link>
       </Container>
     );
   }
 
-  return (
-    <Container className="pb-10">
-      <div className="space-y-4">
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatsCard
-            title="Principal Amount"
-            value={fmt(loan.principalAmount)}
-            icon={Landmark}
-            color="blue"
-          />
-          <StatsCard
-            title="Interest Rate"
-            value={`${loan.interestRate}% APR`}
-            icon={Landmark}
-            color="orange"
-          />
-          <StatsCard
-            title="Paid Amount"
-            value={fmt(loan.paidAmount)}
-            icon={CheckCircle2}
-            color="green"
-          />
-          <StatsCard
-            title="Outstanding Amount"
-            value={fmt(loan.outstandingAmount)}
-            icon={TrendingDown}
-            color="red"
-          />
-        </div>
+  const completionPercent = Math.min(100, (stats.paid / Number(loan.principalAmount)) * 100);
 
-        {/* Toolbar */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/accounting/loan-management">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="size-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-600">
-                <Banknote className="size-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-slate-900 leading-tight">
-                  {loan.lender}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {loan.type.toUpperCase()} FACILITY
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-            <div className="flex w-full gap-2 sm:max-w-[260px]">
-              <Input type="date" />
-              <Input type="date" />
-            </div>
-            <Button className="bg-black text-white hover:bg-black/90">
-              <FileDown className="size-4 mr-2" /> Export Schedule
+  return (
+    <Container className="pb-10 space-y-6">
+      <PageHeader
+        title={loan.lenderName || "Stakeholder Detail"}
+        breadcrumbItems={[
+          { label: "Accounting", href: "/accounting/overview" },
+          { label: "Debt Portfolio", href: "/accounting/loan-management" },
+          { label: "Details" },
+        ]}
+        backHref="/accounting/loan-management"
+        actions={
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsRepaymentModalOpen(true)}
+              className="h-9 px-4 bg-zinc-900 text-white font-bold rounded-md hover:bg-black transition-all flex items-center gap-2 text-sm shadow-sm"
+            >
+              <PlusCircle className="size-4" />
+              Record Repayment
+            </Button>
+            <Button variant="outline" className="h-9 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-bold gap-2 text-sm shadow-sm">
+              <FileDown className="size-4 text-zinc-400" />
+              Export Schedule
             </Button>
           </div>
+        }
+      />
+
+      {/* Entity Card */}
+      <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm flex flex-col md:flex-row gap-6 justify-between items-start md:items-center">
+        <div className="flex items-center gap-4">
+          <div className="size-12 bg-zinc-100 border border-zinc-200 rounded-lg flex items-center justify-center text-zinc-600">
+            <Banknote className="size-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-xl text-zinc-900 leading-tight">
+                {loan.lenderName}
+              </h3>
+              <span className={cn(
+                "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border",
+                stats.outstanding <= 0
+                  ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                  : "bg-amber-50 text-amber-600 border-amber-100"
+              )}>
+                {stats.outstanding <= 0 ? "Fully Settled" : "Active Facility"}
+              </span>
+            </div>
+            <p className="text-xs font-medium text-zinc-500 uppercase flex items-center gap-2 mt-1.5">
+              <span className="bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200 text-[10px] text-zinc-600 font-bold">
+                {(loan.loanType || 'GENERAL').toUpperCase()}
+              </span>
+              <span className="size-1 bg-zinc-300 rounded-full" />
+              DISBURSED {format(new Date(loan.startDate), "MMM dd, yyyy")}
+            </p>
+          </div>
         </div>
 
-        {/* Amortization Schedule Table */}
+        <div className="text-left md:text-right">
+          <p className="text-xs text-zinc-400 font-semibold uppercase tracking-widest">Remarks</p>
+          <p className="text-sm font-medium text-zinc-700 max-w-sm">{loan.remarks || "No additional remarks"}</p>
+        </div>
+      </div>
+
+      {/* Loan Progress Meter */}
+      <div className="bg-white p-6 rounded-xl border border-zinc-200 shadow-sm space-y-4">
+        <div className="flex justify-between items-end">
+          <div>
+            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">Repayment Progress</p>
+            <h4 className="text-2xl font-black text-zinc-900 mt-1">{completionPercent.toFixed(1)}% <span className="text-xs text-zinc-400 font-medium">SETTLED</span></h4>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Target Principal</p>
+            <p className="text-sm font-bold text-zinc-900">{fmt(loan.principalAmount)}</p>
+          </div>
+        </div>
+        <div className="h-3 w-full bg-zinc-100 rounded-full overflow-hidden border border-zinc-200/50">
+          <div
+            className="h-full bg-emerald-500 transition-all duration-1000 ease-out flex items-center justify-end px-1"
+            style={{ width: `${completionPercent}%` }}
+          >
+            {completionPercent > 10 && <div className="size-1.5 bg-white rounded-full shadow-sm animate-pulse" />}
+          </div>
+        </div>
+        <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest pt-1">
+          <span>Origination</span>
+          <span>Fully Settled</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-3 opacity-10">
+            <Landmark className="size-8" />
+          </div>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Principal Facility</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-zinc-900">{fmt(loan.principalAmount)}</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Rate of Interest</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-zinc-900">{loan.interestRate}%</span>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase">Per Annum</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Repaid</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-emerald-600">{fmt(stats.paid)}</span>
+          </div>
+        </div>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Interest Expenses</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-zinc-900">{fmt(stats.interestPaid)}</span>
+          </div>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Net Outstandings</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-white font-mono">{fmt(stats.outstanding)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/50">
+          <div>
+            <h3 className="font-semibold text-zinc-900 text-sm">Amortization History</h3>
+            <p className="text-xs text-zinc-500 font-medium">Tracking principal reductions and interest expenses.</p>
+          </div>
+          <div className="text-right">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Installments</span>
+            <p className="font-bold text-zinc-900 font-mono text-sm">{loan.repayments?.length || 0}</p>
+          </div>
+        </div>
         <CustomTable
-          data={loan.schedule}
+          data={loan.repayments || []}
           columns={detailColumns}
-          scrollAreaHeight="h-[calc(100vh-320px)]"
+          scrollAreaHeight="h-[calc(100vh-500px)]"
         />
       </div>
+
+      <RepaymentModal
+        open={isRepaymentModalOpen}
+        onClose={() => setIsRepaymentModalOpen(false)}
+        loanId={loan.id}
+        nextInstallment={(loan.repayments?.length || 0) + 1}
+      />
     </Container>
   );
 }

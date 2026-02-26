@@ -11,6 +11,7 @@ import {
     CheckCircle2,
     Clock,
     FileText,
+    MapPin,
     Printer,
 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -59,10 +60,12 @@ export default function BuyerLedgerDetailPage() {
         },
     });
 
-    const rows = useMemo(
-        () => ((ledgerPayload as any)?.data || []) as LedgerEntry[],
-        [ledgerPayload]
-    );
+    const rows = useMemo(() => {
+        const payload = (ledgerPayload as any)?.data;
+        if (Array.isArray(payload?.data)) return payload.data as LedgerEntry[];
+        if (Array.isArray(payload)) return payload as LedgerEntry[];
+        return [] as LedgerEntry[];
+    }, [ledgerPayload]);
 
     const { totalDebit, totalCredit, closingBalance } = useMemo(() => {
         let td = 0;
@@ -201,28 +204,34 @@ export default function BuyerLedgerDetailPage() {
             />
 
             {/* Stats - Full Width */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-2">
-                <div className="bg-white border border-zinc-200 rounded-xl p-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 mt-2">
+                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                         Total Invoiced
                     </p>
-                    <p className="text-3xl font-bold text-indigo-600 font-mono">
-                        {fmt(totalDebit)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-3xl font-bold text-indigo-600 font-mono">
+                            {fmt(totalDebit)}
+                        </p>
+                        <ArrowUpRight className="text-indigo-200 w-8 h-8 opacity-50" />
+                    </div>
                     <p className="text-xs text-zinc-400 mt-1">Accounts Receivable</p>
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-5">
+                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                         Total Received
                     </p>
-                    <p className="text-3xl font-bold text-emerald-600 font-mono">
-                        {fmt(totalCredit)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-3xl font-bold text-emerald-600 font-mono">
+                            {fmt(totalCredit)}
+                        </p>
+                        <ArrowDownLeft className="text-emerald-200 w-8 h-8 opacity-50" />
+                    </div>
                     <p className="text-xs text-zinc-400 mt-1">Payments Collected</p>
                 </div>
                 <div
                     className={cn(
-                        "rounded-xl p-5 border",
+                        "rounded-xl p-5 border shadow-sm",
                         closingBalance > 0
                             ? "bg-amber-50 border-amber-200"
                             : closingBalance < 0
@@ -255,9 +264,44 @@ export default function BuyerLedgerDetailPage() {
                 </div>
             </div>
 
+            {/* Buyer Information Card */}
+            <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-8 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Merchandiser</p>
+                        </div>
+                        <p className="text-sm font-bold text-zinc-900">{buyer?.merchandiser || "—"}</p>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Contact Details</p>
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-900">{buyer?.phone}</p>
+                        <p className="text-xs text-zinc-500">{buyer?.email}</p>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Location</p>
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-900">{buyer?.location}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Business Address</p>
+                        </div>
+                        <p className="text-xs text-zinc-600 leading-relaxed font-medium">{buyer?.address}</p>
+                    </div>
+                </div>
+            </div>
+
             {/* Action Filters & Transaction Table */}
             <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-sm font-semibold text-zinc-700 flex items-center gap-2">
                             <FileText className="w-4 h-4" />

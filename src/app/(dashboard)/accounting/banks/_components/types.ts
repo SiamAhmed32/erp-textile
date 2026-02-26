@@ -10,6 +10,7 @@ export const BankFormSchema = z.object({
     branchName: z.string().optional(),
     swiftCode: z.string().optional(),
     routingNumber: z.string().optional(),
+    companyProfileId: z.string().min(1, "Company profile is required"),
 });
 
 export type BankFormValues = z.infer<typeof BankFormSchema>;
@@ -22,6 +23,7 @@ export interface Bank {
     swiftCode: string | null;
     routingNumber: string | null;
     companyProfileId: string;
+    balance: number;
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;

@@ -78,6 +78,20 @@ const BanksTable = ({
                 ),
             },
             {
+                header: "Current Balance",
+                accessor: (row: Bank) => (
+                    <div className="flex flex-col">
+                        <span className={cn(
+                            "font-mono font-black text-[14px] tracking-tight",
+                            row.balance < 0 ? "text-red-600" : "text-emerald-600"
+                        )}>
+                            ৳ {(row.balance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </span>
+                        <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">Real-time Sync</span>
+                    </div>
+                ),
+            },
+            {
                 header: "Ledger Status",
                 accessor: (row: Bank) => (
                     <span

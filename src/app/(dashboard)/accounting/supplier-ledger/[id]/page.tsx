@@ -12,6 +12,7 @@ import {
     Briefcase,
     CheckCircle2,
     FileText,
+    MapPin,
     Printer,
 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -58,10 +59,12 @@ export default function SupplierLedgerDetailPage() {
         },
     });
 
-    const rows = useMemo(
-        () => ((ledgerPayload as any)?.data || []) as LedgerEntry[],
-        [ledgerPayload]
-    );
+    const rows = useMemo(() => {
+        const payload = (ledgerPayload as any)?.data;
+        if (Array.isArray(payload?.data)) return payload.data as LedgerEntry[];
+        if (Array.isArray(payload)) return payload as LedgerEntry[];
+        return [] as LedgerEntry[];
+    }, [ledgerPayload]);
 
     const { totalDebit, totalCredit, closingBalance } = useMemo(() => {
         let td = 0;
@@ -200,28 +203,34 @@ export default function SupplierLedgerDetailPage() {
             />
 
             {/* Stats - Full Width */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 mt-2">
-                <div className="bg-white border border-zinc-200 rounded-xl p-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 mt-2">
+                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                         Total Paid
                     </p>
-                    <p className="text-3xl font-bold text-emerald-600 font-mono">
-                        {fmt(totalDebit)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-3xl font-bold text-emerald-600 font-mono">
+                            {fmt(totalDebit)}
+                        </p>
+                        <ArrowDownLeft className="text-emerald-200 w-8 h-8 opacity-50" />
+                    </div>
                     <p className="text-xs text-zinc-400 mt-1">Payments Made</p>
                 </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-5">
+                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
                         Total Billed
                     </p>
-                    <p className="text-3xl font-bold text-rose-600 font-mono">
-                        {fmt(totalCredit)}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-3xl font-bold text-rose-600 font-mono">
+                            {fmt(totalCredit)}
+                        </p>
+                        <ArrowUpRight className="text-rose-200 w-8 h-8 opacity-50" />
+                    </div>
                     <p className="text-xs text-zinc-400 mt-1">Accounts Payable</p>
                 </div>
                 <div
                     className={cn(
-                        "rounded-xl p-5 border",
+                        "rounded-xl p-5 border shadow-sm",
                         closingBalance > 0
                             ? "bg-rose-50 border-rose-200"
                             : closingBalance < 0
@@ -251,6 +260,41 @@ export default function SupplierLedgerDetailPage() {
                                 ? <span className="text-emerald-700 font-medium">Overpaid</span>
                                 : "Fully Settled"}
                     </p>
+                </div>
+            </div>
+
+            {/* Supplier Information Card */}
+            <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-8 shadow-sm">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <Briefcase className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Supplier Code</p>
+                        </div>
+                        <p className="text-sm font-bold text-zinc-900">{supplier?.supplierCode || "—"}</p>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <FileText className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Contact Details</p>
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-900">{supplier?.phone}</p>
+                        <p className="text-xs text-zinc-500">{supplier?.email}</p>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Location</p>
+                        </div>
+                        <p className="text-sm font-semibold text-zinc-900">{supplier?.location}</p>
+                    </div>
+                    <div className="md:col-span-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <MapPin className="w-3.5 h-3.5 text-zinc-400" />
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Business Address</p>
+                        </div>
+                        <p className="text-xs text-zinc-600 leading-relaxed font-medium">{supplier?.address}</p>
+                    </div>
                 </div>
             </div>
 

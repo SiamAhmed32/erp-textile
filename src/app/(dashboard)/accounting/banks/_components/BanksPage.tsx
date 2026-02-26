@@ -24,12 +24,13 @@ const BanksPage = () => {
     const [editingBank, setEditingBank] = useState<Bank | null>(null);
     const [viewingBank, setViewingBank] = useState<Bank | null>(null);
 
-    const { data, isLoading } = useGetAllQuery({
+    const { data: banksPayload, isLoading } = useGetAllQuery({
         path: "accounting/banks",
         page,
         limit: 10,
         search: search !== "" ? search : undefined,
-        sort: sort ? `${sort.dir === "desc" ? "-" : ""}${sort.field}` : undefined,
+        sortBy: sort.field,
+        sortOrder: sort.dir,
     });
 
     const [putItem] = usePutMutation();
@@ -44,14 +45,19 @@ const BanksPage = () => {
         setPage(1);
     };
 
-    const banks = useMemo(() => (data?.data || []) as Bank[], [data]);
+    const banks = useMemo(() => (banksPayload?.data || []) as Bank[], [banksPayload]);
 
     const stats = useMemo(() => {
+        const total = banksPayload?.meta?.pagination?.total || 0;
+        const activeCount = banks.filter(b => !b.isDeleted).length;
+        const totalLiquidity = banks.reduce((acc, bank) => acc + (bank.balance || 0), 0);
         return {
-            total: data?.meta?.pagination?.total || 0,
-            active: banks.filter(b => !b.isDeleted).length,
+            total,
+            active: activeCount,
+            archived: total - activeCount,
+            totalLiquidity,
         };
-    }, [banks, data]);
+    }, [banks, banksPayload]);
 
     const handleArchive = async (bank: Bank) => {
         const isArchiving = !bank.isDeleted;
@@ -68,72 +74,54 @@ const BanksPage = () => {
     };
 
     return (
-        <div className="space-y-8 pb-10">
-            {/* ── Header Section ─────────────────────────────────────────── */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-[0.2em] text-[10px]">
-                        <Landmark className="w-3 h-3" />
-                        <span>Financial Control</span>
-                    </div>
-                    <h1 className="text-4xl font-black text-zinc-900 tracking-tight">Bank Accounts</h1>
-                    <p className="text-zinc-500 text-sm font-medium">Manage your organizational bank sub-ledgers and liquidity.</p>
-                </div>
+        <div className="space-y-6">
+            {/* ── Page Header ───────────────────────────────────────────── */}
+            <PageHeader
+                title="Bank Management"
+                breadcrumbItems={[
+                    { label: "Accounting", href: "/accounting/overview" },
+                    { label: "Bank Management" },
+                ]}
+                actions={
+                    <Button
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <Building2 className="w-4 h-4" />
+                        Connect New Bank
+                    </Button>
+                }
+            />
 
-                <Button
-                    onClick={() => setIsCreateModalOpen(true)}
-                    className="h-12 px-8 bg-zinc-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-95 flex items-center gap-2"
-                >
-                    <Building2 className="w-4 h-4" />
-                    Connect New Bank
-                </Button>
+            {/* ── Stats Area ────────────────────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <StatsCard
+                    title="Liquid Facilities"
+                    value={`৳ ${stats.totalLiquidity.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`}
+                    icon={Landmark}
+                    description="Total aggregated liquidity"
+                    loading={isLoading}
+                />
+                <StatsCard
+                    title="Active Channels"
+                    value={stats.active}
+                    icon={Activity}
+                    description="Operational bank accounts"
+                    loading={isLoading}
+                    className="border-emerald-100"
+                />
+                <StatsCard
+                    title="Archived"
+                    value={stats.archived}
+                    icon={Building2}
+                    description="Inactive bank profiles"
+                    loading={isLoading}
+                />
             </div>
 
-            {/* ── Stats Carousel Mockup ────────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-zinc-900 rounded-[2rem] p-8 text-white relative overflow-hidden group shadow-2xl shadow-zinc-200">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                        <Landmark className="w-32 h-32" />
-                    </div>
-                    <div className="relative z-10 space-y-6">
-                        <div className="space-y-1">
-                            <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Global Liquidity</p>
-                            <h3 className="text-3xl font-black tracking-tight italic">Sub-Ledger Control</h3>
-                        </div>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-black">{stats.active}</span>
-                            <span className="text-zinc-500 font-bold uppercase text-xs">Active Portals</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white border-2 border-zinc-100 rounded-[2rem] p-8 space-y-6 shadow-sm">
-                    <div className="flex items-center justify-between">
-                        <div className="p-3 bg-green-50 rounded-2xl border border-green-100">
-                            <Activity className="w-6 h-6 text-green-600" />
-                        </div>
-                        <span className="text-[10px] font-black text-green-600 bg-green-50 px-3 py-1 rounded-full uppercase">Operational</span>
-                    </div>
-                    <div className="space-y-1">
-                        <h4 className="text-zinc-900 font-black text-xl italic uppercase tracking-tight">System Status</h4>
-                        <p className="text-zinc-500 text-xs font-medium">Journal synchronization active.</p>
-                    </div>
-                </div>
-
-                <div className="bg-zinc-50 border border-zinc-200/50 rounded-[2rem] p-8 flex flex-col justify-center gap-4">
-                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Archived Entities</p>
-                    <div className="flex items-center gap-4">
-                        <span className="text-4xl font-black text-zinc-300">{stats.total - stats.active}</span>
-                        <div className="h-1 w-full bg-zinc-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-zinc-400" style={{ width: `${((stats.total - stats.active) / stats.total) * 100}%` }}></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* ── Main Workspace ────────────────────────────────────────── */}
-            <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
-                <div className="px-8 py-6 border-b border-zinc-100">
+            {/* ── Workspace Area ────────────────────────────────────────── */}
+            <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="p-4 border-b border-zinc-100 bg-zinc-50/30">
                     <BankToolbar
                         searchInput={searchInput}
                         setSearchInput={setSearchInput}
@@ -148,14 +136,15 @@ const BanksPage = () => {
                     data={banks}
                     loading={isLoading}
                     page={page}
-                    totalPages={data?.meta?.pagination?.totalPages || 1}
+                    totalPages={banksPayload?.meta?.pagination?.totalPages || 1}
                     onPageChange={setPage}
-                    onEdit={(bank) => setEditingBank(bank)}
+                    onEdit={setEditingBank}
+                    onView={setViewingBank}
                     onDelete={handleArchive}
-                    onView={(bank) => setViewingBank(bank)}
                 />
             </div>
 
+            {/* ── Modals ────────────────────────────────────────────────── */}
             <BankCreateModal
                 open={isCreateModalOpen}
                 onOpenChange={setIsCreateModalOpen}
@@ -175,5 +164,4 @@ const BanksPage = () => {
         </div>
     );
 };
-
 export default BanksPage;
