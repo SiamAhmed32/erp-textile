@@ -59,7 +59,7 @@ export default function SupplierLedgerPage() {
       ),
     },
     {
-      header: "Current Payable",
+      header: "Due Balance",
       accessor: (row: any) => (
         <div className={cn(
           "font-mono font-bold text-sm",
@@ -105,7 +105,7 @@ export default function SupplierLedgerPage() {
           >
             <Link href="/suppliers">
               <ExternalLink className="w-4 h-4" />
-              Global Directory
+              Manage Suppliers
             </Link>
           </Button>
         }

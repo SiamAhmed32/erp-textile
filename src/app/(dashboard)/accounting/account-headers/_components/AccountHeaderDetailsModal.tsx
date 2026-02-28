@@ -84,18 +84,14 @@ const AccountHeaderDetailsModal = ({ open, onOpenChange, header }: Props) => {
                         </div>
                     </div>
 
-                    {/* Opening Balance */}
-                    <div className="mt-5 pt-4 border-t border-current/10" style={{ borderColor: "inherit" }}>
-                        <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-                            Opening Balance
-                        </p>
-                        <p className={cn("text-3xl font-black font-mono tracking-tight", palette.text)}>
-                            ৳{" "}
-                            {header.openingBalance?.toLocaleString("en-IN", {
-                                minimumFractionDigits: 2,
-                            })}
-                        </p>
-                    </div>
+                    {/* Parent Info if sub-account */}
+                    {header.parent && (
+                        <div className="flex items-center gap-1.5 mt-4 text-zinc-400 text-xs">
+                            <GitFork className="w-3 h-3" />
+                            <span>Sub-account of</span>
+                            <span className="font-semibold text-zinc-600">{header.parent.name}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── Details Grid ─────────────────────────────────────────── */}

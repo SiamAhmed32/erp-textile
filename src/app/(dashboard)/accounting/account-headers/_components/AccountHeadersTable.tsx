@@ -112,22 +112,6 @@ const AccountHeadersTable = ({
                 },
             },
             {
-                header: "Position",
-                className: "text-right",
-                accessor: (row: AccountHeader) => (
-                    <div className="flex flex-col items-end py-1">
-                        <div className="text-[15px] font-mono font-black text-zinc-900 tracking-tight">
-                            ৳ {row.openingBalance?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Opening Bal</span>
-                            <div className="size-1 rounded-full bg-zinc-200" />
-                            <span className="text-[9px] font-black text-zinc-900 uppercase tracking-widest italic font-mono">BDT</span>
-                        </div>
-                    </div>
-                ),
-            },
-            {
                 header: "Utility",
                 className: "text-right pr-6",
                 accessor: (row: AccountHeader) => (

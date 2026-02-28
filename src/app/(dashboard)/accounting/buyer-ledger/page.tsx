@@ -36,10 +36,6 @@ export default function BuyerLedgerPage() {
 
     const buyers = useMemo(() => ((buyerResponse as any)?.data || []) as any[], [buyerResponse]);
 
-    // Calculate total receivable
-    const totalReceivable = useMemo(() => {
-        return buyers.reduce((sum, b) => sum + (Number(b.balance) || 0), 0);
-    }, [buyers]);
 
     const columns = useMemo(() => [
         {
@@ -64,7 +60,23 @@ export default function BuyerLedgerPage() {
             ),
         },
         {
-            header: "Current Balance",
+            header: "Total Invoiced",
+            accessor: (row: any) => (
+                <div className="font-mono font-bold text-sm text-zinc-600">
+                    ৳ {(Number(row.totalInvoiced) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </div>
+            ),
+        },
+        {
+            header: "Total Received",
+            accessor: (row: any) => (
+                <div className="font-mono font-bold text-sm text-emerald-600">
+                    ৳ {(Number(row.totalReceived) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </div>
+            ),
+        },
+        {
+            header: "Due Balance",
             accessor: (row: any) => (
                 <div className={cn(
                     "font-mono font-bold text-sm",
@@ -110,73 +122,15 @@ export default function BuyerLedgerPage() {
                     >
                         <Link href="/buyers">
                             <ExternalLink className="w-4 h-4" />
-                            Global Directory
+                            Manage Buyers
                         </Link>
                     </Button>
                 }
             />
 
-            {/* Metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-                        Total Buyers
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-2xl font-bold text-zinc-900">
-                            {buyers.length}
-                        </p>
-                        <div className="size-8 rounded-lg bg-zinc-50 flex items-center justify-center text-zinc-400 border border-zinc-100">
-                            <Users className="w-4 h-4" />
-                        </div>
-                    </div>
-                    <p className="text-[10px] text-zinc-400 mt-2">Active trade accounts</p>
-                </div>
-
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-                        Total Receivables
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-2xl font-bold text-rose-600 font-mono italic">
-                            ৳ {totalReceivable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-                        </p>
-                        <div className="size-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-400 border border-rose-100">
-                            <BookOpen className="w-4 h-4" />
-                        </div>
-                    </div>
-                    <p className="text-[10px] text-zinc-400 mt-2">Aggregated outstanding dues</p>
-                </div>
-
-                <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-1">
-                        Quick Actions
-                    </p>
-                    <div className="flex gap-2 mt-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs h-8 font-bold"
-                            asChild
-                        >
-                            <Link href="/accounting/overview">
-                                Overview
-                            </Link>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs h-8 font-bold"
-                            onClick={() => window.print()}
-                        >
-                            Print List
-                        </Button>
-                    </div>
-                </div>
-            </div>
 
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 bg-white p-2 rounded-xl border border-zinc-200 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />

@@ -71,7 +71,6 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                 code: header.code,
                 type: header.type,
                 description: header.description || "",
-                openingBalance: header.openingBalance || 0,
                 parentId: header.parentId,
                 isControlAccount: header.isControlAccount,
             });
@@ -179,7 +178,9 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                 {/* ── Basic Info ──────────────────────────────────────────── */}
                 <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1.5">
-                        <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Account Name</Label>
+                        <Label className="flex items-center gap-1 text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                            Account Name <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                             {...register("name")}
                             placeholder="e.g. Petty Cash"
@@ -189,19 +190,6 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                     </div>
                 </div>
 
-                {/* ── Balance ─────────────────────────────────────────────── */}
-                <div className="space-y-1.5">
-                    <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Opening Balance</Label>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">৳</span>
-                        <Input
-                            type="number"
-                            step="0.01"
-                            {...register("openingBalance", { valueAsNumber: true })}
-                            className="h-11 border-zinc-200 pl-8 font-mono font-black text-zinc-800 text-lg"
-                        />
-                    </div>
-                </div>
 
                 <div className="space-y-1.5">
                     <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">Operational Notes</Label>
