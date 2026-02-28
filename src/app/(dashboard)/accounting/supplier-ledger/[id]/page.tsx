@@ -28,6 +28,7 @@ interface LedgerEntry {
     category: string;
     narration: string;
     accountName: string;
+    debitedAccountName: string;
     debit: number;
     credit: number;
     balance: number;
@@ -101,10 +102,10 @@ export default function SupplierLedgerDetailPage() {
                 ),
             },
             {
-                header: "Account",
+                header: "Debit Account",
                 accessor: (row: LedgerEntry) => (
                     <span className="text-sm font-medium text-zinc-700">
-                        {row.accountName}
+                        {row.debitedAccountName}
                     </span>
                 ),
             },
@@ -125,34 +126,16 @@ export default function SupplierLedgerDetailPage() {
                 ),
             },
             {
-                header: "Debit (৳)",
+                header: "Amount (৳)",
                 className: "text-right",
                 accessor: (row: LedgerEntry) => (
                     <div className="text-right">
-                        {row.debit > 0 ? (
-                            <span className="font-mono text-sm font-semibold text-emerald-600 flex items-center justify-end gap-1">
-                                <ArrowDownLeft className="w-3.5 h-3.5" />
-                                {fmt(row.debit)}
-                            </span>
-                        ) : (
-                            <span className="text-zinc-200 text-sm">—</span>
-                        )}
-                    </div>
-                ),
-            },
-            {
-                header: "Credit (৳)",
-                className: "text-right",
-                accessor: (row: LedgerEntry) => (
-                    <div className="text-right">
-                        {row.credit > 0 ? (
-                            <span className="font-mono text-sm font-semibold text-rose-600 flex items-center justify-end gap-1">
-                                <ArrowUpRight className="w-3.5 h-3.5" />
-                                {fmt(row.credit)}
-                            </span>
-                        ) : (
-                            <span className="text-zinc-200 text-sm">—</span>
-                        )}
+                        <span className={cn(
+                            "font-mono text-sm font-bold",
+                            row.debit > 0 ? "text-emerald-600" : "text-rose-600"
+                        )}>
+                            {row.debit > 0 ? "-" : "+"} {fmt(row.debit || row.credit)}
+                        </span>
                     </div>
                 ),
             },
