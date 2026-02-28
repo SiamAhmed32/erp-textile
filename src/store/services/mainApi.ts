@@ -26,8 +26,16 @@ const tags = [
 	'accounting/accountHeads',
 	'accounting/ledger/supplier',
 	'accounting/ledger/buyer',
+	'accounting/ledger/suppliers/balances',
+	'accounting/ledger/buyers/balances',
+	'accounting/ledger/stats',
+	'accounting/ledger/audit-trail',
+	'accounting/receipts',
+	'accounting/payments',
+	'accounting/banks',
 	'accounting/loans',
 	'accounting/loans/repayments',
+	'accounting/journal-entries',
 ];
 
 export const mainApi = createApi({

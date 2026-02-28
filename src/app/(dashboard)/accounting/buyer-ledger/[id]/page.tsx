@@ -13,10 +13,12 @@ import {
     FileText,
     MapPin,
     Printer,
+    Plus,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import RecordReceiptModal from "../_components/RecordReceiptModal";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface LedgerEntry {
@@ -42,6 +44,7 @@ export default function BuyerLedgerDetailPage() {
 
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
     // Fetch buyer profile
     const { data: buyerData, isLoading: isLoadingBuyer } = useGetByIdQuery({
@@ -201,6 +204,15 @@ export default function BuyerLedgerDetailPage() {
                     { label: buyer?.name || "Detail" },
                 ]}
                 backHref="/accounting/buyer-ledger"
+                actions={
+                    <Button
+                        onClick={() => setIsReceiptModalOpen(true)}
+                        className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Record Receipt
+                    </Button>
+                }
             />
 
             {/* Stats - Full Width */}
@@ -351,6 +363,14 @@ export default function BuyerLedgerDetailPage() {
 
 
             </div>
+
+            {/* Receipt Modal */}
+            <RecordReceiptModal
+                open={isReceiptModalOpen}
+                onOpenChange={setIsReceiptModalOpen}
+                buyerId={buyerId}
+                buyerName={buyer?.name || ""}
+            />
         </Container>
     );
 }
