@@ -327,7 +327,7 @@ export default function BookkeepingCreatePage() {
               >
                 <Flex className="items-center gap-2">
                   <config.icon className="size-4" />
-                  <span className="font-bold text-xs uppercase tracking-wider">
+                  <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
                     {config.label}
                   </span>
                 </Flex>
@@ -342,26 +342,26 @@ export default function BookkeepingCreatePage() {
         <div className="xl:col-span-8 space-y-6">
           {/* Card: Entry Details */}
           <Card className="border-none overflow-hidden shadow-2xl shadow-zinc-200/50 bg-white rounded-2xl">
-            <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+            <CardHeader className="bg-zinc-900 py-6 px-8 rounded-2xl">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
                     {currentConfig && <currentConfig.icon size={20} />}
                   </div>
                   <div>
-                    <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
-                      Voucher Classification
+                    <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                      VOUCHER CLASSIFICATION
                     </p>
-                    <h2 className="text-xl font-black text-white tracking-tight italic">
-                      {currentConfig?.label} Entry
-                    </h2>
+                    <h3 className="text-2xl font-black text-white tracking-tighter italic">
+                      {currentConfig?.label}
+                    </h3>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
-                    Fiscal Period
+                  <p className="text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                    FISCAL PERIOD
                   </p>
-                  <p className="text-white font-black tracking-tight italic">
+                  <p className="text-white font-black tracking-tighter italic">
                     FY-{new Date().getFullYear()}
                   </p>
                 </div>
@@ -551,13 +551,13 @@ export default function BookkeepingCreatePage() {
                               setValue(`lines.${index}.type`, "DEBIT")
                             }
                             className={cn(
-                              "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
+                              "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
                               watchLines[index]?.type === "DEBIT"
                                 ? "bg-zinc-900 text-white"
                                 : "bg-white text-zinc-400 hover:bg-zinc-50",
                             )}
                           >
-                            Dr
+                            DR
                           </button>
                           <button
                             type="button"
@@ -565,13 +565,13 @@ export default function BookkeepingCreatePage() {
                               setValue(`lines.${index}.type`, "CREDIT")
                             }
                             className={cn(
-                              "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
+                              "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
                               watchLines[index]?.type === "CREDIT"
                                 ? "bg-zinc-900 text-white"
                                 : "bg-white text-zinc-400 hover:bg-zinc-50",
                             )}
                           >
-                            Cr
+                            CR
                           </button>
                         </div>
                       </div>

@@ -74,8 +74,8 @@ const InvoicesTable = ({
   onExport,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => { },
-  onRestore = () => { },
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }: Props) => {
   const columns = useMemo(
     () => [
@@ -142,30 +142,10 @@ const InvoicesTable = ({
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatsCard
-          title="All Invoices"
-          value={counts.all}
-          icon={FileText}
-          color="blue"
-        />
-        <StatsCard
-          title="Labels & Tags"
-          value={counts.LABEL_TAG}
-          icon={Tag}
-          color="orange"
-        />
-        <StatsCard
-          title="Fabric"
-          value={counts.FABRIC}
-          icon={Layers}
-          color="purple"
-        />
-        <StatsCard
-          title="Cartons"
-          value={counts.CARTON}
-          icon={Box}
-          color="green"
-        />
+        <StatsCard title="All Invoices" value={counts.all} icon={FileText} />
+        <StatsCard title="Labels & Tags" value={counts.LABEL_TAG} icon={Tag} />
+        <StatsCard title="Fabric" value={counts.FABRIC} icon={Layers} />
+        <StatsCard title="Cartons" value={counts.CARTON} icon={Box} />
       </div>
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -174,9 +154,10 @@ const InvoicesTable = ({
             placeholder="Search PI number, order, terms"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
           />
           <Button
-            className="bg-black text-white hover:bg-black/80"
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
             onClick={onSearchSubmit}
           >
             Search
@@ -188,7 +169,9 @@ const InvoicesTable = ({
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
-            title={showDeleted ? "Show Active Invoices" : "Show Deleted Invoices"}
+            title={
+              showDeleted ? "Show Active Invoices" : "Show Deleted Invoices"
+            }
           >
             <Trash2 className="h-4 w-4" />
             {showDeleted ? "Exit Trash" : "Trash"}

@@ -6,7 +6,7 @@ import {
   CustomModal,
   InputField,
   DateRangeFilter,
-  PageHeader
+  PageHeader,
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   ChevronRight,
-  Filter
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -70,7 +70,8 @@ const employees: EmployeeIOU[] = [
   },
 ];
 
-const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+const fmt = (n: number) =>
+  "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const initialFormData = {
   employeeName: "",
@@ -88,7 +89,9 @@ function EmployeeFormModal({
 }) {
   const [formData, setFormData] = useState(initialFormData);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -105,7 +108,12 @@ function EmployeeFormModal({
     <CustomModal
       open={open}
       onOpenChange={(val) => !val && onClose()}
-      title={<div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">Payroll Context — <span className="text-zinc-900">Advance Registration</span></div>}
+      title={
+        <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">
+          Payroll Context —{" "}
+          <span className="text-zinc-900">Advance Registration</span>
+        </div>
+      }
       maxWidth="600px"
     >
       <form onSubmit={handleSubmit} className="space-y-6 py-4">
@@ -174,11 +182,18 @@ export default function CashBookPage() {
         accessor: (row: EmployeeIOU) => (
           <div className="flex items-center gap-4 py-1">
             <div className="size-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
-              {row.name.split(' ').map(n => n[0]).join('')}
+              {row.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-zinc-900 text-sm">{row.name}</span>
-              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{row.designation}</span>
+              <span className="font-semibold text-zinc-900 text-sm">
+                {row.name}
+              </span>
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                {row.designation}
+              </span>
             </div>
           </div>
         ),
@@ -207,10 +222,14 @@ export default function CashBookPage() {
         header: "Net Outstanding",
         accessor: (row: EmployeeIOU) => (
           <div className="flex flex-col">
-            <span className={cn(
-              "text-sm font-bold font-mono",
-              row.outstandingAmount > 0 ? "text-rose-600" : "text-emerald-600"
-            )}>
+            <span
+              className={cn(
+                "text-sm font-bold font-mono",
+                row.outstandingAmount > 0
+                  ? "text-rose-600"
+                  : "text-emerald-600",
+              )}
+            >
               {fmt(row.outstandingAmount)}
             </span>
           </div>
@@ -229,7 +248,10 @@ export default function CashBookPage() {
         header: "Action",
         className: "text-right pr-6",
         accessor: (row: EmployeeIOU) => (
-          <Link href={`/accounting/cash-book/${row.id}`} className="inline-flex justify-end">
+          <Link
+            href={`/accounting/cash-book/${row.id}`}
+            className="inline-flex justify-end"
+          >
             <Button
               variant="outline"
               size="sm"
@@ -268,52 +290,74 @@ export default function CashBookPage() {
       {/* Premium Stat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Leads</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Active Leads
+          </p>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-zinc-900">{employees.length}</span>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
+            <span className="text-2xl font-bold text-zinc-900">
+              {employees.length}
+            </span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+              Operational
+            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Advanced</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Total Advanced
+          </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">৳ 28.0K</span>
+            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">
+              ৳ 28.0K
+            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Settled</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Settled
+          </p>
           <div className="flex items-baseline justify-between font-semibold">
-            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">৳ 13.0K</span>
-            <div className="flex items-center text-emerald-500 animate-pulse"><ArrowUpRight size={14} /></div>
+            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">
+              ৳ 13.0K
+            </span>
+            <div className="flex items-center text-emerald-500 animate-pulse">
+              <ArrowUpRight size={14} />
+            </div>
           </div>
         </div>
         <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Net Exposure</p>
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">
+            Net Exposure
+          </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">৳ 15.0K</span>
-            <div className="flex items-center text-rose-500"><AlertCircle size={14} /></div>
+            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">
+              ৳ 15.0K
+            </span>
+            <div className="flex items-center text-rose-500">
+              <AlertCircle size={14} />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Toolbar - Redesigned for Consistency */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm">
+      {/* Toolbar - Standardized for Consistency */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search beneficiary by name or role..."
-              className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md"
+              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
             Search
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="hidden lg:block">
             <DateRangeFilter
               start={dateRange.start}
@@ -322,11 +366,14 @@ export default function CashBookPage() {
               placeholder="Activity Dates"
             />
           </div>
-          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-bold gap-2 flex items-center shadow-sm">
+          <Button
+            variant="outline"
+            className="h-11 px-4 rounded-lg border-zinc-200 bg-white text-zinc-600 font-semibold text-xs uppercase tracking-wider gap-2 flex items-center shadow-sm hover:bg-zinc-50"
+          >
             <History className="w-4 h-4 text-zinc-400" />
             <span>Audit Trail</span>
           </Button>
-          <p className="text-[11px] font-black text-zinc-400 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-md tracking-tighter hidden sm:block">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
             {employees.length} Records
           </p>
         </div>

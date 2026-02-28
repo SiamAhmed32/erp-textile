@@ -58,8 +58,8 @@ const CompanyProfilesTable = ({
   onRowClick,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => { },
-  onRestore = () => { },
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }: Props) => {
   const sortOptions = [
     { label: "Company Name (A-Z)", field: "name", dir: "asc" },
@@ -113,10 +113,11 @@ const CompanyProfilesTable = ({
         header: "Status",
         accessor: (row: CompanyProfile) => (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "active"
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              row.status === "active"
                 ? "bg-emerald-100 text-emerald-700"
                 : "bg-slate-200 text-slate-700"
-              }`}
+            }`}
           >
             {row.status === "active" ? "Active" : "Inactive"}
           </span>
@@ -151,10 +152,7 @@ const CompanyProfilesTable = ({
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button
-            variant="outline"
-            className="h-11 px-6 bg-white border-slate-200 font-medium"
-          >
+          <Button className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg">
             Search
           </Button>
           <Button
@@ -164,7 +162,9 @@ const CompanyProfilesTable = ({
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
-            title={showDeleted ? "Show Active Companies" : "Show Deleted Companies"}
+            title={
+              showDeleted ? "Show Active Companies" : "Show Deleted Companies"
+            }
           >
             <Trash2 className="h-4 w-4" />
             {showDeleted ? "Exit Trash" : "Trash"}
@@ -181,14 +181,14 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   typeFilter !== "all" &&
-                  "bg-blue-50 border-blue-200 text-blue-700",
+                    "bg-blue-50 border-blue-200 text-blue-700",
                 )}
               >
                 <span>
                   {typeFilter === "all"
                     ? "All Types"
                     : companyTypeOptions.find((o) => o.value === typeFilter)
-                      ?.label || typeFilter}
+                        ?.label || typeFilter}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
@@ -229,14 +229,14 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   statusFilter !== "all" &&
-                  "bg-amber-50 border-amber-200 text-amber-700",
+                    "bg-amber-50 border-amber-200 text-amber-700",
                 )}
               >
                 <span>
                   {statusFilter === "all"
                     ? "All Status"
                     : statusOptions.find((o) => o.value === statusFilter)
-                      ?.label || statusFilter}
+                        ?.label || statusFilter}
                 </span>
                 <ChevronDown className="h-4 w-4 opacity-50" />
               </Button>
@@ -279,7 +279,7 @@ const CompanyProfilesTable = ({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   (sort.field !== "name" || sort.dir !== "asc") &&
-                  "bg-purple-50 border-purple-200 text-purple-700",
+                    "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -287,9 +287,9 @@ const CompanyProfilesTable = ({
                   {sort.field === "name" && sort.dir === "asc"
                     ? "Sort By"
                     : sortOptions.find(
-                      (opt) =>
-                        opt.field === sort.field && opt.dir === sort.dir,
-                    )?.label}
+                        (opt) =>
+                          opt.field === sort.field && opt.dir === sort.dir,
+                      )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>

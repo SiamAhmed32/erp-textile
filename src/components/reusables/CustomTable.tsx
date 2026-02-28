@@ -17,6 +17,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 interface Column<T> {
   header: string;
   accessor: keyof T | ((row: T) => React.ReactNode);
@@ -150,12 +151,15 @@ function CustomTable<T extends Record<string, any>>({
           overflowWrapper={false}
           className={`border-separate border-spacing-0 ${data.length > 9 ? "h-full" : ""}`}
         >
-          <TableHeader className="sticky top-0 z-10">
+          <TableHeader className="sticky top-0 z-10 border-none">
             <TableRow className="hover:bg-transparent border-none">
               {columns.map((column, index) => (
                 <TableHead
                   key={index}
-                  className={`sticky top-0 z-20 bg-secondary text-white font-semibold h-12 border-b-2 border-secondary ${column.className || ""}`}
+                  className={cn(
+                    "sticky top-0 z-20 bg-zinc-900 text-white/90 font-bold text-xs uppercase tracking-widest h-12 border-none",
+                    column.className,
+                  )}
                 >
                   {column.header}
                 </TableHead>

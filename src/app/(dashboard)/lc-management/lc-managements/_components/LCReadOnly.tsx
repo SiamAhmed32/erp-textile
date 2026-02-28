@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LCManagement } from "./types";
+import { Flex } from "@/components/reusables";
 import {
   Download,
   FileText,
@@ -232,47 +233,37 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
   return (
     <div className="max-w-[1300px] mx-auto space-y-5 pb-10">
       {/* ── LC Summary Bar ─────────────────────────────────────────── */}
-      <Card className="border-none overflow-hidden shadow-2xl shadow-zinc-200/50 bg-white rounded-2xl mb-6">
-        <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
-                <FileText size={20} />
-              </div>
-              <div>
-                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
-                  BBLC MASTER DOCUMENT
-                </p>
-                <h2 className="text-xl font-black text-white tracking-tight italic">
-                  {lc.bblcNumber}
-                </h2>
-              </div>
-            </div>
-            <div className="text-right flex items-center gap-8">
-              <div>
-                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
-                  SETTLEMENT AMOUNT
-                </p>
-                <p className="text-emerald-400 font-black tracking-tight italic">
-                  USD{" "}
-                  {Number(lc.amount).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                  })}
-                </p>
-              </div>
-              <Separator orientation="vertical" className="h-8 bg-white/10" />
-              <div>
-                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
-                  EXPIRY STATUS
-                </p>
-                <p className="text-white font-black tracking-tight italic">
-                  {formatDate(lc.expiryDate)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      {/* ── LC Metrics Bar ─────────────────────────────────────────── */}
+      <div className="bg-white border border-zinc-100 rounded-2xl px-8 py-5 shadow-sm flex flex-wrap items-center gap-x-12 mb-4">
+        <div>
+          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-black mb-1">
+            Settlement Value
+          </p>
+          <p className="text-lg font-black text-zinc-900 italic tracking-tight">
+            USD{" "}
+            {Number(lc.amount).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
+          </p>
+        </div>
+        <Separator
+          orientation="vertical"
+          className="h-8 bg-zinc-100 hidden sm:block"
+        />
+        <div>
+          <p className="text-[10px] text-zinc-400 uppercase tracking-widest font-black mb-1">
+            Validity Date
+          </p>
+          <p className="text-sm font-bold text-zinc-800 tracking-tight">
+            {formatDate(lc.expiryDate)}
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-3">
+          <Badge className="bg-emerald-50 text-emerald-600 border-none text-[10px] font-black uppercase tracking-widest px-3 py-1">
+            Active Record
+          </Badge>
+        </div>
+      </div>
 
       {/* ── Tabs ───────────────────────────────────────────────────── */}
       <Tabs defaultValue="commercial-invoice" className="w-full">
@@ -309,11 +300,15 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
               value={tab.value}
               className="tab-premium-trigger flex-1 min-w-fit"
             >
-              <div className="flex items-center gap-2">
+              <Flex className="items-center gap-2">
                 <tab.icon className="size-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-              </div>
+                <span className="font-bold text-[10px] uppercase tracking-[0.2em] hidden sm:inline">
+                  {tab.label}
+                </span>
+                <span className="font-bold text-[10px] uppercase tracking-[0.2em] sm:hidden">
+                  {tab.label.split(" ")[0]}
+                </span>
+              </Flex>
             </TabsTrigger>
           ))}
         </TabsList>

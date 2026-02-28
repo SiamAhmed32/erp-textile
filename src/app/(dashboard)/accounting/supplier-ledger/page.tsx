@@ -29,64 +29,78 @@ export default function SupplierLedgerPage() {
 
   const suppliers = useMemo(
     () => ((supplierResponse as any)?.data || []) as any[],
-    [supplierResponse]
+    [supplierResponse],
   );
 
   const totalLiability = useMemo(() => {
     return suppliers.reduce((sum, s) => sum + (Number(s.balance) || 0), 0);
   }, [suppliers]);
 
-  const columns = useMemo(() => [
-    {
-      header: "Supplier",
-      accessor: (row: any) => (
-        <div className="flex items-center gap-3 py-1">
-          <div className="size-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600 uppercase shrink-0">
-            {row.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-          </div>
-          <div>
-            <p className="font-semibold text-sm text-zinc-900">{row.name}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-zinc-400 flex items-center gap-1">
-                <Phone className="w-3 h-3" /> {row.phone}
-              </span>
-              <span className="text-xs text-zinc-400 flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> {row.location}
-              </span>
+  const columns = useMemo(
+    () => [
+      {
+        header: "Supplier",
+        accessor: (row: any) => (
+          <div className="flex items-center gap-3 py-1">
+            <div className="size-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600 uppercase shrink-0">
+              {row.name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")
+                .slice(0, 2)}
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-zinc-900">{row.name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-zinc-400 flex items-center gap-1">
+                  <Phone className="w-3 h-3" /> {row.phone}
+                </span>
+                <span className="text-xs text-zinc-400 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" /> {row.location}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      ),
-    },
-    {
-      header: "Due Balance",
-      accessor: (row: any) => (
-        <div className={cn(
-          "font-mono font-bold text-sm",
-          (Number(row.balance) || 0) > 0 ? "text-rose-600" : "text-emerald-600"
-        )}>
-          ৳ {(Number(row.balance) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-        </div>
-      ),
-    },
-    {
-      header: "Ledger",
-      className: "text-right pr-4",
-      accessor: (row: any) => (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all font-bold"
-          asChild
-        >
-          <Link href={`/accounting/supplier-ledger/${row.id}`}>
-            <BookOpen className="w-3.5 h-3.5" />
-            View Statement
-          </Link>
-        </Button>
-      ),
-    },
-  ], []);
+        ),
+      },
+      {
+        header: "Due Balance",
+        accessor: (row: any) => (
+          <div
+            className={cn(
+              "font-mono font-bold text-sm",
+              (Number(row.balance) || 0) > 0
+                ? "text-rose-600"
+                : "text-emerald-600",
+            )}
+          >
+            ৳{" "}
+            {(Number(row.balance) || 0).toLocaleString("en-IN", {
+              minimumFractionDigits: 2,
+            })}
+          </div>
+        ),
+      },
+      {
+        header: "Ledger",
+        className: "text-right pr-4",
+        accessor: (row: any) => (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all font-bold"
+            asChild
+          >
+            <Link href={`/accounting/supplier-ledger/${row.id}`}>
+              <BookOpen className="w-3.5 h-3.5" />
+              View Statement
+            </Link>
+          </Button>
+        ),
+      },
+    ],
+    [],
+  );
 
   return (
     <Container className="pb-10">
@@ -125,7 +139,9 @@ export default function SupplierLedgerPage() {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-[10px] text-zinc-400 mt-2">Active business partners</p>
+          <p className="text-[10px] text-zinc-400 mt-2">
+            Active business partners
+          </p>
         </div>
 
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
@@ -134,13 +150,18 @@ export default function SupplierLedgerPage() {
           </p>
           <div className="flex items-center justify-between">
             <p className="text-2xl font-bold text-rose-600 font-mono italic">
-              ৳ {totalLiability.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              ৳{" "}
+              {totalLiability.toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+              })}
             </p>
             <div className="size-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-400 border border-rose-100">
               <BookOpen className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-[10px] text-zinc-400 mt-2">Current aggregate obligations</p>
+          <p className="text-[10px] text-zinc-400 mt-2">
+            Current aggregate obligations
+          </p>
         </div>
 
         <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm">
@@ -154,9 +175,7 @@ export default function SupplierLedgerPage() {
               className="flex-1 bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs h-8 font-bold"
               asChild
             >
-              <Link href="/accounting/overview">
-                Overview
-              </Link>
+              <Link href="/accounting/overview">Overview</Link>
             </Button>
             <Button
               variant="outline"
@@ -170,25 +189,25 @@ export default function SupplierLedgerPage() {
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 bg-white p-2 rounded-xl border border-zinc-200 shadow-sm">
+      {/* Toolbar - Standardized for Consistency */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search by name or location..."
-              className="pl-9 h-10 border-zinc-200 focus-visible:ring-zinc-900"
+              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
             Search
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <p className="text-xs font-medium text-zinc-500 bg-white px-3 py-1.5 rounded-md border border-zinc-200 shadow-sm">
-            Showing {suppliers.length} Records
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
+            {suppliers.length} Records
           </p>
         </div>
       </div>
