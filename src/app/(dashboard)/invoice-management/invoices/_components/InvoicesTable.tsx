@@ -146,25 +146,21 @@ const InvoicesTable = ({
           title="All Invoices"
           value={counts.all}
           icon={FileText}
-          color="blue"
         />
         <StatsCard
           title="Labels & Tags"
           value={counts.LABEL_TAG}
           icon={Tag}
-          color="orange"
         />
         <StatsCard
           title="Fabric"
           value={counts.FABRIC}
           icon={Layers}
-          color="purple"
         />
         <StatsCard
           title="Cartons"
           value={counts.CARTON}
           icon={Box}
-          color="green"
         />
       </div>
 

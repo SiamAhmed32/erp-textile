@@ -86,6 +86,7 @@ export function InvoiceTermsManagementPage() {
     null,
   );
   const [viewTarget, setViewTarget] = React.useState<InvoiceTerms | null>(null);
+  const [showDeleted, setShowDeleted] = React.useState(false);
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
@@ -98,8 +99,10 @@ export function InvoiceTermsManagementPage() {
     path: "invoice-terms",
     page,
     limit: 10,
-    search,
-    sort: sort.field ? `${sort.field}:${sort.dir}` : null,
+    search: search || "",
+    filters: {
+      ...(showDeleted ? { isDeleted: true } : {}),
+    },
   });
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
   const totalPages = (termsPayload as any)?.meta?.pagination?.totalPages || 1;
@@ -156,6 +159,21 @@ export function InvoiceTermsManagementPage() {
       console.error("Delete Invoice Terms Error:", message);
     } finally {
       setDeleteTarget(null);
+    }
+  };
+
+  const handleToggleDeleted = () => setShowDeleted((p) => !p);
+
+  const handleRestore = async (item: InvoiceTerms) => {
+    try {
+      await putItem({
+        path: `invoice-terms/${item.id}`,
+        body: { isDeleted: false },
+        invalidate: ["invoice-terms"],
+      }).unwrap();
+      refetch();
+    } catch (err: any) {
+      console.error("Restore Invoice Terms Error:", err);
     }
   };
 
@@ -239,6 +257,9 @@ export function InvoiceTermsManagementPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         onView={handleView}
+        onRestore={handleRestore}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
         page={page}
         totalPages={totalPages}
         onPageChange={setPage}

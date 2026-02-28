@@ -78,6 +78,8 @@ const OrderStatusChart: React.FC = () => {
 
     const isEmpty = !isLoading && allStatuses.length === 0;
 
+    const totalOrders = allStatuses.reduce((acc, curr) => acc + curr.value, 0);
+
     return (
         <Card className="col-span-1">
             <CardHeader className="pb-4">
@@ -94,6 +96,24 @@ const OrderStatusChart: React.FC = () => {
                     <div className="h-[300px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
+                                <text
+                                    x="50%"
+                                    y="40%"
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                    className="fill-current text-foreground text-3xl font-bold"
+                                >
+                                    {totalOrders}
+                                </text>
+                                <text
+                                    x="50%"
+                                    y="50%"
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                    className="fill-current text-muted-foreground text-sm font-medium"
+                                >
+                                    Total Orders
+                                </text>
                                 <Pie
                                     data={allStatuses}
                                     cx="50%"
