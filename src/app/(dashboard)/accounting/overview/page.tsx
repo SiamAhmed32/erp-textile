@@ -6,8 +6,6 @@ import { cn } from "@/lib/utils";
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  Landmark,
   Activity,
   ArrowUpRight,
   ArrowDownLeft,
@@ -16,14 +14,12 @@ import {
   Calendar,
   ChevronRight,
   PieChart,
-  History
+  History,
+  Landmark
 } from "lucide-react";
 import { format } from "date-fns";
 import RecentTransactions from "./_components/RecentTransactions";
-import {
-  mockAccountingStats,
-  mockRecentTransactions,
-} from "./_components/types";
+import { useGetAllQuery } from "@/store/services/commonApi";
 
 // ── Shared Premium Stat Card ─────────────────────────────────────────────
 const PremiumStatCard = ({
@@ -78,6 +74,34 @@ const PremiumStatCard = ({
 );
 
 const AccountingOverviewPage = () => {
+  // Fetch high-level stats
+  const { data: statsPayload, isLoading: isLoadingStats } = useGetAllQuery({
+    path: "accounting/ledger/stats",
+  });
+  const stats = (statsPayload as any)?.data || {};
+
+  // Fetch recent transactions (using audit trail API)
+  const { data: auditPayload, isLoading: isLoadingAudit } = useGetAllQuery({
+    path: "accounting/ledger/audit-trail",
+    limit: 5,
+  });
+  const recentEntries = (auditPayload as any)?.data || [];
+
+  // Fetch banks for sub-ledger card
+  const { data: banksPayload } = useGetAllQuery({
+    path: "accounting/banks",
+    limit: 3,
+  });
+  const banks = (banksPayload as any)?.data || [];
+
+  const fmt = (val: number = 0) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "BDT",
+      maximumFractionDigits: 0,
+    }).format(val).replace("BDT", "৳");
+  };
+
   return (
     <Container className="space-y-10 pb-20">
       {/* Header with Title & Date Context */}
@@ -104,32 +128,29 @@ const AccountingOverviewPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <PremiumStatCard
           label="Current Liquidity"
-          value="৳ 45.2M"
+          value={isLoadingStats ? "..." : fmt(stats.cashAndBankBalance)}
           subLabel="Total across all bank sub-ledgers"
           icon={Landmark}
-          trend="+12%"
           color="zinc"
         />
         <PremiumStatCard
-          label="Operational Revenue"
-          value="৳ 12.8M"
-          subLabel="Posted income in current period"
+          label="Total Receivables"
+          value={isLoadingStats ? "..." : fmt(stats.totalReceivables)}
+          subLabel="Outstanding buyer dues (AR)"
           icon={TrendingUp}
-          trend="+8.4%"
           color="green"
         />
         <PremiumStatCard
           label="Total Obligations"
-          value="৳ 5.4M"
-          subLabel="Current liabilities & dues"
+          value={isLoadingStats ? "..." : fmt(stats.totalPayables)}
+          subLabel="Current supplier payables (AP)"
           icon={TrendingDown}
-          trend="-2.1%"
           color="red"
         />
         <PremiumStatCard
           label="Net Position"
-          value="৳ 7.4M"
-          subLabel="Retained earnings & equity"
+          value={isLoadingStats ? "..." : fmt((stats.totalReceivables || 0) - (stats.totalPayables || 0))}
+          subLabel="Current AR / AP delta"
           icon={PieChart}
           color="zinc"
         />
@@ -137,7 +158,6 @@ const AccountingOverviewPage = () => {
 
       {/* Main Action Workspace */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
         {/* Entry Feed — 2/3 width */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
@@ -153,7 +173,9 @@ const AccountingOverviewPage = () => {
               </button>
             </div>
             <div className="p-0">
-              <RecentTransactions transactions={mockRecentTransactions} />
+              <RecentTransactions
+                transactions={recentEntries}
+              />
             </div>
           </div>
         </div>
@@ -171,26 +193,23 @@ const AccountingOverviewPage = () => {
               </div>
 
               <div className="space-y-4">
-                <div className="bg-zinc-800/50 rounded-2xl p-4 flex items-center justify-between border border-zinc-700/50 group-hover:bg-zinc-800 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center font-black text-[10px]">SC</div>
-                    <div>
-                      <p className="text-[11px] font-black tracking-tight">Standard Chartered</p>
-                      <p className="text-[9px] font-bold text-zinc-500 uppercase">Operational</p>
+                {banks.map((bank: any) => (
+                  <div key={bank.id} className="bg-zinc-800/50 rounded-2xl p-4 flex items-center justify-between border border-zinc-700/50 group-hover:bg-zinc-800 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center font-black text-[10px]">
+                        {bank.bankName.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black tracking-tight">{bank.bankName}</p>
+                        <p className="text-[9px] font-bold text-zinc-500 uppercase">{bank.accountNumber}</p>
+                      </div>
                     </div>
+                    <span className="text-xs font-black italic">৳ {(Number(bank.currentBalance) || 0).toLocaleString()}</span>
                   </div>
-                  <span className="text-xs font-black italic">৳ 12.5M</span>
-                </div>
-                <div className="bg-zinc-800/50 rounded-2xl p-4 flex items-center justify-between border border-zinc-700/50 group-hover:bg-zinc-800 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center font-black text-[10px]">IB</div>
-                    <div>
-                      <p className="text-[11px] font-black tracking-tight">Islami Bank Ltd.</p>
-                      <p className="text-[9px] font-bold text-zinc-500 uppercase">Operational</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-black italic">৳ 8.2M</span>
-                </div>
+                ))}
+                {banks.length === 0 && (
+                  <p className="text-zinc-500 text-[10px] italic">No bank accounts linked</p>
+                )}
               </div>
 
               <button className="w-full h-12 bg-white text-zinc-900 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-200 transition-all active:scale-95 shadow-lg shadow-white/5">
@@ -210,14 +229,13 @@ const AccountingOverviewPage = () => {
                   <History className="w-3 h-3 text-rose-600" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-black text-zinc-900 leading-tight">2 Pending Vouchers</p>
-                  <p className="text-[10px] font-medium text-zinc-500 mt-0.5">Vouchers waiting for administrative posting.</p>
+                  <p className="text-[11px] font-black text-zinc-900 leading-tight">System Audit Active</p>
+                  <p className="text-[10px] font-medium text-zinc-500 mt-0.5">Continuous ledger verification is enabled.</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
     </Container>
   );

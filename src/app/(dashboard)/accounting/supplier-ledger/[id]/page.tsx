@@ -14,9 +14,11 @@ import {
     FileText,
     MapPin,
     Printer,
+    Plus,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
+import RecordPaymentModal from "../_components/RecordPaymentModal";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface LedgerEntry {
@@ -41,6 +43,7 @@ export default function SupplierLedgerDetailPage() {
 
     const [dateFrom, setDateFrom] = useState("");
     const [dateTo, setDateTo] = useState("");
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
     // Fetch supplier profile
     const { data: supplierData, isLoading: isLoadingSupplier } = useGetByIdQuery({
@@ -200,6 +203,15 @@ export default function SupplierLedgerDetailPage() {
                     { label: supplier?.name || "Detail" },
                 ]}
                 backHref="/accounting/supplier-ledger"
+                actions={
+                    <Button
+                        onClick={() => setIsPaymentModalOpen(true)}
+                        className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Record Payment
+                    </Button>
+                }
             />
 
             {/* Stats - Full Width */}
@@ -349,6 +361,14 @@ export default function SupplierLedgerDetailPage() {
 
 
             </div>
+
+            {/* Payment Modal */}
+            <RecordPaymentModal
+                open={isPaymentModalOpen}
+                onOpenChange={setIsPaymentModalOpen}
+                supplierId={supplierId}
+                supplierName={supplier?.name || ""}
+            />
         </Container>
     );
 }

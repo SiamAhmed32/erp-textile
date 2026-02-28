@@ -2,6 +2,7 @@
 
 import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGetAllQuery } from "@/store/services/commonApi";
@@ -28,28 +29,31 @@ export default function BuyerLedgerPage() {
     const [search, setSearch] = useState("");
 
     const { data: buyerResponse, isLoading } = useGetAllQuery({
-        path: "buyers",
+        path: "accounting/ledger/buyers/balances",
         limit: 100,
         search: search || undefined,
-        sortBy: "createdAt",
-        sortOrder: "desc",
     });
 
-    const buyers = useMemo(() => ((buyerResponse as any)?.data || []) as Buyer[], [buyerResponse]);
+    const buyers = useMemo(() => ((buyerResponse as any)?.data || []) as any[], [buyerResponse]);
+
+    // Calculate total receivable
+    const totalReceivable = useMemo(() => {
+        return buyers.reduce((sum, b) => sum + (Number(b.balance) || 0), 0);
+    }, [buyers]);
 
     const columns = useMemo(() => [
         {
             header: "Buyer",
-            accessor: (row: Buyer) => (
+            accessor: (row: any) => (
                 <div className="flex items-center gap-3 py-1">
                     <div className="size-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600 uppercase shrink-0">
-                        {row.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                        {row.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                     </div>
                     <div>
                         <p className="font-semibold text-sm text-zinc-900">{row.name}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-zinc-400 flex items-center gap-1">
-                                <UserCheck className="w-3 h-3" /> {row.merchandiser}
+                                <Phone className="w-3 h-3" /> {row.phone}
                             </span>
                             <span className="text-xs text-zinc-400 flex items-center gap-1">
                                 <MapPin className="w-3 h-3" /> {row.location}
@@ -60,52 +64,29 @@ export default function BuyerLedgerPage() {
             ),
         },
         {
-            header: "Contact",
-            accessor: (row: Buyer) => (
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <Mail className="w-3 h-3 text-zinc-300" /> {row.email}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-zinc-500">
-                        <Phone className="w-3 h-3 text-zinc-300" /> {row.phone}
-                    </div>
+            header: "Current Balance",
+            accessor: (row: any) => (
+                <div className={cn(
+                    "font-mono font-bold text-sm",
+                    (Number(row.balance) || 0) > 0 ? "text-rose-600" : "text-emerald-600"
+                )}>
+                    ৳ {(Number(row.balance) || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                 </div>
-            ),
-        },
-        {
-            header: "Status",
-            accessor: (row: Buyer) =>
-                !row.isDeleted ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
-                        <ShieldCheck className="w-3 h-3" /> Active
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-100 text-zinc-400 text-xs font-semibold border border-zinc-200">
-                        <XCircle className="w-3 h-3" /> Inactive
-                    </span>
-                ),
-        },
-        {
-            header: "Onboarded",
-            accessor: (row: Buyer) => (
-                <span className="text-xs text-zinc-500">
-                    {format(new Date(row.createdAt), "dd MMM yyyy")}
-                </span>
             ),
         },
         {
             header: "Ledger",
             className: "text-right pr-4",
-            accessor: (row: Buyer) => (
+            accessor: (row: any) => (
                 <Button
                     variant="outline"
                     size="sm"
-                    className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all"
+                    className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all font-bold"
                     asChild
                 >
                     <Link href={`/accounting/buyer-ledger/${row.id}`}>
                         <BookOpen className="w-3.5 h-3.5" />
-                        View Ledger
+                        View Statement
                     </Link>
                 </Button>
             ),
@@ -115,20 +96,21 @@ export default function BuyerLedgerPage() {
     return (
         <Container className="pb-10">
             <PageHeader
-                title="Buyer Ledger"
+                title="Buyer Ledger Summary"
                 breadcrumbItems={[
                     { label: "Accounting", href: "/accounting/overview" },
                     { label: "Buyer Ledger" },
                 ]}
+                icon={Users}
                 actions={
                     <Button
                         variant="outline"
-                        className="gap-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-sm"
+                        className="gap-2 border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-sm font-bold"
                         asChild
                     >
                         <Link href="/buyers">
                             <ExternalLink className="w-4 h-4" />
-                            Manage Buyers
+                            Global Directory
                         </Link>
                     </Button>
                 }
@@ -153,18 +135,17 @@ export default function BuyerLedgerPage() {
 
                 <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-                        Accounts Receivable
+                        Total Receivables
                     </p>
                     <div className="flex items-center justify-between">
-                        <p className="text-2xl font-bold text-indigo-600 font-mono">
-                            {/* In a real scenario, this would be fetched from a summary API */}
-                            ৳ 0.00
+                        <p className="text-2xl font-bold text-rose-600 font-mono italic">
+                            ৳ {totalReceivable.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
                         </p>
-                        <div className="size-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-400 border border-indigo-100">
+                        <div className="size-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-400 border border-rose-100">
                             <BookOpen className="w-4 h-4" />
                         </div>
                     </div>
-                    <p className="text-[10px] text-zinc-400 mt-2">Total outstanding payments</p>
+                    <p className="text-[10px] text-zinc-400 mt-2">Aggregated outstanding dues</p>
                 </div>
 
                 <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">

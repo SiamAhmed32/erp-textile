@@ -10,6 +10,7 @@ type PageHeaderProps = {
   breadcrumbItems: { label: string; href?: string }[];
   backHref?: string;
   actions?: React.ReactNode;
+  icon?: React.ElementType; // Match icon prop
   className?: string;
 };
 
@@ -18,6 +19,7 @@ const PageHeader = ({
   breadcrumbItems,
   backHref,
   actions,
+  icon: Icon,
   className,
 }: PageHeaderProps) => {
   return (
@@ -45,9 +47,16 @@ const PageHeader = ({
                 </Link>
               </Button>
             )}
-            <PrimaryHeading className="text-black! tracking-tight text-2xl">
-              {title}
-            </PrimaryHeading>
+            <div className="flex items-center gap-2">
+              {Icon && (
+                <div className="p-1 px-1.5 rounded-md border border-gray-100 bg-gray-50/50">
+                  <Icon className="h-5 w-5 text-gray-500" />
+                </div>
+              )}
+              <PrimaryHeading className="text-black! tracking-tight text-2xl">
+                {title}
+              </PrimaryHeading>
+            </div>
           </div>
 
           {actions && <div className="flex items-center gap-2">{actions}</div>}

@@ -14,6 +14,7 @@ import {
     Contact,
     Building,
     Landmark,
+    History as HistoryIcon,
 } from "lucide-react";
 
 export const navMain = [
@@ -112,6 +113,11 @@ export const navMain = [
                 title: "Bank Management",
                 url: "/accounting/banks",
                 icon: Landmark,
+            },
+            {
+                title: "Audit Trail",
+                url: "/accounting/audit-trail",
+                icon: HistoryIcon,
             },
             {
                 title: "Loan Management",
