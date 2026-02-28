@@ -1,13 +1,25 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LCManagement } from "./types";
-import { Download } from "lucide-react";
+import {
+  Download,
+  FileText,
+  Truck,
+  FileCheck,
+  Shield,
+  Banknote,
+  Globe,
+  Layers,
+  Scale,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -220,76 +232,91 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
   return (
     <div className="max-w-[1300px] mx-auto space-y-5 pb-10">
       {/* ── LC Summary Bar ─────────────────────────────────────────── */}
-      <div className="bg-white border border-gray-200 rounded-2xl px-8 py-6">
-        <div className="flex flex-wrap items-center gap-x-12 gap-y-4">
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">
-              BBLC Number
-            </p>
-            <p className="text-xl font-bold text-gray-900">{lc.bblcNumber}</p>
+      <Card className="border-none overflow-hidden shadow-2xl shadow-zinc-200/50 bg-white rounded-2xl mb-6">
+        <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+                <FileText size={20} />
+              </div>
+              <div>
+                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                  BBLC MASTER DOCUMENT
+                </p>
+                <h2 className="text-xl font-black text-white tracking-tight italic">
+                  {lc.bblcNumber}
+                </h2>
+              </div>
+            </div>
+            <div className="text-right flex items-center gap-8">
+              <div>
+                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                  SETTLEMENT AMOUNT
+                </p>
+                <p className="text-emerald-400 font-black tracking-tight italic">
+                  USD{" "}
+                  {Number(lc.amount).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
+              </div>
+              <Separator orientation="vertical" className="h-8 bg-white/10" />
+              <div>
+                <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                  EXPIRY STATUS
+                </p>
+                <p className="text-white font-black tracking-tight italic">
+                  {formatDate(lc.expiryDate)}
+                </p>
+              </div>
+            </div>
           </div>
-          <Separator orientation="vertical" className="h-10 hidden sm:block" />
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">
-              Settlement Amount
-            </p>
-            <p className="text-xl font-bold text-green-700">
-              USD{" "}
-              {Number(lc.amount).toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
-            </p>
-          </div>
-          <Separator orientation="vertical" className="h-10 hidden sm:block" />
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">
-              Buyer
-            </p>
-            <p className="text-sm font-semibold text-gray-800">
-              {buyer?.name || "—"}
-            </p>
-          </div>
-          <Separator orientation="vertical" className="h-10 hidden sm:block" />
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">
-              Expiry Date
-            </p>
-            <p className="text-sm font-semibold text-gray-800">
-              {formatDate(lc.expiryDate)}
-            </p>
-          </div>
-          <div className="ml-auto">
-            <Badge className="bg-blue-50 text-blue-600 border border-blue-100 font-semibold text-[11px] uppercase tracking-wider px-3 py-1 hover:bg-blue-50">
-              Active
-            </Badge>
-          </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
 
       {/* ── Tabs ───────────────────────────────────────────────────── */}
       <Tabs defaultValue="commercial-invoice" className="w-full">
-        <div className="sticky top-2 z-40 bg-white border border-gray-200 rounded-xl p-1 mb-5 shadow-sm">
-          <TabsList className="flex gap-1 bg-transparent w-full">
-            {[
-              { value: "commercial-invoice", label: "Commercial Invoice" },
-              { value: "delivery-challan", label: "Delivery Challan" },
-              { value: "beneficiary-certificate", label: "Beneficiary Cert." },
-              { value: "certificate-of-origin", label: "Cert. of Origin" },
-              { value: "bill-of-exchange", label: "Bill of Exchange" },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="flex-1 text-[11px] font-semibold uppercase tracking-wider py-2 rounded-lg text-gray-500
-                  data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=active]:shadow-none
-                  transition-all"
-              >
+        <TabsList className="tab-premium-list w-full! max-w-5xl mx-auto overflow-x-auto flex-nowrap">
+          {[
+            {
+              value: "commercial-invoice",
+              label: "Commercial Invoice",
+              icon: FileText,
+            },
+            {
+              value: "delivery-challan",
+              label: "Delivery Challan",
+              icon: Truck,
+            },
+            {
+              value: "beneficiary-certificate",
+              label: "Beneficiary Cert.",
+              icon: FileCheck,
+            },
+            {
+              value: "certificate-of-origin",
+              label: "Cert. of Origin",
+              icon: Globe,
+            },
+            {
+              value: "bill-of-exchange",
+              label: "Bill of Exchange",
+              icon: Banknote,
+            },
+          ].map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="tab-premium-trigger flex-1 min-w-fit"
+            >
+              <div className="flex items-center gap-2">
+                <tab.icon className="size-4" />
                 <span className="hidden sm:inline">{tab.label}</span>
                 <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+              </div>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
         {/* ── Commercial Invoice ─────────────────────────────────── */}
         <TabsContent
@@ -297,9 +324,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
           className="focus-visible:outline-none"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <Card className="lg:col-span-8 border-gray-200 rounded-2xl">
+            <Card className="lg:col-span-8 border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+              <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                    <FileText size={16} />
+                  </div>
+                  <div>
+                    <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                      BILLING DOCUMENT
+                    </p>
+                    <h3 className="text-base font-black text-white tracking-tight italic">
+                      Invoice Details
+                    </h3>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent className="p-7">
-                <SectionLabel title="Invoice Details" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-7 mb-7">
                   <Field label="Invoice No (PI)" value={lc.invoice?.piNumber} />
                   <Field
@@ -332,9 +373,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
             </Card>
 
             <div className="lg:col-span-4 space-y-5">
-              <Card className="border-gray-200 rounded-2xl">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                      <Shield size={16} />
+                    </div>
+                    <div>
+                      <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                        VERIFICATION
+                      </p>
+                      <h3 className="text-base font-black text-white tracking-tight italic">
+                        Parties & Logistics
+                      </h3>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-6">
-                  <SectionLabel title="Parties & Logistics" />
                   <div className="space-y-5">
                     <Field label="Buyer">
                       <p className="text-sm font-semibold text-gray-800">
@@ -372,9 +427,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
           className="focus-visible:outline-none"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <Card className="lg:col-span-8 border-gray-200 rounded-2xl">
+            <Card className="lg:col-span-8 border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+              <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                    <Truck size={16} />
+                  </div>
+                  <div>
+                    <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                      TRANSPORTATION
+                    </p>
+                    <h3 className="text-base font-black text-white tracking-tight italic">
+                      Challan Details
+                    </h3>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent className="p-7">
-                <SectionLabel title="Challan Details" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-7 mb-7">
                   <Field label="Challan Number" value={lc.challanNo} />
                   <Field
@@ -395,9 +464,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
             </Card>
 
             <div className="lg:col-span-4 space-y-5">
-              <Card className="border-gray-200 rounded-2xl">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                      <Layers size={16} />
+                    </div>
+                    <div>
+                      <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                        LOGISTICS DATA
+                      </p>
+                      <h3 className="text-base font-black text-white tracking-tight italic">
+                        Seller & Weight
+                      </h3>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-6">
-                  <SectionLabel title="Seller & Weight" />
                   <div className="space-y-5">
                     <Field label="Seller">
                       <p className="text-sm font-semibold text-gray-800">
@@ -452,9 +535,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
           className="focus-visible:outline-none"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <Card className="lg:col-span-8 border-gray-200 rounded-2xl">
+            <Card className="lg:col-span-8 border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+              <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                    <ShieldCheck size={16} />
+                  </div>
+                  <div>
+                    <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                      OFFICIAL ATTESTATION
+                    </p>
+                    <h3 className="text-base font-black text-white tracking-tight italic">
+                      Certification Details
+                    </h3>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent className="p-7">
-                <SectionLabel title="Certification Details" />
                 <div className="p-5 bg-gray-50 rounded-xl border border-gray-100 mb-7 italic text-gray-600 text-sm leading-relaxed">
                   <p className="not-italic text-[10px] uppercase tracking-widest font-bold text-gray-400 mb-2">
                     Official Declaration
@@ -469,9 +566,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
             </Card>
 
             <div className="lg:col-span-4 space-y-5">
-              <Card className="border-gray-200 rounded-2xl">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                      <FileCheck size={16} />
+                    </div>
+                    <div>
+                      <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                        AUTHORIZATION
+                      </p>
+                      <h3 className="text-base font-black text-white tracking-tight italic">
+                        Signatory
+                      </h3>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-6">
-                  <SectionLabel title="Signatory" />
                   <div className="space-y-5">
                     <Field label="Authorized For">
                       <p className="text-sm font-semibold text-gray-800">
@@ -502,9 +613,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
           className="focus-visible:outline-none"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            <Card className="lg:col-span-8 border-gray-200 rounded-2xl">
+            <Card className="lg:col-span-8 border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+              <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                    <Globe size={16} />
+                  </div>
+                  <div>
+                    <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                      PROVENANCE
+                    </p>
+                    <h3 className="text-base font-black text-white tracking-tight italic">
+                      Origin Details
+                    </h3>
+                  </div>
+                </div>
+              </CardHeader>
               <CardContent className="p-7">
-                <SectionLabel title="Origin Details" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-7 mb-7">
                   <Field label="Origin Country" value="Bangladesh" />
                   <Field label="Certificate Type" value="LC Document" />
@@ -519,9 +644,23 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
             </Card>
 
             <div className="lg:col-span-4 space-y-5">
-              <Card className="border-gray-200 rounded-2xl">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900/95 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                      <Scale size={16} />
+                    </div>
+                    <div>
+                      <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                        AUDIT NOTE
+                      </p>
+                      <h3 className="text-base font-black text-white tracking-tight italic">
+                        Verification Note
+                      </h3>
+                    </div>
+                  </div>
+                </CardHeader>
                 <CardContent className="p-6">
-                  <SectionLabel title="Verification Note" />
                   <p className="text-sm text-gray-500 leading-relaxed mb-5">
                     This document certifies that the listed goods are
                     manufactured and originated in the country stated above.
@@ -548,14 +687,28 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
           <div className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Drawer */}
-              <Card className="border-gray-200 rounded-2xl">
-                <CardContent className="p-7">
-                  <div className="flex items-center justify-between mb-5">
-                    <SectionLabel title="Drawer Details (Client)" />
-                    <Badge className="bg-amber-50 text-amber-700 border-amber-100 text-[10px] font-semibold uppercase tracking-wider">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                        <Users size={16} />
+                      </div>
+                      <div>
+                        <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                          PAYEE PARTY
+                        </p>
+                        <h3 className="text-base font-black text-white tracking-tight italic">
+                          Drawer Details (Client)
+                        </h3>
+                      </div>
+                    </div>
+                    <Badge className="bg-amber-400/10 text-amber-400 border-none text-[9px] font-black uppercase tracking-wider">
                       Client
                     </Badge>
                   </div>
+                </CardHeader>
+                <CardContent className="p-7">
                   <div className="grid grid-cols-2 gap-7 mb-5">
                     <Field
                       label="Dispatch Location"
@@ -579,14 +732,28 @@ const LCReadOnly = ({ lc, items, onExport }: Props) => {
               </Card>
 
               {/* Drawee */}
-              <Card className="border-gray-200 rounded-2xl">
-                <CardContent className="p-7">
-                  <div className="flex items-center justify-between mb-5">
-                    <SectionLabel title="Drawee Details (Bank)" />
-                    <Badge className="bg-blue-50 text-blue-600 border-blue-100 text-[10px] font-semibold uppercase tracking-wider">
+              <Card className="border-none overflow-hidden shadow-xl shadow-zinc-200/50 bg-white rounded-2xl">
+                <CardHeader className="bg-zinc-900 py-4 px-7 rounded-t-2xl">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-white/10 flex items-center justify-center text-white">
+                        <Banknote size={16} />
+                      </div>
+                      <div>
+                        <p className="text-zinc-400 text-[9px] font-bold uppercase tracking-[0.2em] mb-0">
+                          CORRESPONDENT BANK
+                        </p>
+                        <h3 className="text-base font-black text-white tracking-tight italic">
+                          Drawee Details (Bank)
+                        </h3>
+                      </div>
+                    </div>
+                    <Badge className="bg-blue-400/10 text-blue-400 border-none text-[9px] font-black uppercase tracking-wider">
                       Bank
                     </Badge>
                   </div>
+                </CardHeader>
+                <CardContent className="p-7">
                   <div className="grid grid-cols-2 gap-7 mb-5">
                     <Field
                       label="Bank Location"
