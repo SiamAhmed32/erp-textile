@@ -148,15 +148,15 @@ export default function BuyerLedgerPage() {
                     <p className="text-[10px] text-zinc-400 mt-2">Aggregated outstanding dues</p>
                 </div>
 
-                <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
+                <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm">
+                    <p className="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-1">
                         Quick Actions
                     </p>
                     <div className="flex gap-2 mt-2">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 bg-transparent border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white text-xs h-8"
+                            className="flex-1 bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs h-8 font-bold"
                             asChild
                         >
                             <Link href="/accounting/overview">
@@ -166,7 +166,7 @@ export default function BuyerLedgerPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 bg-zinc-100 border-zinc-200 text-zinc-900 hover:bg-zinc-200 text-xs h-8"
+                            className="flex-1 bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs h-8 font-bold"
                             onClick={() => window.print()}
                         >
                             Print List
@@ -176,15 +176,20 @@ export default function BuyerLedgerPage() {
             </div>
 
             {/* Toolbar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                    <Input
-                        placeholder="Search by name, merchandiser or location..."
-                        className="pl-9 h-10 border-zinc-200 focus-visible:ring-zinc-900"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 bg-white p-2 rounded-xl border border-zinc-200 shadow-sm">
+                <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                        <Input
+                            placeholder="Search by name, merchandiser or location..."
+                            className="pl-9 h-10 border-zinc-200 focus-visible:ring-zinc-900"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+                        Search
+                    </Button>
                 </div>
                 <div className="flex items-center gap-2">
                     <p className="text-xs font-medium text-zinc-500 bg-white px-3 py-1.5 rounded-md border border-zinc-200 shadow-sm">

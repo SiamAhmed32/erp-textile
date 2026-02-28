@@ -85,7 +85,13 @@ const AccountingOverviewPage = () => {
     path: "accounting/ledger/audit-trail",
     limit: 5,
   });
-  const recentEntries = (auditPayload as any)?.data || [];
+
+  const recentEntries = React.useMemo(() => {
+    const raw = (auditPayload as any)?.data;
+    if (Array.isArray(raw?.data)) return raw.data;
+    if (Array.isArray(raw)) return raw;
+    return [];
+  }, [auditPayload]);
 
   // Fetch banks for sub-ledger card
   const { data: banksPayload } = useGetAllQuery({

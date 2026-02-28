@@ -90,7 +90,7 @@ const RecentTransactions = ({ transactions, isLoading }: RecentTransactionsProps
 
     return (
         <CustomTable
-            data={transactions}
+            data={Array.isArray(transactions) ? transactions : []}
             columns={columns}
             isLoading={isLoading}
             skeletonRows={5}

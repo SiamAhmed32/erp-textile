@@ -641,14 +641,14 @@ export default function DailyBookkeepingList() {
       />
 
       {/* Toolbar */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-4">
-        {/* Search */}
-        <div className="flex w-full gap-2 lg:max-w-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm mb-6">
+        {/* Search Group */}
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search voucher no. or narration..."
-              className="pl-9"
+              className="pl-9 h-10 border-zinc-200 focus-visible:ring-zinc-900"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -656,6 +656,9 @@ export default function DailyBookkeepingList() {
               }}
             />
           </div>
+          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+            Search
+          </Button>
         </div>
 
         {/* Filters */}

@@ -173,60 +173,53 @@ export default function CashBookPage() {
         header: "Beneficiary / Employee",
         accessor: (row: EmployeeIOU) => (
           <div className="flex items-center gap-4 py-1">
-            <div className="size-10 rounded-2xl bg-zinc-100 border border-zinc-200 flex items-center justify-center font-black text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
+            <div className="size-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
               {row.name.split(' ').map(n => n[0]).join('')}
             </div>
             <div className="flex flex-col">
-              <span className="font-black text-zinc-900 text-[14px] uppercase tracking-tight italic">{row.name}</span>
+              <span className="font-semibold text-zinc-900 text-sm">{row.name}</span>
               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{row.designation}</span>
             </div>
           </div>
         ),
       },
       {
-        header: "Life-To-Date Issuance",
+        header: "Total Advanced",
         accessor: (row: EmployeeIOU) => (
           <div className="flex flex-col">
-            <span className="text-[14px] font-mono font-black text-zinc-900">
+            <span className="text-sm font-mono font-bold text-zinc-900">
               {fmt(row.totalIssuedAmount)}
             </span>
-            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Total Advanced</span>
           </div>
         ),
       },
       {
-        header: "Liquidated (Settled)",
+        header: "Settled",
         accessor: (row: EmployeeIOU) => (
           <div className="flex flex-col">
-            <span className="text-[14px] font-mono font-black text-emerald-600">
+            <span className="text-sm font-mono font-bold text-emerald-600">
               {fmt(row.totalReturnedAmount)}
             </span>
-            <span className="text-[9px] font-black text-zinc-400 tracking-widest uppercase mt-0.5">Salary Adjustments</span>
           </div>
         ),
       },
       {
-        header: "Net Outstanding IOU",
+        header: "Net Outstanding",
         accessor: (row: EmployeeIOU) => (
           <div className="flex flex-col">
             <span className={cn(
-              "text-[15px] font-black font-mono italic",
-              row.outstandingAmount > 0 ? "text-rose-600" : "text-zinc-300"
+              "text-sm font-bold font-mono",
+              row.outstandingAmount > 0 ? "text-rose-600" : "text-emerald-600"
             )}>
               {fmt(row.outstandingAmount)}
             </span>
-            {row.outstandingAmount > 0 ? (
-              <span className="text-[9px] font-black text-rose-400/80 uppercase tracking-widest mt-0.5 animate-pulse">Pending Collection</span>
-            ) : (
-              <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest mt-0.5">Clear Account</span>
-            )}
           </div>
         ),
       },
       {
-        header: "Recent Trace",
+        header: "Last Transaction",
         accessor: (row: EmployeeIOU) => (
-          <div className="flex items-center gap-2 text-zinc-400 font-bold text-[11px]">
+          <div className="flex items-center gap-2 text-zinc-500 font-medium text-xs">
             <History size={12} />
             {row.lastTransaction}
           </div>
@@ -236,13 +229,14 @@ export default function CashBookPage() {
         header: "Action",
         className: "text-right pr-6",
         accessor: (row: EmployeeIOU) => (
-          <Link href={`/accounting/cash-book/${row.id}`}>
+          <Link href={`/accounting/cash-book/${row.id}`} className="inline-flex justify-end">
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-all rounded-xl border border-transparent hover:border-zinc-200"
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 gap-1.5 text-xs border-zinc-200 hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all font-bold"
             >
-              <ChevronRight className="h-4 w-4" />
+              <Eye className="w-3.5 h-3.5" />
+              View
             </Button>
           </Link>
         ),
@@ -252,70 +246,74 @@ export default function CashBookPage() {
   );
 
   return (
-    <Container className="pb-10 space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-zinc-500 font-bold uppercase tracking-[0.2em] text-[10px]">
-            <Coins className="w-3 h-3" />
-            <span>Liquidity & Employee Treasury</span>
-          </div>
-          <h1 className="text-5xl font-black text-zinc-900 tracking-tight italic">Petty Cash Book</h1>
-          <p className="text-zinc-500 text-sm font-medium">Internal cash reconciliation, office expenses, and employee advance tracking.</p>
-        </div>
-
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-          className="h-12 px-8 bg-zinc-900 text-white font-bold rounded-xl hover:bg-black transition-all active:scale-95 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Employee Record
-        </Button>
-      </div>
+    <Container className="pb-10 space-y-6">
+      <PageHeader
+        title="Petty Cash Book"
+        breadcrumbItems={[
+          { label: "Accounting", href: "/accounting/overview" },
+          { label: "Petty Cash Book" },
+        ]}
+        icon={Wallet}
+        actions={
+          <Button
+            onClick={() => setIsAddModalOpen(true)}
+            className="h-9 px-4 bg-zinc-900 text-white font-bold rounded-md hover:bg-black transition-all flex items-center gap-2 text-sm shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            New Beneficiary
+          </Button>
+        }
+      />
 
       {/* Premium Stat Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Beneficiaries</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-900">{employees.length}</span>
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Active Leads</span>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Leads</p>
+          <div className="flex items-baseline justify-between">
+            <span className="text-2xl font-bold text-zinc-900">{employees.length}</span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
           </div>
         </div>
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Total Advanced</p>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Advanced</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-zinc-900 italic">৳ 28,000</span>
+            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">৳ 28.0K</span>
           </div>
         </div>
-        <div className="bg-white border border-zinc-200 rounded-[2rem] p-6 space-y-4">
-          <p className="text-zinc-400 text-[10px] font-black uppercase tracking-widest">Salary Liquidation</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-emerald-600 italic">৳ 13,000</span>
-            <div className="flex items-center text-emerald-500"><ArrowUpRight size={16} /></div>
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Settled</p>
+          <div className="flex items-baseline justify-between font-semibold">
+            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">৳ 13.0K</span>
+            <div className="flex items-center text-emerald-500 animate-pulse"><ArrowUpRight size={14} /></div>
           </div>
         </div>
-        <div className="bg-rose-50 border border-rose-100 rounded-[2rem] p-6 space-y-4">
-          <p className="text-rose-400 text-[10px] font-black uppercase tracking-widest text-rose-400">Net Exposure (IOUs)</p>
+        <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Net Exposure</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-black text-rose-600 italic">৳ 15,000</span>
-            <div className="flex items-center text-rose-500"><AlertCircle size={16} /></div>
+            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">৳ 15.0K</span>
+            <div className="flex items-center text-rose-500"><AlertCircle size={14} /></div>
           </div>
         </div>
       </div>
 
-      {/* Premium Toolbar */}
-      <div className="bg-zinc-50/50 border border-zinc-200 rounded-[2rem] p-4 flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-zinc-900 transition-colors" />
-          <Input
-            placeholder="Search beneficiary by name or role..."
-            className="h-12 pl-11 border-zinc-200 bg-white rounded-2xl focus:ring-zinc-900 font-medium"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Toolbar - Redesigned for Consistency */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm">
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <Input
+              placeholder="Search beneficiary by name or role..."
+              className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+            Search
+          </Button>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
+        <div className="flex items-center gap-3">
           <div className="hidden lg:block">
             <DateRangeFilter
               start={dateRange.start}
@@ -324,23 +322,22 @@ export default function CashBookPage() {
               placeholder="Activity Dates"
             />
           </div>
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 text-zinc-600 font-bold gap-2">
-            <Filter className="w-4 h-4" />
-            Refine
+          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-bold gap-2 flex items-center shadow-sm">
+            <History className="w-4 h-4 text-zinc-400" />
+            <span>Audit Trail</span>
           </Button>
-          <Button variant="outline" className="h-12 px-6 rounded-2xl border-zinc-200 text-zinc-600 font-bold gap-2">
-            <History className="w-4 h-4" />
-            Audit
-          </Button>
+          <p className="text-[11px] font-black text-zinc-400 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-md tracking-tighter hidden sm:block">
+            {employees.length} Records
+          </p>
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-[2.5rem] shadow-sm overflow-hidden">
+      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
         <CustomTable
           data={employees}
           columns={listColumns}
-          scrollAreaHeight="h-[calc(100vh-480px)]"
-          rowClassName="group hover:bg-zinc-50 transition-colors cursor-default"
+          scrollAreaHeight="h-[calc(100vh-450px)]"
+          rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
         />
       </div>
 

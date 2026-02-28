@@ -12,6 +12,13 @@ import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -388,72 +395,81 @@ export default function LoanManagementPage() {
       {/* Premium Stat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Active Credits</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Credits</p>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold text-zinc-900">{loans.length}</span>
-            <span className="text-[10px] font-bold text-emerald-500 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Total Principal</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Principal</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 font-mono">৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M</span>
+            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M</span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Portfolio Settlement</p>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-emerald-600 font-mono">{stats.settledPct}%</span>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Weighted Avg</span>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Settled Volume</p>
+          <div className="flex items-baseline justify-between font-semibold">
+            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">{stats.settledPct}%</span>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest italic opacity-60">Weighted Avg</span>
           </div>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-xl text-white space-y-3">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">Net Exposure</p>
+        <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm space-y-3">
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Net Exposure</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold font-mono">৳ {(stats.netExposure / 1000000).toFixed(1)}M</span>
+            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">৳ {(stats.netExposure / 1000000).toFixed(1)}M</span>
           </div>
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-50/50 p-2 rounded-lg border border-zinc-100">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-          <Input
-            placeholder="Search lender entity or liability type..."
-            className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md shadow-sm"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+      {/* Toolbar - Redesigned for Consistency with Orders */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm">
+        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            <Input
+              placeholder="Search lender entity or liability type..."
+              className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <Button
+            className="bg-black text-white hover:bg-black/80 font-bold px-6 h-10"
+            onClick={() => { /* Real-time search by RTK, but button adds intent */ }}
+          >
+            Search
+          </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-medium gap-2 shadow-sm">
-                <ArrowUpDown className="w-4 h-4 text-zinc-400" />
-                <span>{sortOptions.find(o => o.field === sort.field && o.dir === sort.dir)?.label || "Sort"}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {sortOptions.map((opt, idx) => (
-                <DropdownMenuItem
-                  key={idx}
-                  onClick={() => setSort({ field: opt.field, dir: opt.dir as any })}
-                  className="text-sm font-medium"
-                >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex items-center gap-3">
+          <div className="w-full sm:max-w-[200px]">
+            <Select
+              value={sort.field + "_" + sort.dir}
+              onValueChange={(value: string) => {
+                const [f, d] = value.split("_");
+                setSort({ field: f, dir: d as any });
+              }}
+            >
+              <SelectTrigger className="h-10 text-xs font-bold border-zinc-200 bg-white shadow-sm">
+                <SelectValue placeholder="Sort entries" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((o) => (
+                  <SelectItem key={o.field + "_" + o.dir} value={o.field + "_" + o.dir} className="text-xs font-semibold">
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-medium gap-2 shadow-sm">
+          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-bold gap-2 flex items-center shadow-sm">
             <History className="w-4 h-4 text-zinc-400" />
-            Audit
+            <span>Audit Trail</span>
           </Button>
 
-          <p className="text-xs font-medium text-zinc-500 bg-white px-3 py-2 rounded-md border border-zinc-200 shadow-sm ml-2 hidden sm:block">
+          <p className="text-[11px] font-black text-zinc-400 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-md tracking-tighter hidden sm:block">
             Showing {loans.length} Records
           </p>
         </div>
@@ -464,8 +480,8 @@ export default function LoanManagementPage() {
           data={loans}
           columns={listColumns}
           isLoading={isLoadingLoans}
-          scrollAreaHeight="h-[calc(100vh-420px)]"
-          rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default"
+          scrollAreaHeight="h-[calc(100vh-450px)]"
+          rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
         />
       </div>
 

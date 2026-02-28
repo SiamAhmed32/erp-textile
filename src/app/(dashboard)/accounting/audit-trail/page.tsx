@@ -94,7 +94,7 @@ const AuditTrailPage = () => {
     });
 
     const auditItems = useMemo(() => {
-        const raw = (auditPayload as any)?.data;
+        const raw = (auditPayload as any)?.data?.data || (auditPayload as any)?.data;
         if (Array.isArray(raw)) return raw as AuditEntry[];
         return [] as AuditEntry[];
     }, [auditPayload]);
