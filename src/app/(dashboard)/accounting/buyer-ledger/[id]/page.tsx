@@ -103,7 +103,7 @@ export default function BuyerLedgerDetailPage() {
                 ),
             },
             {
-                header: "Debit Account",
+                header: "Account",
                 accessor: (row: LedgerEntry) => (
                     <span className="text-sm font-medium text-zinc-700">
                         {row.debitedAccountName}

@@ -110,6 +110,11 @@ export const navMain = [
                 icon: ReceiptText,
             },
             {
+                title: "Trial Balance",
+                url: "/accounting/trial-balance",
+                icon: FileText,
+            },
+            {
                 title: "Bank Management",
                 url: "/accounting/banks",
                 icon: Landmark,

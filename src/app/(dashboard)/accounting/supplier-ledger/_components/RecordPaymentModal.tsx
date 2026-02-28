@@ -182,7 +182,7 @@ export default function RecordPaymentModal({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <p className="text-[9px] text-zinc-400 italic">* Non-editable (Set by Payment Method)</p>
+                        <p className="text-[9px] text-zinc-400 italic font-medium">* Default: CASH/BANK (Locked)</p>
                     </div>
                     <div className="space-y-2">
                         <Label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
@@ -198,7 +198,7 @@ export default function RecordPaymentModal({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <p className="text-[9px] text-zinc-400 italic">* Default: Accounts Payable</p>
+                        <p className="text-[9px] text-emerald-600 italic font-medium">* Suggest: Accounts Payable (Editable)</p>
                     </div>
                 </div>
 

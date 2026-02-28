@@ -115,66 +115,84 @@ const employees: EmployeeIOU[] = [
 
 const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN");
 
+import { useGetByIdQuery, useGetAllQuery } from "@/store/services/commonApi";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function CashBookDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = React.use(params);
-  const employee = employees.find((e) => e.id === id);
+  const [dateRange, setDateRange] = useState({ start: "", end: "" });
+
+  // 1. Fetch Employee Summary for Stats
+  const { data: summaryResponse, isLoading: isSummaryLoading } = useGetByIdQuery({
+    path: "moi-cash-books/employee",
+    id: `${id}/summary`,
+  });
+
+  const employee = summaryResponse?.data;
+
+  // 2. Fetch Transaction History
+  const { data: transactionsResponse, isLoading: isTxLoading } = useGetAllQuery({
+    path: `moi-cash-books/employee/${id}`,
+    filters: {
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    },
+  });
+
+  const transactions = transactionsResponse?.data || [];
 
   const detailColumns = useMemo(
     () => [
       {
         header: "Ref No",
-        accessor: (row: Transaction) => row.ref,
+        accessor: (row: any) => row.journalEntry?.voucherNo || row.id.slice(0, 8),
       },
       {
         header: "Date",
-        accessor: (row: Transaction) => row.date,
+        accessor: (row: any) => new Date(row.createdAt).toLocaleDateString(),
       },
       {
         header: "Type",
-        accessor: (row: Transaction) => (
+        accessor: (row: any) => (
           <span
             className={cn(
               "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-              row.type === "Return"
+              row.type === "SETTLE"
                 ? "bg-emerald-50 text-emerald-600"
                 : "bg-amber-50 text-amber-600",
             )}
           >
-            {row.type.toUpperCase()}
+            {row.type}
           </span>
         ),
       },
       {
         header: "Amount",
-        accessor: (row: Transaction) => (
+        accessor: (row: any) => (
           <span
             className={cn(
               "font-mono font-bold",
-              row.amount > 0 ? "text-amber-600" : "text-emerald-700",
+              row.type === "ISSUE" ? "text-amber-600" : "text-emerald-700",
             )}
           >
-            {row.amount > 0 ? "+" : ""}
+            {row.type === "ISSUE" ? "+" : "-"}
             {fmt(row.amount)}
           </span>
         ),
       },
       {
-        header: "Balance",
-        accessor: (row: Transaction) => fmt(row.balance),
-      },
-      {
         header: "Note",
-        accessor: (row: Transaction) => row.note,
+        accessor: (row: any) => row.note || row.journalEntry?.narration || "N/A",
       },
     ],
     [],
   );
 
-  if (!employee) {
+  if (!isSummaryLoading && !employee) {
     return (
       <Container className="pb-10">
         <div className="space-y-4">
@@ -196,27 +214,27 @@ export default function CashBookDetailPage({
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <StatsCard
             title="Employee"
-            value={employee.name}
+            value={employee?.name || ""}
             icon={Wallet}
-            color="blue"
+            loading={isSummaryLoading}
           />
           <StatsCard
             title="Total Advanced"
-            value={fmt(employee.totalIssued)}
+            value={fmt(employee?.totalIssuedAmount || 0)}
             icon={Wallet}
-            color="orange"
+            loading={isSummaryLoading}
           />
           <StatsCard
             title="Settled"
-            value={fmt(employee.totalReturned)}
+            value={fmt(employee?.totalReturnedAmount || 0)}
             icon={CheckCircle2}
-            color="green"
+            loading={isSummaryLoading}
           />
           <StatsCard
             title="Outstanding"
-            value={fmt(employee.outstanding)}
+            value={fmt(employee?.outstandingAmount || 0)}
             icon={AlertCircle}
-            color="red"
+            loading={isSummaryLoading}
           />
         </div>
 
@@ -230,17 +248,25 @@ export default function CashBookDetailPage({
             </Link>
             <div>
               <h3 className="font-bold text-lg text-foreground leading-tight">
-                {employee.name}
+                {isSummaryLoading ? <Skeleton className="h-6 w-32" /> : employee?.name}
               </h3>
               <p className="text-xs text-muted-foreground">
-                {employee.designation}
+                {isSummaryLoading ? <Skeleton className="h-4 w-24" /> : employee?.designation}
               </p>
             </div>
           </div>
           <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
             <div className="flex w-full gap-2 sm:max-w-[260px]">
-              <Input type="date" />
-              <Input type="date" />
+              <Input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              />
+              <Input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              />
             </div>
             <Button className="bg-black text-white hover:bg-black/90">
               <FileDown className="size-4 mr-2" /> Export PDF
@@ -249,11 +275,21 @@ export default function CashBookDetailPage({
         </div>
 
         {/* Transaction History Table */}
-        <CustomTable
-          data={employee.transactions}
-          columns={detailColumns}
-          scrollAreaHeight="h-[calc(100vh-320px)]"
-        />
+        <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+          {isTxLoading ? (
+            <div className="p-8 space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <CustomTable
+              data={transactions}
+              columns={detailColumns}
+              scrollAreaHeight="h-[calc(100vh-320px)]"
+            />
+          )}
+        </div>
       </div>
     </Container>
   );

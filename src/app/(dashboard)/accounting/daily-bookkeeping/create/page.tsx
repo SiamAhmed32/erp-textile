@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Controller,
   SubmitHandler,
@@ -43,6 +43,20 @@ import {
 } from "react-hook-form";
 import toast from "react-hot-toast";
 import { z } from "zod";
+
+// Import supplier creation requirements
+import { SupplierForm } from "@/components/Supplier/SupplierForm";
+import { SupplierFormData } from "@/components/Supplier/types";
+
+const emptySupplier: SupplierFormData = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  location: "",
+  supplierCode: "",
+  openingLiability: 0,
+};
 
 /* ─── Validation Schema (mirrors backend journalEntry.validation.ts) ─────── */
 const journalEntrySchema = z.object({
@@ -78,20 +92,10 @@ const categoryConfigs: Record<
   string,
   { label: string; icon: any; desc: string }
 > = {
-  BUYER_DUE: {
-    label: "Buyer Due",
-    icon: Bookmark,
-    desc: "Recognize sales revenue and buyer obligation.",
-  },
   RECEIPT: {
     label: "Receipt",
     icon: Receipt,
     desc: "Record a payment received from a buyer.",
-  },
-  SUPPLIER_DUE: {
-    label: "Supplier Due",
-    icon: Building,
-    desc: "Recognize purchase expense and supplier obligation.",
   },
   PAYMENT: {
     label: "Payment",
@@ -166,10 +170,63 @@ export default function BookkeepingCreatePage() {
     limit: 1000,
   });
   const { data: buyersData } = useGetAllQuery({ path: "buyers", limit: 1000 });
-  const { data: suppliersData } = useGetAllQuery({
+  const { data: suppliersData, refetch: refetchSuppliers } = useGetAllQuery({
     path: "suppliers",
     limit: 1000,
   });
+
+  // Supplier Creation State
+  const [isSupplierFormOpen, setIsSupplierFormOpen] = useState(false);
+  const [supplierFormData, setSupplierFormData] = useState<SupplierFormData>(emptySupplier);
+  const [supplierFormErrors, setSupplierFormErrors] = useState<Partial<Record<keyof SupplierFormData, string>>>({});
+  const [postSupplier] = usePostMutation();
+
+  const handleCreateSupplierSubmit = async () => {
+    // Basic validation
+    const errors: Partial<Record<keyof SupplierFormData, string>> = {};
+    if (!supplierFormData.name?.trim()) errors.name = "Supplier name is required";
+    if (!supplierFormData.email?.trim()) errors.email = "Email is required";
+    if (!supplierFormData.phone?.trim()) errors.phone = "Phone number is required";
+    if (!supplierFormData.address?.trim()) errors.address = "Address is required";
+    if (!supplierFormData.location?.trim()) errors.location = "Location is required";
+    setSupplierFormErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please fill in all required fields correctly.");
+      return;
+    }
+
+    try {
+      const response = await postSupplier({
+        path: "suppliers",
+        body: {
+          ...supplierFormData,
+          openingLiability: supplierFormData.openingLiability ? Number(supplierFormData.openingLiability) : undefined,
+        },
+        invalidate: ["suppliers"],
+      }).unwrap();
+
+      toast.success("Supplier created successfully");
+      setIsSupplierFormOpen(false);
+      setSupplierFormData(emptySupplier);
+
+      // Select the newly created supplier
+      if (response && response.data && response.data.id) {
+        setValue("supplierId", response.data.id);
+      }
+      refetchSuppliers();
+    } catch (err: any) {
+      const message = err?.data?.message || err?.message || "Failed to create supplier";
+      toast.error(`Error: ${message}`);
+    }
+  };
+
+  const handleSupplierFormChange = (field: keyof SupplierFormData, value: string | number) => {
+    setSupplierFormData((prev: SupplierFormData) => ({ ...prev, [field]: value }));
+    if (supplierFormErrors[field]) {
+      setSupplierFormErrors((prev: Partial<Record<keyof SupplierFormData, string>>) => ({ ...prev, [field]: undefined }));
+    }
+  };
   const { data: banksData } = useGetAllQuery({
     path: "accounting/banks",
     limit: 1000,
@@ -261,8 +318,8 @@ export default function BookkeepingCreatePage() {
     } catch (error: any) {
       toast.error(
         error?.data?.error?.message ||
-          error?.data?.message ||
-          "Failed to save journal entry.",
+        error?.data?.message ||
+        "Failed to save journal entry.",
       );
     }
   };
@@ -315,7 +372,28 @@ export default function BookkeepingCreatePage() {
       <div className="mt-8">
         <Tabs
           value={activeCategory}
-          onValueChange={(v) => setValue("category", v as any)}
+          onValueChange={(v) => {
+            setValue("category", v as any);
+            const defaultReceivable = accounts.find(a => a.type === "ASSET" && (a.name.toLowerCase().includes("receivable") || a.name.toLowerCase().includes("reachable")));
+            const defaultPayable = accounts.find(a => a.type === "LIABILITY" && a.name.toLowerCase().includes("payable"));
+
+            if (v === "RECEIPT") {
+              setValue("lines", [
+                { accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined },
+                { accountHeadId: defaultReceivable?.id || "", type: "CREDIT", amount: 0, bankId: undefined },
+              ]);
+            } else if (v === "PAYMENT") {
+              setValue("lines", [
+                { accountHeadId: defaultPayable?.id || "", type: "DEBIT", amount: 0, bankId: undefined },
+                { accountHeadId: "", type: "CREDIT", amount: 0, bankId: undefined },
+              ]);
+            } else {
+              setValue("lines", [
+                { accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined },
+                { accountHeadId: "", type: "CREDIT", amount: 0, bankId: undefined },
+              ]);
+            }
+          }}
           className="w-full"
         >
           <TabsList className="tab-premium-list w-full! max-w-5xl mx-auto overflow-x-auto flex-nowrap">
@@ -396,79 +474,88 @@ export default function BookkeepingCreatePage() {
               {/* Buyer sub-ledger (BUYER_DUE / RECEIPT only) */}
               {(activeCategory === "BUYER_DUE" ||
                 activeCategory === "RECEIPT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Buyer</OptionalLabel>
-                  <Controller
-                    name="buyerId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? undefined : val)
-                        }
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                          <SelectValue placeholder="Select a buyer..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No buyer attached —
-                          </SelectItem>
-                          {buyers.map((b) => (
-                            <SelectItem key={b.id} value={b.id}>
-                              {b.name}
-                              {b.location ? ` (${b.location})` : ""}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Buyer</OptionalLabel>
+                    <Controller
+                      name="buyerId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                            <SelectValue placeholder="Select a buyer..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No buyer attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link this entry to a specific buyer for sub-ledger tracking.
-                    Leave blank for general entries.
-                  </HelperText>
-                </div>
-              )}
+                            {buyers.map((b) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                                {b.location ? ` (${b.location})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific buyer for sub-ledger tracking.
+                      Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* Supplier sub-ledger (SUPPLIER_DUE / PAYMENT only) */}
               {(activeCategory === "SUPPLIER_DUE" ||
                 activeCategory === "PAYMENT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Supplier</OptionalLabel>
-                  <Controller
-                    name="supplierId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? undefined : val)
-                        }
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                          <SelectValue placeholder="Select a supplier..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No supplier attached —
-                          </SelectItem>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Supplier</OptionalLabel>
+                    <Controller
+                      name="supplierId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) => {
+                            if (val === "__create__") {
+                              setIsSupplierFormOpen(true);
+                              // Reset the inner value so it doesn't stay stuck on "__create__"
+                              field.onChange(field.value);
+                            } else {
+                              field.onChange(val === "__none__" ? undefined : val);
+                            }
+                          }}
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                            <SelectValue placeholder="Select a supplier..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No supplier attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link this entry to a specific supplier for sub-ledger
-                    tracking. Leave blank for general entries.
-                  </HelperText>
-                </div>
-              )}
+                            <SelectItem value="__create__" className="text-indigo-600 font-medium">
+                              + Create New Supplier
+                            </SelectItem>
+                            {suppliers.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific supplier for sub-ledger
+                      tracking. Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* ── Voucher Lines ─────────────────────────────────────── */}
               <div className="space-y-4">
@@ -498,162 +585,176 @@ export default function BookkeepingCreatePage() {
 
                 {/* Lines */}
                 <div className="space-y-4">
-                  {fields.map((field, index) => (
-                    <div
-                      key={field.id}
-                      className="grid grid-cols-12 gap-4 items-start p-6 rounded-2xl border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300"
-                    >
-                      {/* Account Head — required */}
-                      <div className="col-span-12 md:col-span-5 space-y-1.5">
-                        <RequiredLabel>Ledger Account</RequiredLabel>
-                        <Controller
-                          name={`lines.${index}.accountHeadId`}
-                          control={control}
-                          render={({ field: selectField }) => (
-                            <Select
-                              onValueChange={selectField.onChange}
-                              value={selectField.value || ""}
-                            >
-                              <SelectTrigger
-                                className={cn(
-                                  "bg-white h-11 rounded-xl border-zinc-200",
-                                  errors.lines?.[index]?.accountHeadId &&
-                                    "border-red-400 focus:ring-red-400",
-                                )}
+                  {fields.map((field, index) => {
+                    // Determine if this line should be fully locked to AR/AP
+                    const isLockedCredit = activeCategory === "RECEIPT" && index === 1;
+                    const isLockedDebit = activeCategory === "PAYMENT" && index === 0;
+                    const isLineLocked = isLockedCredit || isLockedDebit;
+
+                    return (
+                      <div
+                        key={field.id}
+                        className="grid grid-cols-12 gap-4 items-start p-6 rounded-2xl border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300"
+                      >
+                        {/* Account Head — required */}
+                        <div className="col-span-12 md:col-span-5 space-y-1.5">
+                          <RequiredLabel>Ledger Account</RequiredLabel>
+                          <Controller
+                            name={`lines.${index}.accountHeadId`}
+                            control={control}
+                            render={({ field: selectField }) => (
+                              <Select
+                                onValueChange={selectField.onChange}
+                                value={selectField.value || ""}
+                                disabled={isLineLocked}
                               >
-                                <SelectValue placeholder="Select account head..." />
-                              </SelectTrigger>
-                              <SelectContent className="max-h-[240px]">
-                                {accounts.map((a) => (
-                                  <SelectItem key={a.id} value={a.id}>
-                                    {a.name}
-                                    {a.code ? ` — ${a.code}` : ""}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                        <FieldError
-                          message={
-                            errors.lines?.[index]?.accountHeadId?.message
-                          }
-                        />
-                      </div>
-
-                      {/* Debit / Credit toggle — required */}
-                      <div className="col-span-6 md:col-span-3 space-y-1.5">
-                        <RequiredLabel>Entry Side</RequiredLabel>
-                        <div className="flex h-11 rounded-xl overflow-hidden border border-zinc-200">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setValue(`lines.${index}.type`, "DEBIT")
-                            }
-                            className={cn(
-                              "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
-                              watchLines[index]?.type === "DEBIT"
-                                ? "bg-zinc-900 text-white"
-                                : "bg-white text-zinc-400 hover:bg-zinc-50",
-                            )}
-                          >
-                            DR
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setValue(`lines.${index}.type`, "CREDIT")
-                            }
-                            className={cn(
-                              "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
-                              watchLines[index]?.type === "CREDIT"
-                                ? "bg-zinc-900 text-white"
-                                : "bg-white text-zinc-400 hover:bg-zinc-50",
-                            )}
-                          >
-                            CR
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Amount — required */}
-                      <div className="col-span-4 md:col-span-3 space-y-1.5">
-                        <RequiredLabel>Amount (৳)</RequiredLabel>
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="0.00"
-                          {...register(`lines.${index}.amount`, {
-                            valueAsNumber: true,
-                          })}
-                          className={cn(
-                            "font-mono bg-white h-11 rounded-xl border-zinc-200",
-                            errors.lines?.[index]?.amount &&
-                              "border-red-400 focus:ring-red-400",
-                          )}
-                        />
-                        <FieldError
-                          message={errors.lines?.[index]?.amount?.message}
-                        />
-                      </div>
-
-                      {/* Remove button */}
-                      <div className="col-span-2 md:col-span-1 pt-6 flex justify-center">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          disabled={fields.length <= 2}
-                          className="h-9 w-9 rounded-lg text-zinc-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-all"
-                          title="Remove this line"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-
-                      {/* Bank sub-ledger — optional, full row */}
-                      <div className="col-span-12 pt-2 border-t border-zinc-50">
-                        <div className="flex items-center gap-3">
-                          <OptionalLabel>Bank Sub-ledger</OptionalLabel>
-                          <div className="w-56">
-                            <Controller
-                              name={`lines.${index}.bankId`}
-                              control={control}
-                              render={({ field: bankField }) => (
-                                <Select
-                                  onValueChange={(val) =>
-                                    bankField.onChange(
-                                      val === "__none__" ? undefined : val,
-                                    )
-                                  }
-                                  value={bankField.value || "__none__"}
+                                <SelectTrigger
+                                  className={cn(
+                                    "bg-white h-11 rounded-xl border-zinc-200",
+                                    isLineLocked && "opacity-60 cursor-not-allowed bg-zinc-50",
+                                    errors.lines?.[index]?.accountHeadId &&
+                                    "border-red-400 focus:ring-red-400",
+                                  )}
                                 >
-                                  <SelectTrigger className="h-8 bg-white text-xs">
-                                    <SelectValue placeholder="N/A" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="__none__">
-                                      N/A — Not a bank transaction
+                                  <SelectValue placeholder="Select account head..." />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[240px]">
+                                  {accounts.map((a) => (
+                                    <SelectItem key={a.id} value={a.id}>
+                                      {a.name}
+                                      {a.code ? ` — ${a.code}` : ""}
                                     </SelectItem>
-                                    {banks.map((b) => (
-                                      <SelectItem key={b.id} value={b.id}>
-                                        {b.bankName}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          <FieldError
+                            message={
+                              errors.lines?.[index]?.accountHeadId?.message
+                            }
+                          />
+                        </div>
+
+                        {/* Debit / Credit toggle — required */}
+                        <div className="col-span-6 md:col-span-3 space-y-1.5">
+                          <RequiredLabel>Entry Side</RequiredLabel>
+                          <div className="flex h-11 rounded-xl overflow-hidden border border-zinc-200">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!isLineLocked) setValue(`lines.${index}.type`, "DEBIT")
+                              }}
+                              disabled={isLineLocked}
+                              className={cn(
+                                "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
+                                watchLines[index]?.type === "DEBIT"
+                                  ? "bg-zinc-900 text-white"
+                                  : "bg-white text-zinc-400 hover:bg-zinc-50",
+                                isLineLocked && watchLines[index]?.type !== "DEBIT" ? "opacity-30 cursor-not-allowed hidden" : "",
+                                isLineLocked && watchLines[index]?.type === "DEBIT" ? "cursor-not-allowed opacity-80" : ""
                               )}
-                            />
+                            >
+                              DR
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!isLineLocked) setValue(`lines.${index}.type`, "CREDIT")
+                              }}
+                              disabled={isLineLocked}
+                              className={cn(
+                                "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
+                                watchLines[index]?.type === "CREDIT"
+                                  ? "bg-zinc-900 text-white"
+                                  : "bg-white text-zinc-400 hover:bg-zinc-50",
+                                isLineLocked && watchLines[index]?.type !== "CREDIT" ? "opacity-30 cursor-not-allowed hidden" : "",
+                                isLineLocked && watchLines[index]?.type === "CREDIT" ? "cursor-not-allowed opacity-80" : ""
+                              )}
+                            >
+                              CR
+                            </button>
                           </div>
-                          <span className="text-[11px] text-zinc-400">
-                            Only fill if this line involves a specific bank
-                            account.
-                          </span>
+                        </div>
+
+                        {/* Amount — required */}
+                        <div className="col-span-4 md:col-span-3 space-y-1.5">
+                          <RequiredLabel>Amount (৳)</RequiredLabel>
+                          <Input
+                            type="number"
+                            step="any"
+                            placeholder="0.00"
+                            {...register(`lines.${index}.amount`, {
+                              valueAsNumber: true,
+                            })}
+                            className={cn(
+                              "font-mono bg-white h-11 rounded-xl border-zinc-200",
+                              errors.lines?.[index]?.amount &&
+                              "border-red-400 focus:ring-red-400",
+                            )}
+                          />
+                          <FieldError
+                            message={errors.lines?.[index]?.amount?.message}
+                          />
+                        </div>
+
+                        {/* Remove button */}
+                        <div className="col-span-2 md:col-span-1 pt-6 flex justify-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            disabled={fields.length <= 2 || isLineLocked}
+                            className="h-9 w-9 rounded-lg text-zinc-300 hover:text-red-500 hover:bg-red-50 disabled:opacity-20 transition-all"
+                            title="Remove this line"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+
+                        {/* Bank sub-ledger — optional, full row */}
+                        <div className="col-span-12 pt-2 border-t border-zinc-50">
+                          <div className="flex items-center gap-3">
+                            <OptionalLabel>Bank Sub-ledger</OptionalLabel>
+                            <div className="w-56">
+                              <Controller
+                                name={`lines.${index}.bankId`}
+                                control={control}
+                                render={({ field: bankField }) => (
+                                  <Select
+                                    onValueChange={(val) =>
+                                      bankField.onChange(
+                                        val === "__none__" ? undefined : val,
+                                      )
+                                    }
+                                    value={bankField.value || "__none__"}
+                                  >
+                                    <SelectTrigger className="h-8 bg-white text-xs">
+                                      <SelectValue placeholder="N/A" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="__none__">
+                                        N/A — Not a bank transaction
+                                      </SelectItem>
+                                      {banks.map((b) => (
+                                        <SelectItem key={b.id} value={b.id}>
+                                          {b.bankName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
+                            </div>
+                            <span className="text-[11px] text-zinc-400">
+                              Only fill if this line involves a specific bank account.
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>
@@ -757,6 +858,21 @@ export default function BookkeepingCreatePage() {
           </div>
         </div>
       </div>
+
+      {/* Supplier Creation Modal */}
+      <SupplierForm
+        open={isSupplierFormOpen}
+        mode="create"
+        data={supplierFormData}
+        errors={supplierFormErrors}
+        onClose={() => {
+          setIsSupplierFormOpen(false);
+          setSupplierFormData(emptySupplier);
+          setSupplierFormErrors({});
+        }}
+        onChange={handleSupplierFormChange}
+        onSubmit={handleCreateSupplierSubmit}
+      />
     </Container>
   );
 }
