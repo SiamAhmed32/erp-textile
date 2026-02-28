@@ -4,11 +4,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   useGetAllQuery,
-  useDeleteOneMutation,
+  usePatchMutation,
 } from "@/store/services/commonApi";
 import LCsTable from "./LCsTable";
 import { LCManagement } from "./types";
-import { PrimaryHeading } from "@/components/reusables";
+import { PrimaryHeading, CustomModal } from "@/components/reusables";
+import { Button } from "@/components/ui/button";
 
 const LCPage = () => {
   const router = useRouter();
@@ -21,7 +22,9 @@ const LCPage = () => {
   const [expiryDateTo, setExpiryDateTo] = useState("");
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
-  const [deleteItem] = useDeleteOneMutation();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deletingLC, setDeletingLC] = useState<LCManagement | null>(null);
+  const [patchItem] = usePatchMutation();
 
   useEffect(() => {
     const handle = setTimeout(() => setDebouncedSearch(search), 300);
@@ -45,6 +48,7 @@ const LCPage = () => {
       ...(expiryDateTo ? { expiryEndDate: expiryDateTo } : {}),
       ...(minAmount ? { minAmount } : {}),
       ...(maxAmount ? { maxAmount } : {}),
+      ...(showDeleted ? { isDeleted: true } : {}),
     },
   });
 
@@ -91,26 +95,54 @@ const LCPage = () => {
   );
 
   const handleDelete = useCallback(
+    (row: LCManagement) => {
+      setDeletingLC(row);
+    },
+    [],
+  );
+
+  const confirmDelete = useCallback(async () => {
+    if (!deletingLC) return;
+    try {
+      await patchItem({
+        path: `lc-managements/${deletingLC.id}`,
+        body: { isDeleted: true },
+        invalidate: ["lc-managements"],
+      }).unwrap();
+      refetch();
+    } catch (err: any) {
+      console.error(
+        "Delete LC Error:",
+        err.message || "Failed to delete LC management",
+      );
+    } finally {
+      setDeletingLC(null);
+    }
+  }, [patchItem, refetch, deletingLC]);
+
+  const handleRestore = useCallback(
     async (row: LCManagement) => {
-      if (
-        !window.confirm("Are you sure you want to delete this LC Management?")
-      )
-        return;
       try {
-        await deleteItem({
+        await patchItem({
           path: `lc-managements/${row.id}`,
+          body: { isDeleted: false },
           invalidate: ["lc-managements"],
         }).unwrap();
         refetch();
       } catch (err: any) {
         console.error(
-          "Delete LC Error:",
-          err.message || "Failed to delete LC management",
+          "Restore LC Error:",
+          err.message || "Failed to restore LC management",
         );
       }
     },
-    [deleteItem, refetch],
+    [patchItem, refetch],
   );
+
+  const handleToggleDeleted = useCallback(() => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
+  }, []);
 
   const handleSearchSubmit = useCallback(() => {
     setDebouncedSearch(search);
@@ -148,7 +180,41 @@ const LCPage = () => {
         onEdit={handleEdit}
         onExport={handleExport}
         onDelete={handleDelete}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+        onRestore={handleRestore}
       />
+
+      <CustomModal
+        open={!!deletingLC}
+        onOpenChange={(open) => !open && setDeletingLC(null)}
+        title="Confirm Delete"
+        maxWidth="400px"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete LC{" "}
+            <span className="font-semibold text-foreground">
+              {deletingLC?.bblcNumber}
+            </span>
+            ? This is a soft delete operation.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingLC(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
     </div>
   );
 };

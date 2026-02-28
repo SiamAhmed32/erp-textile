@@ -3,15 +3,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  useDeleteOneMutation,
   useGetAllQuery,
+  usePatchMutation,
 } from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
 import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
 import { countByType, normalizeInvoice } from "./helpers";
 
-import { PageHeader } from "@/components/reusables";
+import { PageHeader, CustomModal } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,7 +29,9 @@ const InvoicePage = () => {
   const [duplicateInvoiceId, setDuplicateInvoiceId] = useState<string | null>(
     null,
   );
-  const [deleteOne] = useDeleteOneMutation();
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
+  const [patchItem] = usePatchMutation();
 
   //  console.log("edit invoice:", editInvoiceId);
 
@@ -53,6 +55,7 @@ const InvoicePage = () => {
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
+      ...(showDeleted ? { isDeleted: true } : {}),
     },
   });
   const invoices = useMemo(
@@ -106,22 +109,54 @@ const InvoicePage = () => {
   );
 
   const handleDelete = useCallback(
+    (row: Invoice) => {
+      setDeletingInvoice(row);
+    },
+    [],
+  );
+
+  const confirmDelete = useCallback(async () => {
+    if (!deletingInvoice) return;
+    try {
+      await patchItem({
+        path: `invoices/${deletingInvoice.id}`,
+        body: { isDeleted: true },
+        invalidate: ["invoices"],
+      }).unwrap();
+      refetch();
+    } catch (err: any) {
+      console.error(
+        "Delete Invoice Error:",
+        err.message || "Failed to delete invoice",
+      );
+    } finally {
+      setDeletingInvoice(null);
+    }
+  }, [patchItem, refetch, deletingInvoice]);
+
+  const handleRestore = useCallback(
     async (row: Invoice) => {
       try {
-        await deleteOne({
+        await patchItem({
           path: `invoices/${row.id}`,
+          body: { isDeleted: false },
           invalidate: ["invoices"],
         }).unwrap();
         refetch();
       } catch (err: any) {
         console.error(
-          "Delete Invoice Error:",
-          err.message || "Failed to delete invoice",
+          "Restore Invoice Error:",
+          err.message || "Failed to restore invoice",
         );
       }
     },
-    [deleteOne, refetch],
+    [patchItem, refetch],
   );
+
+  const handleToggleDeleted = useCallback(() => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
+  }, []);
 
   const handleSearchSubmit = useCallback(() => {
     setDebouncedSearch(search);
@@ -185,6 +220,9 @@ const InvoicePage = () => {
         onDuplicate={handleDuplicate}
         onExport={handleExport}
         onDelete={handleDelete}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+        onRestore={handleRestore}
       />
       <InvoiceFormModal
         open={isCreateModalOpen}
@@ -206,6 +244,36 @@ const InvoicePage = () => {
         onClose={() => setDuplicateInvoiceId(null)}
         onSuccess={handleDuplicateSuccess}
       />
+      <CustomModal
+        open={!!deletingInvoice}
+        onOpenChange={(open) => !open && setDeletingInvoice(null)}
+        title="Confirm Delete"
+        maxWidth="400px"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete invoice{" "}
+            <span className="font-semibold text-foreground">
+              {deletingInvoice?.piNumber}
+            </span>
+            ? This is a soft delete operation.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setDeletingInvoice(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
     </>
   );
 };

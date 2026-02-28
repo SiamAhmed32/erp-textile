@@ -148,7 +148,7 @@ function CustomTable<T extends Record<string, any>>({
       <div className={`overflow-auto border rounded-md ${scrollAreaHeight}`}>
         <Table
           overflowWrapper={false}
-          className="border-separate border-spacing-0"
+          className={`border-separate border-spacing-0 ${data.length > 9 ? "h-full" : ""}`}
         >
           <TableHeader className="sticky top-0 z-10">
             <TableRow className="hover:bg-transparent border-none">
