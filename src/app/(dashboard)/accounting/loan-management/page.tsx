@@ -6,7 +6,7 @@ import {
   CustomModal,
   InputField,
   SelectBox,
-  PageHeader
+  PageHeader,
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ import {
   ShieldAlert,
   History,
   FileText,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -58,7 +58,8 @@ interface Loan {
   repayments: any[];
 }
 
-const fmt = (n: number) => "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
+const fmt = (n: number) =>
+  "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
 
 const initialFormData = {
   lenderName: "",
@@ -86,16 +87,21 @@ function StakeholderFormModal({
     limit: 100,
   });
 
-  const companies = useMemo(() => ((companiesPayload as any)?.data || []) as any[], [companiesPayload]);
+  const companies = useMemo(
+    () => ((companiesPayload as any)?.data || []) as any[],
+    [companiesPayload],
+  );
 
   // Auto-select first company profile if none selected
   React.useEffect(() => {
     if (companies.length > 0 && !formData.companyProfileId) {
-      setFormData(prev => ({ ...prev, companyProfileId: companies[0].id }));
+      setFormData((prev) => ({ ...prev, companyProfileId: companies[0].id }));
     }
   }, [companies, formData.companyProfileId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -107,8 +113,13 @@ function StakeholderFormModal({
     try {
       const payload: any = {
         ...formData,
-        principalAmount: parseFloat(String(formData.principalAmount).replace(/[^0-9.]/g, "")) || 0,
-        interestRate: parseFloat(String(formData.interestRate).replace(/[^0-9.]/g, "")) || 0,
+        principalAmount:
+          parseFloat(
+            String(formData.principalAmount).replace(/[^0-9.]/g, ""),
+          ) || 0,
+        interestRate:
+          parseFloat(String(formData.interestRate).replace(/[^0-9.]/g, "")) ||
+          0,
       };
 
       if (!payload.endDate) delete payload.endDate;
@@ -119,7 +130,7 @@ function StakeholderFormModal({
         path: "accounting/loans",
         body: {
           ...payload,
-          companyProfileId: payload.companyProfileId || companies[0]?.id
+          companyProfileId: payload.companyProfileId || companies[0]?.id,
         },
         invalidate: ["accounting/loans"],
       }).unwrap();
@@ -136,7 +147,11 @@ function StakeholderFormModal({
     <CustomModal
       open={open}
       onOpenChange={(val) => !val && onClose()}
-      title={<div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">Origination — <span className="text-zinc-900">New Stakeholder</span></div>}
+      title={
+        <div className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-black text-zinc-400">
+          Origination — <span className="text-zinc-900">New Stakeholder</span>
+        </div>
+      }
       maxWidth="600px"
     >
       <form onSubmit={handleSubmit} className="space-y-6 py-4">
@@ -173,7 +188,7 @@ function StakeholderFormModal({
           name="companyProfileId"
           value={formData.companyProfileId}
           onChange={handleChange as any}
-          options={companies.map(c => ({ _id: c.id, name: c.name }))}
+          options={companies.map((c) => ({ _id: c.id, name: c.name }))}
           placeholder="Select Company Profile"
           required
         />
@@ -257,26 +272,39 @@ export default function LoanManagementPage() {
     { label: "Principal: High to Low", field: "principalAmount", dir: "desc" },
   ];
 
-
   const listColumns = useMemo(
     () => [
       {
         header: "Lender Entity",
         accessor: (row: Loan) => (
           <div className="flex items-center gap-3 py-1">
-            <div className={cn(
-              "size-9 rounded-lg flex items-center justify-center border font-semibold text-[10px]",
-              row.loanType === "bank" ? "bg-zinc-900 border-zinc-900 text-white shadow-sm" :
-                row.loanType === "director" ? "bg-indigo-50 border-indigo-100 text-indigo-700" :
-                  "bg-amber-50 border-amber-100 text-amber-700"
-            )}>
-              {row.loanType === "bank" ? <Landmark size={14} /> :
-                row.loanType === "director" ? <Briefcase size={14} /> : <UserCircle2 size={14} />}
+            <div
+              className={cn(
+                "size-9 rounded-lg flex items-center justify-center border font-semibold text-[10px]",
+                row.loanType === "bank"
+                  ? "bg-zinc-900 border-zinc-900 text-white shadow-sm"
+                  : row.loanType === "director"
+                    ? "bg-indigo-50 border-indigo-100 text-indigo-700"
+                    : "bg-amber-50 border-amber-100 text-amber-700",
+              )}
+            >
+              {row.loanType === "bank" ? (
+                <Landmark size={14} />
+              ) : row.loanType === "director" ? (
+                <Briefcase size={14} />
+              ) : (
+                <UserCircle2 size={14} />
+              )}
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-zinc-900 text-sm whitespace-nowrap">{row.lenderName}</span>
+              <span className="font-semibold text-zinc-900 text-sm whitespace-nowrap">
+                {row.lenderName}
+              </span>
               <span className="text-xs text-zinc-500 whitespace-nowrap mt-0.5">
-                {row.loanType ? row.loanType.charAt(0).toUpperCase() + row.loanType.slice(1) : 'Other'} Debt
+                {row.loanType
+                  ? row.loanType.charAt(0).toUpperCase() + row.loanType.slice(1)
+                  : "Other"}{" "}
+                Debt
               </span>
             </div>
           </div>
@@ -298,9 +326,15 @@ export default function LoanManagementPage() {
       {
         header: "Outstanding Balance",
         accessor: (row: Loan) => {
-          const paidPrincipal = row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) || 0;
+          const paidPrincipal =
+            row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) ||
+            0;
           const outstanding = Number(row.principalAmount) - paidPrincipal;
-          const settledPct = Math.min(100, Math.round((paidPrincipal / Number(row.principalAmount)) * 100)) || 0;
+          const settledPct =
+            Math.min(
+              100,
+              Math.round((paidPrincipal / Number(row.principalAmount)) * 100),
+            ) || 0;
 
           return (
             <div className="flex flex-col">
@@ -325,7 +359,9 @@ export default function LoanManagementPage() {
       {
         header: "Status",
         accessor: (row: Loan) => {
-          const paidPrincipal = row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) || 0;
+          const paidPrincipal =
+            row.repayments?.reduce((sum, r) => sum + Number(r.principal), 0) ||
+            0;
           const isSettled = paidPrincipal >= Number(row.principalAmount);
           return (
             <div>
@@ -346,7 +382,10 @@ export default function LoanManagementPage() {
         header: "Action",
         className: "text-right pr-6",
         accessor: (row: Loan) => (
-          <Link href={`/accounting/loan-management/${row.id}`} className="inline-flex justify-end">
+          <Link
+            href={`/accounting/loan-management/${row.id}`}
+            className="inline-flex justify-end"
+          >
             <Button
               variant="outline"
               size="sm"
@@ -363,12 +402,18 @@ export default function LoanManagementPage() {
   );
 
   const stats = useMemo(() => {
-    const totalPrincipal = loans.reduce((sum, l) => sum + Number(l.principalAmount), 0);
-    const totalPaid = loans.reduce((sum, l) =>
-      sum + (l.repayments?.reduce((s, r) => s + Number(r.principal), 0) || 0)
-      , 0);
+    const totalPrincipal = loans.reduce(
+      (sum, l) => sum + Number(l.principalAmount),
+      0,
+    );
+    const totalPaid = loans.reduce(
+      (sum, l) =>
+        sum + (l.repayments?.reduce((s, r) => s + Number(r.principal), 0) || 0),
+      0,
+    );
     const netExposure = totalPrincipal - totalPaid;
-    const settledPct = totalPrincipal > 0 ? Math.round((totalPaid / totalPrincipal) * 100) : 0;
+    const settledPct =
+      totalPrincipal > 0 ? Math.round((totalPaid / totalPrincipal) * 100) : 0;
 
     return { totalPrincipal, totalPaid, netExposure, settledPct };
   }, [loans]);
@@ -395,55 +440,75 @@ export default function LoanManagementPage() {
       {/* Premium Stat Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Active Credits</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Active Credits
+          </p>
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-zinc-900">{loans.length}</span>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">Operational</span>
+            <span className="text-2xl font-bold text-zinc-900">
+              {loans.length}
+            </span>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+              Operational
+            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Total Principal</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Total Principal
+          </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M</span>
+            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">
+              ৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M
+            </span>
           </div>
         </div>
         <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Settled Volume</p>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+            Settled Volume
+          </p>
           <div className="flex items-baseline justify-between font-semibold">
-            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">{stats.settledPct}%</span>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest italic opacity-60">Weighted Avg</span>
+            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">
+              {stats.settledPct}%
+            </span>
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest italic opacity-60">
+              Weighted Avg
+            </span>
           </div>
         </div>
         <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">Net Exposure</p>
+          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">
+            Net Exposure
+          </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">৳ {(stats.netExposure / 1000000).toFixed(1)}M</span>
+            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">
+              ৳ {(stats.netExposure / 1000000).toFixed(1)}M
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Toolbar - Redesigned for Consistency with Orders */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm">
+      {/* Toolbar - Standardized for Consistency */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search lender entity or liability type..."
-              className="pl-9 h-10 border-zinc-200 bg-white focus-visible:ring-zinc-900 text-sm rounded-md"
+              className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <Button
-            className="bg-black text-white hover:bg-black/80 font-bold px-6 h-10"
-            onClick={() => { /* Real-time search by RTK, but button adds intent */ }}
+            className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg"
+            onClick={() => {}}
           >
             Search
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="w-full sm:max-w-[200px]">
+        <div className="flex items-center gap-2">
+          <div className="w-full sm:min-w-[200px]">
             <Select
               value={sort.field + "_" + sort.dir}
               onValueChange={(value: string) => {
@@ -451,12 +516,16 @@ export default function LoanManagementPage() {
                 setSort({ field: f, dir: d as any });
               }}
             >
-              <SelectTrigger className="h-10 text-xs font-bold border-zinc-200 bg-white shadow-sm">
+              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
                 <SelectValue placeholder="Sort entries" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-xl shadow-xl">
                 {sortOptions.map((o) => (
-                  <SelectItem key={o.field + "_" + o.dir} value={o.field + "_" + o.dir} className="text-xs font-semibold">
+                  <SelectItem
+                    key={o.field + "_" + o.dir}
+                    value={o.field + "_" + o.dir}
+                    className="text-xs font-semibold rounded-lg my-0.5"
+                  >
                     {o.label}
                   </SelectItem>
                 ))}
@@ -464,13 +533,16 @@ export default function LoanManagementPage() {
             </Select>
           </div>
 
-          <Button variant="outline" size="sm" className="h-10 px-4 rounded-md border-zinc-200 bg-white text-zinc-600 font-bold gap-2 flex items-center shadow-sm">
+          <Button
+            variant="outline"
+            className="h-11 px-4 rounded-lg border-zinc-200 bg-white text-zinc-600 font-semibold text-xs uppercase tracking-wider gap-2 flex items-center shadow-sm hover:bg-zinc-50"
+          >
             <History className="w-4 h-4 text-zinc-400" />
             <span>Audit Trail</span>
           </Button>
 
-          <p className="text-[11px] font-black text-zinc-400 bg-zinc-50 border border-zinc-200 px-3 py-2 rounded-md tracking-tighter hidden sm:block">
-            Showing {loans.length} Records
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
+            {loans.length} Records
           </p>
         </div>
       </div>

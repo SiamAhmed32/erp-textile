@@ -270,7 +270,7 @@ body {
 
   /* ─── Premium Modern Tabs ─── */
   .tab-premium-list {
-    @apply mx-auto flex w-fit items-center justify-center h-14 p-1.5 bg-slate-200/40 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-inner mb-6;
+    @apply mx-auto flex w-fit items-center justify-center h-14 bg-slate-200/40 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-inner mb-6;
   }
 
   .tab-premium-trigger {
@@ -278,7 +278,7 @@ body {
   }
 
   .tab-premium-trigger[data-state="active"] {
-    @apply bg-zinc-900 text-white shadow-xl shadow-zinc-200/50 scale-[1.02] ring-1 ring-zinc-800;
+    @apply bg-zinc-900 text-white shadow-xl shadow-zinc-200/50 rounded-2xl ring-1 ring-zinc-800;
   }
 
   /* Version for LC with more tabs - scrollable and slightly more compact if needed */

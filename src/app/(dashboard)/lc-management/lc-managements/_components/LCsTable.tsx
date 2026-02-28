@@ -75,8 +75,8 @@ const LCsTable: React.FC<LCsTableProps> = ({
   onExport,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => { },
-  onRestore = () => { },
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }) => {
   const columns = useMemo(
     () => [
@@ -221,11 +221,11 @@ const LCsTable: React.FC<LCsTableProps> = ({
             placeholder="Search BBLC, Bank, Branch..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-11 border-slate-200"
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
           />
           <Button
             onClick={onSearchSubmit}
-            className="h-11 bg-black text-white hover:bg-black/80"
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
           >
             Search
           </Button>

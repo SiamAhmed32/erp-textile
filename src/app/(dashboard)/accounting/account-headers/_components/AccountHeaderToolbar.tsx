@@ -80,7 +80,7 @@ export default function AccountHeaderToolbar({
         </div>
         <Button
           onClick={onSearch}
-          className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium"
+          className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
         >
           Search
         </Button>
@@ -94,12 +94,13 @@ export default function AccountHeaderToolbar({
             <Button
               variant="outline"
               className={cn(
-                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                type !== "all" && "bg-blue-50 border-blue-200 text-blue-700",
+                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-semibold text-xs uppercase tracking-wider",
+                type !== "all" &&
+                  "bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200",
               )}
             >
               <span>{typeOptions.find((t) => t.value === type)?.label}</span>
-              <ChevronDown className="h-4 w-4 opacity-50" />
+              <ChevronDown className="h-4 w-4 opacity-50 text-slate-400" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -111,8 +112,10 @@ export default function AccountHeaderToolbar({
                 key={opt.value}
                 onClick={() => setType(opt.value)}
                 className={cn(
-                  "rounded-lg my-0.5",
-                  type === opt.value ? "bg-blue-50 text-blue-700" : "",
+                  "rounded-lg my-0.5 font-semibold text-xs tracking-wide transition-colors",
+                  type === opt.value
+                    ? "bg-zinc-100 text-zinc-900"
+                    : "text-zinc-500 hover:bg-zinc-50",
                 )}
               >
                 {opt.label}
@@ -127,12 +130,12 @@ export default function AccountHeaderToolbar({
             <Button
               variant="outline"
               className={cn(
-                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
+                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-semibold text-xs uppercase tracking-wider",
                 !isDefaultSort &&
-                  "bg-purple-50 border-purple-200 text-purple-700",
+                  "bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200",
               )}
             >
-              <ArrowUpDown className="h-4 w-4 opacity-50" />
+              <ArrowUpDown className="h-4 w-4 opacity-50 text-slate-400" />
               <span>{isDefaultSort ? "Sort by" : activeSortLabel}</span>
             </Button>
           </DropdownMenuTrigger>
@@ -147,10 +150,10 @@ export default function AccountHeaderToolbar({
                   setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" })
                 }
                 className={cn(
-                  "rounded-lg my-0.5",
+                  "rounded-lg my-0.5 font-semibold text-xs tracking-wide transition-colors",
                   sort.field === opt.field && sort.dir === opt.dir
-                    ? "bg-purple-50 text-purple-700"
-                    : "",
+                    ? "bg-zinc-100 text-zinc-900"
+                    : "text-zinc-500 hover:bg-zinc-50",
                 )}
               >
                 {opt.label}

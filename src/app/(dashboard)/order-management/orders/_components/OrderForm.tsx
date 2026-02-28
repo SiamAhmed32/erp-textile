@@ -1215,7 +1215,7 @@ const OrderForm = ({
           <TabsTrigger value="basic" className="tab-premium-trigger">
             <Flex className="items-center gap-2">
               <FileText className="size-4" />
-              <span className="font-bold text-xs uppercase tracking-wider">
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
                 Basic Info
               </span>
             </Flex>
@@ -1223,7 +1223,7 @@ const OrderForm = ({
           <TabsTrigger value="details" className="tab-premium-trigger">
             <Flex className="items-center gap-2">
               <Package className="size-4" />
-              <span className="font-bold text-xs uppercase tracking-wider">
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
                 Order Details
               </span>
             </Flex>

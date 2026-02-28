@@ -1,6 +1,11 @@
 "use client";
 
-import { Container, CustomModal, DateRangeFilter, PageHeader } from "@/components/reusables";
+import {
+  Container,
+  CustomModal,
+  DateRangeFilter,
+  PageHeader,
+} from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,12 +53,12 @@ interface JournalEntry {
   voucherNo: string;
   date: string;
   category:
-  | "BUYER_DUE"
-  | "RECEIPT"
-  | "SUPPLIER_DUE"
-  | "PAYMENT"
-  | "JOURNAL"
-  | "CONTRA";
+    | "BUYER_DUE"
+    | "RECEIPT"
+    | "SUPPLIER_DUE"
+    | "PAYMENT"
+    | "JOURNAL"
+    | "CONTRA";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -156,7 +161,7 @@ function ViewModal({
                       "font-mono text-sm font-bold",
                       line.type === "DEBIT"
                         ? "text-indigo-600"
-                        : "text-zinc-700"
+                        : "text-zinc-700",
                     )}
                   >
                     ৳{" "}
@@ -169,7 +174,7 @@ function ViewModal({
                       "text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase",
                       line.type === "DEBIT"
                         ? "bg-indigo-50 border-indigo-100 text-indigo-700"
-                        : "bg-zinc-50 border-zinc-200 text-zinc-500"
+                        : "bg-zinc-50 border-zinc-200 text-zinc-500",
                     )}
                   >
                     {line.type}
@@ -183,8 +188,7 @@ function ViewModal({
               Total
             </span>
             <span className="font-mono font-bold">
-              ৳{" "}
-              {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              ৳ {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
         </div>
@@ -423,10 +427,7 @@ export default function DailyBookkeepingList() {
   const [deleteOne, { isLoading: isDeleting }] = useDeleteOneMutation();
   const [reverseMutation, { isLoading: isReversing }] = usePostMutation();
 
-  const entries = useMemo(
-    () => (data?.data || []) as JournalEntry[],
-    [data]
-  );
+  const entries = useMemo(() => (data?.data || []) as JournalEntry[], [data]);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handlePost = async () => {
@@ -442,7 +443,9 @@ export default function DailyBookkeepingList() {
       refetch();
     } catch (err: any) {
       toast.error(
-        err?.data?.error?.message || err?.data?.message || "Failed to post entry."
+        err?.data?.error?.message ||
+          err?.data?.message ||
+          "Failed to post entry.",
       );
     }
   };
@@ -459,7 +462,9 @@ export default function DailyBookkeepingList() {
       refetch();
     } catch (err: any) {
       toast.error(
-        err?.data?.error?.message || err?.data?.message || "Failed to delete draft."
+        err?.data?.error?.message ||
+          err?.data?.message ||
+          "Failed to delete draft.",
       );
     }
   };
@@ -477,7 +482,9 @@ export default function DailyBookkeepingList() {
       refetch();
     } catch (err: any) {
       toast.error(
-        err?.data?.error?.message || err?.data?.message || "Failed to reverse entry."
+        err?.data?.error?.message ||
+          err?.data?.message ||
+          "Failed to reverse entry.",
       );
     }
   };
@@ -505,7 +512,7 @@ export default function DailyBookkeepingList() {
           <span
             className={cn(
               "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold border",
-              CATEGORY_COLORS[row.category] || "bg-zinc-100"
+              CATEGORY_COLORS[row.category] || "bg-zinc-100",
             )}
           >
             {row.category.replace("_", " ")}
@@ -526,7 +533,10 @@ export default function DailyBookkeepingList() {
         header: "Amount",
         accessor: (row: JournalEntry) => (
           <span className="font-mono text-sm font-semibold text-zinc-900">
-            ৳ {getTotalAmount(row.lines).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            ৳{" "}
+            {getTotalAmount(row.lines).toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+            })}
           </span>
         ),
       },
@@ -616,7 +626,7 @@ export default function DailyBookkeepingList() {
         ),
       },
     ],
-    []
+    [],
   );
 
   return (
@@ -640,15 +650,15 @@ export default function DailyBookkeepingList() {
         }
       />
 
-      {/* Toolbar */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white border border-zinc-200 p-2 rounded-xl shadow-sm mb-6">
+      {/* Toolbar - Standardized for Consistency */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2 mb-4">
         {/* Search Group */}
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search voucher no. or narration..."
-              className="pl-9 h-10 border-zinc-200 focus-visible:ring-zinc-900"
+              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -656,41 +666,103 @@ export default function DailyBookkeepingList() {
               }}
             />
           </div>
-          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-10">
+          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
             Search
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Category */}
           <div className="w-[170px]">
-            <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1); }}>
-              <SelectTrigger>
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => {
+                setCategoryFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="RECEIPT">Receipt</SelectItem>
-                <SelectItem value="PAYMENT">Payment</SelectItem>
-                <SelectItem value="JOURNAL">Journal</SelectItem>
-                <SelectItem value="CONTRA">Contra</SelectItem>
-                <SelectItem value="BUYER_DUE">Buyer Due</SelectItem>
-                <SelectItem value="SUPPLIER_DUE">Supplier Due</SelectItem>
+              <SelectContent className="rounded-xl shadow-xl">
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  All Categories
+                </SelectItem>
+                <SelectItem
+                  value="RECEIPT"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Receipt
+                </SelectItem>
+                <SelectItem
+                  value="PAYMENT"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Payment
+                </SelectItem>
+                <SelectItem
+                  value="JOURNAL"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Journal
+                </SelectItem>
+                <SelectItem
+                  value="CONTRA"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Contra
+                </SelectItem>
+                <SelectItem
+                  value="BUYER_DUE"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Buyer Due
+                </SelectItem>
+                <SelectItem
+                  value="SUPPLIER_DUE"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Supplier Due
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Status */}
           <div className="w-[140px]">
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-              <SelectTrigger>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="DRAFT">Draft</SelectItem>
-                <SelectItem value="POSTED">Posted</SelectItem>
+              <SelectContent className="rounded-xl shadow-xl">
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  All Status
+                </SelectItem>
+                <SelectItem
+                  value="DRAFT"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Draft
+                </SelectItem>
+                <SelectItem
+                  value="POSTED"
+                  className="text-xs font-semibold rounded-lg my-0.5"
+                >
+                  Posted
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>

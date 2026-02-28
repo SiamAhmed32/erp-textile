@@ -5,13 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/services/types";
-import {
-  useGetAllQuery,
-  usePutMutation,
-} from "@/store/services/commonApi";
-import {
-  useUpdateUserMutation,
-} from "@/store/services/authApi";
+import { useGetAllQuery, usePutMutation } from "@/store/services/commonApi";
+import { useUpdateUserMutation } from "@/store/services/authApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
@@ -157,7 +152,7 @@ const UsersPage = () => {
           </div>
           <Button
             onClick={handleSearchSubmit}
-            className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium"
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
           >
             Search
           </Button>
@@ -185,7 +180,7 @@ const UsersPage = () => {
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   roleFilter !== "all" &&
-                  "bg-blue-50 border-blue-200 text-blue-700",
+                    "bg-blue-50 border-blue-200 text-blue-700",
                 )}
               >
                 <span>
@@ -224,7 +219,7 @@ const UsersPage = () => {
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   (sort.field !== "username" || sort.dir !== "asc") &&
-                  "bg-purple-50 border-purple-200 text-purple-700",
+                    "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -232,9 +227,9 @@ const UsersPage = () => {
                   {sort.field === "username" && sort.dir === "asc"
                     ? "Sort By"
                     : sortOptions.find(
-                      (opt) =>
-                        opt.field === sort.field && opt.dir === sort.dir,
-                    )?.label}
+                        (opt) =>
+                          opt.field === sort.field && opt.dir === sort.dir,
+                      )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -304,16 +299,10 @@ const UsersPage = () => {
             ? This is a soft delete operation.
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setDeletingUser(null)}
-            >
+            <Button variant="outline" onClick={() => setDeletingUser(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDelete}
-            >
+            <Button variant="destructive" onClick={handleDelete}>
               Delete
             </Button>
           </div>

@@ -227,7 +227,9 @@ const OrdersTable = ({
         header: "Delivery Date",
         className: "px-4 ",
         accessor: (row: Order) => (
-          <div className="whitespace-nowrap">{formatDate(row.deliveryDate)}</div>
+          <div className="whitespace-nowrap">
+            {formatDate(row.deliveryDate)}
+          </div>
         ),
       },
 
@@ -347,9 +349,10 @@ const OrdersTable = ({
             placeholder="Search order number, buyer, company"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
           />
           <Button
-            className="bg-black text-white hover:bg-black/80"
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
             onClick={onSearchSubmit}
           >
             Search

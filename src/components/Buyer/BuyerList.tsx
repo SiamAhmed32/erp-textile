@@ -4,7 +4,14 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Eye, SquarePen, Trash2, ArrowUpDown, RotateCcw } from "lucide-react";
+import {
+  Search,
+  Eye,
+  SquarePen,
+  Trash2,
+  ArrowUpDown,
+  RotateCcw,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,8 +52,8 @@ export function BuyerList({
   totalPages,
   onPageChange,
   showDeleted = false,
-  onToggleDeleted = () => { },
-  onRestore = () => { },
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }: Props) {
   const sortOptions = [
     { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
@@ -193,10 +200,7 @@ export function BuyerList({
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button
-            variant="outline"
-            className="h-11 px-6 bg-white border-slate-200 font-medium"
-          >
+          <Button className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg">
             Search
           </Button>
           <Button
@@ -222,7 +226,7 @@ export function BuyerList({
                 className={cn(
                   "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
                   (sort.field !== "name" || sort.dir !== "asc") &&
-                  "bg-purple-50 border-purple-200 text-purple-700",
+                    "bg-purple-50 border-purple-200 text-purple-700",
                 )}
               >
                 <ArrowUpDown className="h-4 w-4 opacity-50" />
@@ -230,9 +234,9 @@ export function BuyerList({
                   {sort.field === "createdAt" && sort.dir === "desc"
                     ? "Sort By"
                     : sortOptions.find(
-                      (opt) =>
-                        opt.field === sort.field && opt.dir === sort.dir,
-                    )?.label}
+                        (opt) =>
+                          opt.field === sort.field && opt.dir === sort.dir,
+                      )?.label}
                 </span>
               </Button>
             </DropdownMenuTrigger>
