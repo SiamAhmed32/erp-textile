@@ -61,7 +61,7 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
               { label: order?.orderNumber || "Details" },
             ]}
             actions={
-              <div className="flex flex-wrap gap -2">
+              <div className="flex flex-wrap gap-2">
                 {order && (
                   <Button
                     variant="outline"
