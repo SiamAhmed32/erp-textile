@@ -25,20 +25,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Landmark,
-  CheckCircle2,
-  TrendingDown,
-  Eye,
   Search,
   Plus,
   ChevronDown,
-  ArrowUpDown,
-  UserCircle2,
+  Landmark,
   Briefcase,
-  ShieldAlert,
+  UserCircle2,
+  CheckCircle2,
+  TrendingDown,
+  Eye,
   History,
-  FileText,
-  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -401,23 +397,6 @@ export default function LoanManagementPage() {
     [],
   );
 
-  const stats = useMemo(() => {
-    const totalPrincipal = loans.reduce(
-      (sum, l) => sum + Number(l.principalAmount),
-      0,
-    );
-    const totalPaid = loans.reduce(
-      (sum, l) =>
-        sum + (l.repayments?.reduce((s, r) => s + Number(r.principal), 0) || 0),
-      0,
-    );
-    const netExposure = totalPrincipal - totalPaid;
-    const settledPct =
-      totalPrincipal > 0 ? Math.round((totalPaid / totalPrincipal) * 100) : 0;
-
-    return { totalPrincipal, totalPaid, netExposure, settledPct };
-  }, [loans]);
-
   return (
     <Container className="pb-10 space-y-6">
       <PageHeader
@@ -436,56 +415,6 @@ export default function LoanManagementPage() {
           </Button>
         }
       />
-
-      {/* Premium Stat Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            Active Credits
-          </p>
-          <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-bold text-zinc-900">
-              {loans.length}
-            </span>
-            <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-              Operational
-            </span>
-          </div>
-        </div>
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            Total Principal
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">
-              ৳ {(stats.totalPrincipal / 1000000).toFixed(1)}M
-            </span>
-          </div>
-        </div>
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-            Settled Volume
-          </p>
-          <div className="flex items-baseline justify-between font-semibold">
-            <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">
-              {stats.settledPct}%
-            </span>
-            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest italic opacity-60">
-              Weighted Avg
-            </span>
-          </div>
-        </div>
-        <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm space-y-3">
-          <p className="text-[10px] font-bold text-rose-500 uppercase tracking-widest">
-            Net Exposure
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">
-              ৳ {(stats.netExposure / 1000000).toFixed(1)}M
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Toolbar - Standardized for Consistency */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
@@ -547,15 +476,13 @@ export default function LoanManagementPage() {
         </div>
       </div>
 
-      <div className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-        <CustomTable
-          data={loans}
-          columns={listColumns}
-          isLoading={isLoadingLoans}
-          scrollAreaHeight="h-[calc(100vh-450px)]"
-          rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
-        />
-      </div>
+      <CustomTable
+        data={loans}
+        columns={listColumns}
+        isLoading={isLoadingLoans}
+        scrollAreaHeight="h-[calc(100vh-350px)]"
+        rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
+      />
 
       <StakeholderFormModal
         open={isAddModalOpen}

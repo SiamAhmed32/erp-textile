@@ -3,14 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import {
-  Plus,
-  Landmark,
-  LayoutGrid,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  TrendingUp,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetAllQuery } from "@/store/services/commonApi";
 import { AccountHeader } from "./types";
@@ -76,15 +69,6 @@ const AccountHeadersPage = () => {
 
   const headers = useMemo(() => (data?.data || []) as AccountHeader[], [data]);
 
-  const stats = useMemo(() => {
-    return {
-      total: headers.length,
-      asset: headers.filter((h) => h.type === "ASSET").length,
-      liability: headers.filter((h) => h.type === "LIABILITY").length,
-      revenue: headers.filter((h) => h.type === "REVENUE").length,
-    };
-  }, [headers]);
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -104,74 +88,6 @@ const AccountHeadersPage = () => {
           </Button>
         }
       />
-
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Account Heads",
-            value: stats.total,
-            icon: LayoutGrid,
-            description: "Ledger collection",
-            bg: "bg-zinc-100",
-            iconColor: "text-zinc-600",
-          },
-          {
-            label: "Asset Accounts",
-            value: stats.asset,
-            icon: ArrowDownCircle,
-            description: "Current & Fixed",
-            bg: "bg-sky-100",
-            iconColor: "text-sky-600",
-          },
-          {
-            label: "Liability",
-            value: stats.liability,
-            icon: ArrowUpCircle,
-            description: "Debts & Obligations",
-            bg: "bg-rose-100",
-            iconColor: "text-rose-600",
-          },
-          {
-            label: "Revenue",
-            value: stats.revenue,
-            icon: TrendingUp,
-            description: "Income accounts",
-            bg: "bg-emerald-100",
-            iconColor: "text-emerald-600",
-          },
-        ].map((stat, i) => (
-          <Card
-            key={i}
-            className="border border-zinc-100 shadow-xl shadow-zinc-200/50 rounded-2xl overflow-hidden bg-white"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "size-12 rounded-xl flex items-center justify-center",
-                    stat.bg,
-                    stat.iconColor,
-                  )}
-                >
-                  <stat.icon size={22} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-0.5">
-                    {stat.label}
-                  </p>
-                  <h3 className="text-2xl font-extrabold text-zinc-900 tracking-tight">
-                    {stat.value}
-                  </h3>
-                  <p className="text-[10px] font-medium text-zinc-400 mt-0.5">
-                    {stat.description}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       <AccountHeaderToolbar
         searchInput={searchInput}

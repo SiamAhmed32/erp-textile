@@ -117,14 +117,6 @@ export default function BankToolbar({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        <Button
-          className="h-11 bg-black text-white hover:bg-black/90 shadow-sm"
-          onClick={onAdd}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Bank
-        </Button>
       </div>
     </div>
   );
