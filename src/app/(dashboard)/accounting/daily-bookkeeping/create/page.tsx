@@ -12,6 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Flex } from "@/components/reusables";
 import { cn } from "@/lib/utils";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -53,9 +55,9 @@ const journalEntrySchema = z.object({
     "JOURNAL",
     "CONTRA",
   ]),
-  narration: z.string().optional(),        // optional — backend: z.string().max(1000).optional()
-  buyerId: z.string().uuid().optional(),   // optional — backend: only needed for BUYER_DUE / RECEIPT
-  supplierId: z.string().uuid().optional(),// optional — backend: only needed for SUPPLIER_DUE / PAYMENT
+  narration: z.string().optional(), // optional — backend: z.string().max(1000).optional()
+  buyerId: z.string().uuid().optional(), // optional — backend: only needed for BUYER_DUE / RECEIPT
+  supplierId: z.string().uuid().optional(), // optional — backend: only needed for SUPPLIER_DUE / PAYMENT
   companyProfileId: z.string().uuid(),
   lines: z
     .array(
@@ -64,7 +66,7 @@ const journalEntrySchema = z.object({
         type: z.enum(["DEBIT", "CREDIT"]),
         amount: z.number().positive("Must be greater than 0"),
         bankId: z.string().uuid().optional(), // optional — backend: sub-ledger only when bank involved
-      })
+      }),
     )
     .min(2, "At least 2 lines required"),
 });
@@ -236,7 +238,7 @@ export default function BookkeepingCreatePage() {
         else acc.credit += amt;
         return acc;
       },
-      { debit: 0, credit: 0 }
+      { debit: 0, credit: 0 },
     );
   }, [watchLines]);
 
@@ -259,8 +261,8 @@ export default function BookkeepingCreatePage() {
     } catch (error: any) {
       toast.error(
         error?.data?.error?.message ||
-        error?.data?.message ||
-        "Failed to save journal entry."
+          error?.data?.message ||
+          "Failed to save journal entry.",
       );
     }
   };
@@ -268,7 +270,7 @@ export default function BookkeepingCreatePage() {
   const currentConfig = categoryConfigs[activeCategory];
 
   return (
-    <Container className="pb-32 !max-w-[1200px]">
+    <Container className="pb-32 max-w-[1200px]!">
       {/* ── Standard PageHeader ─────────────────────────────────────────── */}
       <PageHeader
         title="New Journal Entry"
@@ -297,7 +299,7 @@ export default function BookkeepingCreatePage() {
                 "transition-all",
                 isBalanced
                   ? "bg-black text-white hover:bg-black/90"
-                  : "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed"
+                  : "bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed",
               )}
             >
               {isPosting
@@ -310,47 +312,71 @@ export default function BookkeepingCreatePage() {
         }
       />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start mt-4">
+      <div className="mt-8">
+        <Tabs
+          value={activeCategory}
+          onValueChange={(v) => setValue("category", v as any)}
+          className="w-full"
+        >
+          <TabsList className="tab-premium-list w-full! max-w-5xl mx-auto overflow-x-auto flex-nowrap">
+            {Object.entries(categoryConfigs).map(([key, config]) => (
+              <TabsTrigger
+                key={key}
+                value={key}
+                className="tab-premium-trigger flex-1 min-w-fit"
+              >
+                <Flex className="items-center gap-2">
+                  <config.icon className="size-4" />
+                  <span className="font-bold text-xs uppercase tracking-wider">
+                    {config.label}
+                  </span>
+                </Flex>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* ── Left Column: Voucher Form ─────────────────────────────────── */}
         <div className="xl:col-span-8 space-y-6">
-
           {/* Card: Entry Details */}
-          <Card>
-            <CardHeader className="bg-zinc-900 rounded-t-xl py-5 px-6">
+          <Card className="border-none overflow-hidden shadow-2xl shadow-zinc-200/50 bg-white rounded-2xl">
+            <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="size-9 rounded-lg bg-white/10 flex items-center justify-center text-white">
-                    {currentConfig && <currentConfig.icon size={18} />}
+                <div className="flex items-center gap-4">
+                  <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+                    {currentConfig && <currentConfig.icon size={20} />}
                   </div>
                   <div>
-                    <p className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
-                      Classification
+                    <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                      Voucher Classification
                     </p>
-                    <h2 className="text-lg font-bold text-white">
+                    <h2 className="text-xl font-black text-white tracking-tight italic">
                       {currentConfig?.label} Entry
                     </h2>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-zinc-400 text-[10px] font-semibold uppercase tracking-widest">
-                    Fiscal Year
+                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                    Fiscal Period
                   </p>
-                  <p className="text-white font-semibold">
-                    {new Date().getFullYear()}
+                  <p className="text-white font-black tracking-tight italic">
+                    FY-{new Date().getFullYear()}
                   </p>
                 </div>
               </div>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-8 space-y-8">
               {/* Date & Narration */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 rounded-xl bg-zinc-50 border border-zinc-100">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 rounded-2xl bg-zinc-50/50 border border-zinc-100">
                 <div className="space-y-1.5">
                   <RequiredLabel>Entry Date</RequiredLabel>
                   <Input
                     type="date"
                     {...register("date")}
-                    className="bg-white"
+                    className="bg-white h-11 rounded-xl border-zinc-200 focus:ring-2 focus:ring-zinc-900/10 transition-all"
                   />
                   <FieldError message={errors.date?.message} />
                 </div>
@@ -359,7 +385,7 @@ export default function BookkeepingCreatePage() {
                   <Input
                     {...register("narration")}
                     placeholder="e.g. Received payment from buyer for Invoice #1001"
-                    className="bg-white"
+                    className="bg-white h-11 rounded-xl border-zinc-200 focus:ring-2 focus:ring-zinc-900/10 transition-all"
                   />
                   <HelperText>
                     A brief description of this transaction. Helps during audit.
@@ -370,79 +396,79 @@ export default function BookkeepingCreatePage() {
               {/* Buyer sub-ledger (BUYER_DUE / RECEIPT only) */}
               {(activeCategory === "BUYER_DUE" ||
                 activeCategory === "RECEIPT") && (
-                  <div className="space-y-1.5">
-                    <OptionalLabel>Buyer</OptionalLabel>
-                    <Controller
-                      name="buyerId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(val) =>
-                            field.onChange(val === "__none__" ? undefined : val)
-                          }
-                          value={field.value || "__none__"}
-                        >
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="Select a buyer..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">
-                              — No buyer attached —
+                <div className="space-y-1.5">
+                  <OptionalLabel>Buyer</OptionalLabel>
+                  <Controller
+                    name="buyerId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) =>
+                          field.onChange(val === "__none__" ? undefined : val)
+                        }
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                          <SelectValue placeholder="Select a buyer..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">
+                            — No buyer attached —
+                          </SelectItem>
+                          {buyers.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name}
+                              {b.location ? ` (${b.location})` : ""}
                             </SelectItem>
-                            {buyers.map((b) => (
-                              <SelectItem key={b.id} value={b.id}>
-                                {b.name}
-                                {b.location ? ` (${b.location})` : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <HelperText>
-                      Link this entry to a specific buyer for sub-ledger tracking.
-                      Leave blank for general entries.
-                    </HelperText>
-                  </div>
-                )}
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <HelperText>
+                    Link this entry to a specific buyer for sub-ledger tracking.
+                    Leave blank for general entries.
+                  </HelperText>
+                </div>
+              )}
 
               {/* Supplier sub-ledger (SUPPLIER_DUE / PAYMENT only) */}
               {(activeCategory === "SUPPLIER_DUE" ||
                 activeCategory === "PAYMENT") && (
-                  <div className="space-y-1.5">
-                    <OptionalLabel>Supplier</OptionalLabel>
-                    <Controller
-                      name="supplierId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(val) =>
-                            field.onChange(val === "__none__" ? undefined : val)
-                          }
-                          value={field.value || "__none__"}
-                        >
-                          <SelectTrigger className="bg-white">
-                            <SelectValue placeholder="Select a supplier..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">
-                              — No supplier attached —
+                <div className="space-y-1.5">
+                  <OptionalLabel>Supplier</OptionalLabel>
+                  <Controller
+                    name="supplierId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) =>
+                          field.onChange(val === "__none__" ? undefined : val)
+                        }
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                          <SelectValue placeholder="Select a supplier..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">
+                            — No supplier attached —
+                          </SelectItem>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
                             </SelectItem>
-                            {suppliers.map((s) => (
-                              <SelectItem key={s.id} value={s.id}>
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <HelperText>
-                      Link this entry to a specific supplier for sub-ledger
-                      tracking. Leave blank for general entries.
-                    </HelperText>
-                  </div>
-                )}
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <HelperText>
+                    Link this entry to a specific supplier for sub-ledger
+                    tracking. Leave blank for general entries.
+                  </HelperText>
+                </div>
+              )}
 
               {/* ── Voucher Lines ─────────────────────────────────────── */}
               <div className="space-y-4">
@@ -471,11 +497,11 @@ export default function BookkeepingCreatePage() {
                 </div>
 
                 {/* Lines */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {fields.map((field, index) => (
                     <div
                       key={field.id}
-                      className="grid grid-cols-12 gap-3 items-start p-4 rounded-xl border border-zinc-200 bg-white hover:border-zinc-300 transition-colors"
+                      className="grid grid-cols-12 gap-4 items-start p-6 rounded-2xl border border-zinc-200 bg-white hover:border-zinc-300 hover:shadow-lg hover:shadow-zinc-100 transition-all duration-300"
                     >
                       {/* Account Head — required */}
                       <div className="col-span-12 md:col-span-5 space-y-1.5">
@@ -490,9 +516,9 @@ export default function BookkeepingCreatePage() {
                             >
                               <SelectTrigger
                                 className={cn(
-                                  "bg-white",
+                                  "bg-white h-11 rounded-xl border-zinc-200",
                                   errors.lines?.[index]?.accountHeadId &&
-                                  "border-red-400 focus:ring-red-400"
+                                    "border-red-400 focus:ring-red-400",
                                 )}
                               >
                                 <SelectValue placeholder="Select account head..." />
@@ -518,7 +544,7 @@ export default function BookkeepingCreatePage() {
                       {/* Debit / Credit toggle — required */}
                       <div className="col-span-6 md:col-span-3 space-y-1.5">
                         <RequiredLabel>Entry Side</RequiredLabel>
-                        <div className="flex rounded-lg overflow-hidden border border-zinc-200">
+                        <div className="flex h-11 rounded-xl overflow-hidden border border-zinc-200">
                           <button
                             type="button"
                             onClick={() =>
@@ -528,7 +554,7 @@ export default function BookkeepingCreatePage() {
                               "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
                               watchLines[index]?.type === "DEBIT"
                                 ? "bg-zinc-900 text-white"
-                                : "bg-white text-zinc-400 hover:bg-zinc-50"
+                                : "bg-white text-zinc-400 hover:bg-zinc-50",
                             )}
                           >
                             Dr
@@ -542,7 +568,7 @@ export default function BookkeepingCreatePage() {
                               "flex-1 h-9 text-xs font-semibold uppercase tracking-wider transition-all",
                               watchLines[index]?.type === "CREDIT"
                                 ? "bg-zinc-900 text-white"
-                                : "bg-white text-zinc-400 hover:bg-zinc-50"
+                                : "bg-white text-zinc-400 hover:bg-zinc-50",
                             )}
                           >
                             Cr
@@ -561,9 +587,9 @@ export default function BookkeepingCreatePage() {
                             valueAsNumber: true,
                           })}
                           className={cn(
-                            "font-mono bg-white",
+                            "font-mono bg-white h-11 rounded-xl border-zinc-200",
                             errors.lines?.[index]?.amount &&
-                            "border-red-400 focus:ring-red-400"
+                              "border-red-400 focus:ring-red-400",
                           )}
                         />
                         <FieldError
@@ -598,7 +624,7 @@ export default function BookkeepingCreatePage() {
                                 <Select
                                   onValueChange={(val) =>
                                     bankField.onChange(
-                                      val === "__none__" ? undefined : val
+                                      val === "__none__" ? undefined : val,
                                     )
                                   }
                                   value={bankField.value || "__none__"}
@@ -635,112 +661,84 @@ export default function BookkeepingCreatePage() {
         </div>
 
         {/* ── Right Column: Balance Status & Category ───────────────────── */}
-        <div className="xl:col-span-4 space-y-4">
-
+        <div className="xl:col-span-4 space-y-6 sticky top-8">
           {/* Balance Checker */}
-          <Card className="bg-zinc-900 text-white sticky top-10">
-            <CardContent className="p-6 space-y-6">
-              <div>
-                <p className="text-zinc-400 text-xs font-semibold uppercase tracking-widest">
-                  Double Entry Check
-                </p>
-                <h3 className="text-xl font-bold mt-1">Voucher Balance</h3>
+          <Card className="border-none overflow-hidden shadow-2xl shadow-zinc-200/50 bg-white rounded-2xl">
+            <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+                  <Scale size={20} />
+                </div>
+                <div>
+                  <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+                    Internal Controls
+                  </p>
+                  <h3 className="text-xl font-black text-white tracking-tight italic">
+                    Voucher Balance
+                  </h3>
+                </div>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-zinc-400 text-sm font-medium">
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center py-4 border-b border-zinc-100">
+                  <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
                     Total Debits
                   </span>
-                  <span className="font-mono font-bold text-lg">
+                  <span className="font-mono font-black text-xl text-zinc-900 italic">
                     ৳ {totals.debit.toLocaleString()}
                   </span>
                 </div>
-                <div className="flex justify-between items-center py-3 border-b border-white/10">
-                  <span className="text-zinc-400 text-sm font-medium">
+                <div className="flex justify-between items-center py-4 border-b border-zinc-100">
+                  <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
                     Total Credits
                   </span>
-                  <span className="font-mono font-bold text-lg">
+                  <span className="font-mono font-black text-xl text-zinc-900 italic">
                     ৳ {totals.credit.toLocaleString()}
                   </span>
                 </div>
 
                 <div
                   className={cn(
-                    "p-4 rounded-xl border transition-all duration-500",
+                    "p-6 rounded-2xl border transition-all duration-500",
                     isBalanced
-                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                      : "bg-zinc-800 border-zinc-700 text-zinc-500"
+                      ? "bg-emerald-50 border-emerald-100 text-emerald-700"
+                      : "bg-rose-50 border-rose-100 text-rose-700",
                   )}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-4">
                     <div
                       className={cn(
-                        "size-8 rounded-lg flex items-center justify-center",
-                        isBalanced ? "bg-emerald-500 text-white" : "bg-zinc-700 text-zinc-500"
+                        "size-10 rounded-xl flex items-center justify-center shadow-sm",
+                        isBalanced
+                          ? "bg-emerald-500 text-white"
+                          : "bg-rose-500 text-white",
                       )}
                     >
                       {isBalanced ? (
-                        <CheckCircle2 size={18} />
+                        <CheckCircle2 size={20} />
                       ) : (
-                        <AlertTriangle size={18} />
+                        <AlertTriangle size={20} />
                       )}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider">
-                        {isBalanced ? "Balanced" : "Not Balanced"}
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] leading-none mb-1">
+                        Status: {isBalanced ? "Balanced" : "Variance Detected"}
                       </p>
-                      <p className="text-sm font-bold">
+                      <p className="text-lg font-black tracking-tight italic">
                         {isBalanced
-                          ? "Ready to save"
+                          ? "Audit Compliant"
                           : `৳ ${Math.abs(totals.debit - totals.credit).toLocaleString()} variance`}
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Category Selector */}
-              <div className="space-y-3 pt-2">
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">
-                  Entry Type{" "}
-                  <span className="text-red-400 ml-0.5">*</span>
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {Object.entries(categoryConfigs).map(([key, config]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setValue("category", key as any)}
-                      title={config.desc}
-                      className={cn(
-                        "p-3 rounded-xl border text-left transition-all active:scale-95 group",
-                        activeCategory === key
-                          ? "bg-white border-white text-zinc-900 shadow-lg"
-                          : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-300"
-                      )}
-                    >
-                      <config.icon
-                        size={16}
-                        className={cn(
-                          "mb-2",
-                          activeCategory === key
-                            ? "text-zinc-900"
-                            : "text-zinc-500"
-                        )}
-                      />
-                      <p className="text-[10px] font-semibold uppercase tracking-wider leading-none">
-                        {config.label}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </CardContent>
           </Card>
 
           {/* Guideline note */}
-          <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5">
+          <div className="bg-zinc-50/50 border border-zinc-100 rounded-[1.5rem] p-6">
             <div className="flex items-start gap-3">
               <Scale className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
               <div>
@@ -749,8 +747,8 @@ export default function BookkeepingCreatePage() {
                 </p>
                 <p className="text-xs text-zinc-500 leading-relaxed">
                   Entries are saved as{" "}
-                  <span className="font-semibold text-zinc-700">DRAFT</span>{" "}
-                  and do not affect account balances until they are formally{" "}
+                  <span className="font-semibold text-zinc-700">DRAFT</span> and
+                  do not affect account balances until they are formally{" "}
                   <span className="font-semibold text-zinc-700">POSTED</span>{" "}
                   through the bookkeeping command center.
                 </p>

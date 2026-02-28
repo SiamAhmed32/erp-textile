@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,24 +51,42 @@ const SectionHeader = ({
   icon: Icon,
   title,
   description,
+  rightLabel,
+  rightValue,
 }: {
   icon: LucideIcon;
   title: string;
   description?: string;
+  rightLabel?: string;
+  rightValue?: string;
 }) => (
-  <div className="flex items-start gap-4 pb-6 border-b border-slate-100 mb-6">
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-      <Icon className="size-5" />
-    </div>
-    <div>
-      <h3 className="text-lg font-bold tracking-tight text-slate-800">
-        {title}
-      </h3>
-      {description && (
-        <p className="text-sm text-slate-500 mt-0.5">{description}</p>
+  <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+          <Icon size={20} />
+        </div>
+        <div>
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {description ? description.toUpperCase() : "MANAGEMENT MODULE"}
+          </p>
+          <h3 className="text-xl font-black text-white tracking-tight italic">
+            {title}
+          </h3>
+        </div>
+      </div>
+      {rightLabel && (
+        <div className="text-right">
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {rightLabel}
+          </p>
+          <p className="text-white font-black tracking-tight italic">
+            {rightValue}
+          </p>
+        </div>
       )}
     </div>
-  </div>
+  </CardHeader>
 );
 
 const InputGroup = ({
@@ -165,14 +183,15 @@ const OrderForm = ({
   /* ─── Basic Info Tab ─── */
   const renderBasicInfo = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-        <CardContent className="pt-8 space-y-8">
-          <SectionHeader
-            icon={FileText}
-            title="Primary Information"
-            description="Enter the core details for this order."
-          />
-
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={FileText}
+          title="Primary Information"
+          description="Basic Order Logistics"
+          rightLabel="CURRENT SESSION"
+          rightValue={new Date().getFullYear().toString()}
+        />
+        <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
             <InputGroup
               id="orderNumber"
@@ -389,14 +408,15 @@ const OrderForm = ({
   const renderFabricDetails = () => {
     const rows = data.orderItems.fabricItem?.fabricItemData || [];
     return (
-      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-        <CardContent className="pt-8 space-y-8">
-          <SectionHeader
-            icon={Layers}
-            title="Fabric Details"
-            description="Configure fabric style, dimensions, and color variants."
-          />
-
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Layers}
+          title="Fabric Details"
+          description="Production Specifications"
+          rightLabel="FABRIC CLASS"
+          rightValue="PREMIUM"
+        />
+        <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -631,14 +651,15 @@ const OrderForm = ({
   const renderLabelDetails = () => {
     const rows = data.orderItems.labelItem?.labelItemData || [];
     return (
-      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-        <CardContent className="pt-8 space-y-8">
-          <SectionHeader
-            icon={Tag}
-            title="Label & Tag Details"
-            description="Configure label style and item breakdown."
-          />
-
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Tag}
+          title="Label & Tag Details"
+          description="Branding & Trims"
+          rightLabel="ITEM TYPE"
+          rightValue="ACCESSORIES"
+        />
+        <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -850,14 +871,15 @@ const OrderForm = ({
   const renderCartonDetails = () => {
     const rows = data.orderItems.cartonItem?.cartonItemData || [];
     return (
-      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-        <CardContent className="pt-8 space-y-8">
-          <SectionHeader
-            icon={Box}
-            title="Carton Packaging Details"
-            description="Configure carton specifications and item breakdown."
-          />
-
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Box}
+          title="Carton Packaging Details"
+          description="Shipment Packaging"
+          rightLabel="PACKING"
+          rightValue="STANDARD"
+        />
+        <CardContent className="p-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -1091,13 +1113,15 @@ const OrderForm = ({
       {data.productType === "LABEL_TAG" && renderLabelDetails()}
       {data.productType === "CARTON" && renderCartonDetails()}
 
-      <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-        <CardContent className="pt-8 space-y-8">
-          <SectionHeader
-            icon={Truck}
-            title="Delivery Timeline"
-            description="Set the expected delivery date for this order."
-          />
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Truck}
+          title="Delivery Timeline"
+          description="Logistics Scheduling"
+          rightLabel="STATUS"
+          rightValue="PENDING"
+        />
+        <CardContent className="p-8 space-y-8">
           <div className="max-w-md">
             <InputGroup
               id="deliveryDate"
