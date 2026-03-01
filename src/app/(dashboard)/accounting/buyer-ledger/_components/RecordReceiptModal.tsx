@@ -52,6 +52,10 @@ export default function RecordReceiptModal({
     const [referenceId, setReferenceId] = useState("");
     const [remarks, setRemarks] = useState("");
 
+    // Account Overrides
+    const [assetAccountId, setAssetAccountId] = useState("");
+    const [receivableAccountId, setReceivableAccountId] = useState("");
+
     // Fetch banks for dropdown
     const { data: banksPayload } = useGetAllQuery({
         path: "accounting/banks",
@@ -60,6 +64,34 @@ export default function RecordReceiptModal({
     });
     const banks = (banksPayload?.data || []) as any[];
 
+    // Fetch account heads for overrides
+    const { data: accountsPayload } = useGetAllQuery({
+        path: "accounting/accountHeads",
+        limit: 1000,
+    });
+    const allAccounts = (accountsPayload?.data || []) as any[];
+
+    const cashBankAccounts = allAccounts.filter(acc =>
+        acc.type === "ASSET" && (acc.name.toLowerCase().includes("cash") || acc.name.toLowerCase().includes("bank"))
+    );
+    const reachableAccounts = allAccounts.filter(acc =>
+        acc.type === "ASSET" && (acc.name.toLowerCase().includes("receivable") || acc.name.toLowerCase().includes("reachable"))
+    );
+
+    // Default selections
+    React.useEffect(() => {
+        if (!assetAccountId && cashBankAccounts.length > 0) {
+            const defaultAcc = cashBankAccounts.find(a =>
+                paymentMethod === "CASH" ? a.name.toLowerCase().includes("cash") : a.name.toLowerCase().includes("bank")
+            ) || cashBankAccounts[0];
+            setAssetAccountId(defaultAcc.id);
+        }
+        if (!receivableAccountId && reachableAccounts.length > 0) {
+            const defaultAcc = reachableAccounts.find(a => a.name.toLowerCase().includes("receivable")) || reachableAccounts[0];
+            setReceivableAccountId(defaultAcc.id);
+        }
+    }, [cashBankAccounts, reachableAccounts, paymentMethod, assetAccountId, receivableAccountId]);
+
     const resetForm = () => {
         setAmount("");
         setDate(format(new Date(), "yyyy-MM-dd"));
@@ -67,6 +99,8 @@ export default function RecordReceiptModal({
         setBankAccountId("");
         setReferenceId("");
         setRemarks("");
+        setAssetAccountId("");
+        setReceivableAccountId("");
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -83,6 +117,8 @@ export default function RecordReceiptModal({
                 amount: Number(amount),
                 date,
                 paymentMethod,
+                assetAccountId,
+                receivableAccountId
             };
 
             if (referenceId.trim()) body.referenceId = referenceId.trim();
@@ -130,6 +166,42 @@ export default function RecordReceiptModal({
                     <p className="text-base font-bold text-zinc-900">{buyerName}</p>
                 </div>
 
+                {/* Account Head Double Entry - Visualized as requested */}
+                <div className="grid grid-cols-2 gap-4 bg-zinc-50/50 p-4 rounded-xl border border-zinc-100">
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                            Debit Account (DR)
+                        </Label>
+                        <Select value={assetAccountId} onValueChange={setAssetAccountId} disabled>
+                            <SelectTrigger className="h-10 bg-white border-zinc-200 opacity-80 cursor-not-allowed">
+                                <SelectValue placeholder="Cash/Bank" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {cashBankAccounts.map(acc => (
+                                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-[9px] text-zinc-400 italic font-medium">* Default: CASH/BANK (Locked)</p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                            Credit Account (CR)
+                        </Label>
+                        <Select value={receivableAccountId} onValueChange={setReceivableAccountId}>
+                            <SelectTrigger className="h-10 bg-white border-zinc-200">
+                                <SelectValue placeholder="Receivable" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {reachableAccounts.map(acc => (
+                                    <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <p className="text-[9px] text-emerald-600 italic font-medium">* Suggest: Accounts Receivable (Editable)</p>
+                    </div>
+                </div>
+
                 {/* Amount + Date Row */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -170,7 +242,14 @@ export default function RecordReceiptModal({
                         value={paymentMethod}
                         onValueChange={(v) => {
                             setPaymentMethod(v as PaymentMethod);
-                            if (v === "CASH") setBankAccountId("");
+                            if (v === "CASH") {
+                                setBankAccountId("");
+                                const cashAcc = cashBankAccounts.find(a => a.name.toLowerCase().includes("cash"));
+                                if (cashAcc) setAssetAccountId(cashAcc.id);
+                            } else {
+                                const bankAcc = cashBankAccounts.find(a => a.name.toLowerCase().includes("bank"));
+                                if (bankAcc) setAssetAccountId(bankAcc.id);
+                            }
                         }}
                     >
                         <SelectTrigger className="h-12 border-zinc-200">

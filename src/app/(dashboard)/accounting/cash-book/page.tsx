@@ -29,46 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
-/* ─── Mock data ─────────────────────────────────────────── */
-interface EmployeeIOU {
-  id: string;
-  name: string;
-  designation: string;
-  totalIssuedAmount: number;
-  totalReturnedAmount: number;
-  outstandingAmount: number;
-  lastTransaction: string;
-}
-
-const employees: EmployeeIOU[] = [
-  {
-    id: "1",
-    name: "Salim Ahmed",
-    designation: "Production Manager",
-    totalIssuedAmount: 15000,
-    totalReturnedAmount: 5000,
-    outstandingAmount: 10000,
-    lastTransaction: "17 Feb 2026",
-  },
-  {
-    id: "2",
-    name: "Kamal Hossain",
-    designation: "Executive (Admin)",
-    totalIssuedAmount: 8000,
-    totalReturnedAmount: 8000,
-    outstandingAmount: 0,
-    lastTransaction: "16 Feb 2026",
-  },
-  {
-    id: "3",
-    name: "Rina Begum",
-    designation: "Support Staff",
-    totalIssuedAmount: 5000,
-    totalReturnedAmount: 0,
-    outstandingAmount: 5000,
-    lastTransaction: "18 Feb 2026",
-  },
-];
+// Removed mock data
 
 const fmt = (n: number) =>
   "৳ " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -170,21 +131,53 @@ function EmployeeFormModal({
   );
 }
 
+import { useGetAllQuery } from "@/store/services/commonApi";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function CashBookPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
 
+  const { data: apiResponse, isLoading } = useGetAllQuery({
+    path: "moi-cash-books/summaries",
+    search,
+    filters: {
+      startDate: dateRange.start,
+      endDate: dateRange.end,
+    },
+  });
+
+  const employees = useMemo(() => apiResponse?.data || [], [apiResponse]);
+
+  const stats = useMemo(() => {
+    const totalAdvanced = employees.reduce((sum: number, emp: any) => sum + emp.totalIssuedAmount, 0);
+    const totalSettled = employees.reduce((sum: number, emp: any) => sum + emp.totalReturnedAmount, 0);
+    const netExposure = totalAdvanced - totalSettled;
+
+    return {
+      totalAdvanced,
+      totalSettled,
+      netExposure,
+      count: employees.length,
+    };
+  }, [employees]);
+
+  const fmtK = (n: number) => {
+    if (n >= 1000) return `৳ ${(n / 1000).toFixed(1)}K`;
+    return `৳ ${n.toLocaleString()}`;
+  };
+
   const listColumns = useMemo(
     () => [
       {
         header: "Beneficiary / Employee",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <div className="flex items-center gap-4 py-1">
             <div className="size-10 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center font-bold text-[12px] text-zinc-500 group-hover:bg-zinc-900 group-hover:text-white transition-all">
               {row.name
                 .split(" ")
-                .map((n) => n[0])
+                .map((n: string) => n[0])
                 .join("")}
             </div>
             <div className="flex flex-col">
@@ -200,7 +193,7 @@ export default function CashBookPage() {
       },
       {
         header: "Total Advanced",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <div className="flex flex-col">
             <span className="text-sm font-mono font-bold text-zinc-900">
               {fmt(row.totalIssuedAmount)}
@@ -210,7 +203,7 @@ export default function CashBookPage() {
       },
       {
         header: "Settled",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <div className="flex flex-col">
             <span className="text-sm font-mono font-bold text-emerald-600">
               {fmt(row.totalReturnedAmount)}
@@ -220,7 +213,7 @@ export default function CashBookPage() {
       },
       {
         header: "Net Outstanding",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <div className="flex flex-col">
             <span
               className={cn(
@@ -237,17 +230,21 @@ export default function CashBookPage() {
       },
       {
         header: "Last Transaction",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <div className="flex items-center gap-2 text-zinc-500 font-medium text-xs">
             <History size={12} />
-            {row.lastTransaction}
+            {new Date(row.lastTransaction).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })}
           </div>
         ),
       },
       {
         header: "Action",
         className: "text-right pr-6",
-        accessor: (row: EmployeeIOU) => (
+        accessor: (row: any) => (
           <Link
             href={`/accounting/cash-book/${row.id}`}
             className="inline-flex justify-end"
@@ -295,7 +292,7 @@ export default function CashBookPage() {
           </p>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold text-zinc-900">
-              {employees.length}
+              {isLoading ? <Skeleton className="h-8 w-12" /> : stats.count}
             </span>
             <span className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
               Operational
@@ -308,7 +305,7 @@ export default function CashBookPage() {
           </p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-zinc-900 font-semibold italic tracking-tight">
-              ৳ 28.0K
+              {isLoading ? <Skeleton className="h-8 w-24" /> : fmtK(stats.totalAdvanced)}
             </span>
           </div>
         </div>
@@ -318,7 +315,7 @@ export default function CashBookPage() {
           </p>
           <div className="flex items-baseline justify-between font-semibold">
             <span className="text-2xl font-bold text-emerald-600 italic tracking-tight">
-              ৳ 13.0K
+              {isLoading ? <Skeleton className="h-8 w-24" /> : fmtK(stats.totalSettled)}
             </span>
             <div className="flex items-center text-emerald-500 animate-pulse">
               <ArrowUpRight size={14} />
@@ -331,7 +328,7 @@ export default function CashBookPage() {
           </p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-rose-600 font-semibold italic tracking-tight">
-              ৳ 15.0K
+              {isLoading ? <Skeleton className="h-8 w-24" /> : fmtK(stats.netExposure)}
             </span>
             <div className="flex items-center text-rose-500">
               <AlertCircle size={14} />

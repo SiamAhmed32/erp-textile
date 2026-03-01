@@ -19,7 +19,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   accessor: keyof T | ((row: T) => React.ReactNode);
   className?: string;
 }

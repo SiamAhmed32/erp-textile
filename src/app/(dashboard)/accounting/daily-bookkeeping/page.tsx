@@ -53,12 +53,12 @@ interface JournalEntry {
   voucherNo: string;
   date: string;
   category:
-    | "BUYER_DUE"
-    | "RECEIPT"
-    | "SUPPLIER_DUE"
-    | "PAYMENT"
-    | "JOURNAL"
-    | "CONTRA";
+  | "BUYER_DUE"
+  | "RECEIPT"
+  | "SUPPLIER_DUE"
+  | "PAYMENT"
+  | "JOURNAL"
+  | "CONTRA";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -444,8 +444,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       toast.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Failed to post entry.",
+        err?.data?.message ||
+        "Failed to post entry.",
       );
     }
   };
@@ -463,8 +463,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       toast.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Failed to delete draft.",
+        err?.data?.message ||
+        "Failed to delete draft.",
       );
     }
   };
@@ -483,8 +483,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       toast.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Failed to reverse entry.",
+        err?.data?.message ||
+        "Failed to reverse entry.",
       );
     }
   };
@@ -717,16 +717,10 @@ export default function DailyBookkeepingList() {
                   Contra
                 </SelectItem>
                 <SelectItem
-                  value="BUYER_DUE"
+                  value="CONTRA"
                   className="text-xs font-semibold rounded-lg my-0.5"
                 >
-                  Buyer Due
-                </SelectItem>
-                <SelectItem
-                  value="SUPPLIER_DUE"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Supplier Due
+                  Contra
                 </SelectItem>
               </SelectContent>
             </Select>

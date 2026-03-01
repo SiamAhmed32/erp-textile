@@ -54,7 +54,6 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
         resolver: zodResolver(AccountHeaderFormSchema),
         defaultValues: {
             name: "",
-            code: "",
             type: "ASSET",
             description: "",
             parentId: null,
