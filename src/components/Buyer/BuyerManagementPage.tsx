@@ -128,10 +128,8 @@ export function BuyerManagementPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to delete buyer";
-      console.error("Delete Buyer Error:", message);
+        "Could not delete the buyer. Please try again.";
+      console.error("Delete Buyer Error:", err);
     } finally {
       setDeleteTarget(null);
     }
@@ -149,10 +147,8 @@ export function BuyerManagementPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to restore buyer";
-      console.error("Restore Buyer Error:", message);
+        "Could not restore the buyer. Please try again.";
+      console.error("Restore Buyer Error:", err);
     }
   };
 
@@ -198,10 +194,8 @@ export function BuyerManagementPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save buyer";
-      console.error("Save Buyer Error:", message);
+        "Could not save the buyer. Please try again.";
+      console.error("Save Buyer Error:", err);
     }
   };
 
@@ -276,16 +270,10 @@ export function BuyerManagementPage() {
             ? This is a soft delete operation.
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteTarget(null)}
-            >
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete
             </Button>
           </div>

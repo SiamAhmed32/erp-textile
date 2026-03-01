@@ -107,7 +107,9 @@ const UserEditModal = ({ open, onOpenChange, user }: Props) => {
       notify.success("User updated successfully");
       onOpenChange(false);
     } catch (error: any) {
-      notify.error(error?.data?.message || "Failed to update user");
+      notify.error(
+        error?.data?.message || "Could not update the user. Please try again.",
+      );
     }
   };
 

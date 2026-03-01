@@ -41,7 +41,7 @@ import {
   useForm,
   useWatch,
 } from "react-hook-form";
-import toast from "react-hot-toast";
+import { notify } from "@/lib/notifications";
 import { z } from "zod";
 
 // Import supplier creation requirements
@@ -119,7 +119,7 @@ function RequiredLabel({ children }: { children: React.ReactNode }) {
   return (
     <Label className="text-xs font-semibold text-zinc-700">
       {children}{" "}
-      <span className="text-red-500 ml-0.5" title="This field is required">
+      <span className="text-destructive ml-0.5" title="This field is required">
         *
       </span>
     </Label>
@@ -149,7 +149,7 @@ function HelperText({ children }: { children: React.ReactNode }) {
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <p className="text-[11px] text-red-500 font-medium flex items-center gap-1 mt-1">
+    <p className="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
       <AlertTriangle className="w-3 h-3 shrink-0" />
       {message}
     </p>
@@ -177,22 +177,29 @@ export default function BookkeepingCreatePage() {
 
   // Supplier Creation State
   const [isSupplierFormOpen, setIsSupplierFormOpen] = useState(false);
-  const [supplierFormData, setSupplierFormData] = useState<SupplierFormData>(emptySupplier);
-  const [supplierFormErrors, setSupplierFormErrors] = useState<Partial<Record<keyof SupplierFormData, string>>>({});
+  const [supplierFormData, setSupplierFormData] =
+    useState<SupplierFormData>(emptySupplier);
+  const [supplierFormErrors, setSupplierFormErrors] = useState<
+    Partial<Record<keyof SupplierFormData, string>>
+  >({});
   const [postSupplier] = usePostMutation();
 
   const handleCreateSupplierSubmit = async () => {
     // Basic validation
     const errors: Partial<Record<keyof SupplierFormData, string>> = {};
-    if (!supplierFormData.name?.trim()) errors.name = "Supplier name is required";
+    if (!supplierFormData.name?.trim())
+      errors.name = "Supplier name is required";
     if (!supplierFormData.email?.trim()) errors.email = "Email is required";
-    if (!supplierFormData.phone?.trim()) errors.phone = "Phone number is required";
-    if (!supplierFormData.address?.trim()) errors.address = "Address is required";
-    if (!supplierFormData.location?.trim()) errors.location = "Location is required";
+    if (!supplierFormData.phone?.trim())
+      errors.phone = "Phone number is required";
+    if (!supplierFormData.address?.trim())
+      errors.address = "Address is required";
+    if (!supplierFormData.location?.trim())
+      errors.location = "Location is required";
     setSupplierFormErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      toast.error("Please fill in all required fields correctly.");
+      notify.error("Please fill in all required fields correctly.");
       return;
     }
 
@@ -201,12 +208,14 @@ export default function BookkeepingCreatePage() {
         path: "suppliers",
         body: {
           ...supplierFormData,
-          openingLiability: supplierFormData.openingLiability ? Number(supplierFormData.openingLiability) : undefined,
+          openingLiability: supplierFormData.openingLiability
+            ? Number(supplierFormData.openingLiability)
+            : undefined,
         },
         invalidate: ["suppliers"],
       }).unwrap();
 
-      toast.success("Supplier created successfully");
+      notify.success("Supplier created successfully");
       setIsSupplierFormOpen(false);
       setSupplierFormData(emptySupplier);
 
@@ -216,15 +225,29 @@ export default function BookkeepingCreatePage() {
       }
       refetchSuppliers();
     } catch (err: any) {
-      const message = err?.data?.message || err?.message || "Failed to create supplier";
-      toast.error(`Error: ${message}`);
+      const message =
+        err?.data?.message ||
+        "Could not create the supplier. Please try again.";
+      console.error("Create Supplier Error:", err);
+      notify.error(message);
     }
   };
 
-  const handleSupplierFormChange = (field: keyof SupplierFormData, value: string | number) => {
-    setSupplierFormData((prev: SupplierFormData) => ({ ...prev, [field]: value }));
+  const handleSupplierFormChange = (
+    field: keyof SupplierFormData,
+    value: string | number,
+  ) => {
+    setSupplierFormData((prev: SupplierFormData) => ({
+      ...prev,
+      [field]: value,
+    }));
     if (supplierFormErrors[field]) {
-      setSupplierFormErrors((prev: Partial<Record<keyof SupplierFormData, string>>) => ({ ...prev, [field]: undefined }));
+      setSupplierFormErrors(
+        (prev: Partial<Record<keyof SupplierFormData, string>>) => ({
+          ...prev,
+          [field]: undefined,
+        }),
+      );
     }
   };
   const { data: banksData } = useGetAllQuery({
@@ -303,7 +326,7 @@ export default function BookkeepingCreatePage() {
 
   const onSubmit: SubmitHandler<JournalFormValues> = async (data) => {
     if (!isBalanced) {
-      toast.error("Voucher is not balanced. Debits must equal Credits.");
+      notify.error("Voucher is not balanced. Debits must equal Credits.");
       return;
     }
     try {
@@ -313,13 +336,13 @@ export default function BookkeepingCreatePage() {
         invalidate: ["accounting/journal-entries"],
       }).unwrap();
 
-      toast.success("Journal entry saved as DRAFT successfully.");
+      notify.success("Journal entry saved as DRAFT successfully.");
       router.push("/accounting/daily-bookkeeping");
     } catch (error: any) {
-      toast.error(
+      notify.error(
         error?.data?.error?.message ||
-        error?.data?.message ||
-        "Failed to save journal entry.",
+          error?.data?.message ||
+          "Could not save the journal entry. Please try again.",
       );
     }
   };
@@ -374,23 +397,62 @@ export default function BookkeepingCreatePage() {
           value={activeCategory}
           onValueChange={(v) => {
             setValue("category", v as any);
-            const defaultReceivable = accounts.find(a => a.type === "ASSET" && (a.name.toLowerCase().includes("receivable") || a.name.toLowerCase().includes("reachable")));
-            const defaultPayable = accounts.find(a => a.type === "LIABILITY" && a.name.toLowerCase().includes("payable"));
+            const defaultReceivable = accounts.find(
+              (a) =>
+                a.type === "ASSET" &&
+                (a.name.toLowerCase().includes("receivable") ||
+                  a.name.toLowerCase().includes("reachable")),
+            );
+            const defaultPayable = accounts.find(
+              (a) =>
+                a.type === "LIABILITY" &&
+                a.name.toLowerCase().includes("payable"),
+            );
 
             if (v === "RECEIPT") {
               setValue("lines", [
-                { accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined },
-                { accountHeadId: defaultReceivable?.id || "", type: "CREDIT", amount: 0, bankId: undefined },
+                {
+                  accountHeadId: "",
+                  type: "DEBIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
+                {
+                  accountHeadId: defaultReceivable?.id || "",
+                  type: "CREDIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
               ]);
             } else if (v === "PAYMENT") {
               setValue("lines", [
-                { accountHeadId: defaultPayable?.id || "", type: "DEBIT", amount: 0, bankId: undefined },
-                { accountHeadId: "", type: "CREDIT", amount: 0, bankId: undefined },
+                {
+                  accountHeadId: defaultPayable?.id || "",
+                  type: "DEBIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
+                {
+                  accountHeadId: "",
+                  type: "CREDIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
               ]);
             } else {
               setValue("lines", [
-                { accountHeadId: "", type: "DEBIT", amount: 0, bankId: undefined },
-                { accountHeadId: "", type: "CREDIT", amount: 0, bankId: undefined },
+                {
+                  accountHeadId: "",
+                  type: "DEBIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
+                {
+                  accountHeadId: "",
+                  type: "CREDIT",
+                  amount: 0,
+                  bankId: undefined,
+                },
               ]);
             }
           }}
@@ -474,88 +536,93 @@ export default function BookkeepingCreatePage() {
               {/* Buyer sub-ledger (BUYER_DUE / RECEIPT only) */}
               {(activeCategory === "BUYER_DUE" ||
                 activeCategory === "RECEIPT") && (
-                  <div className="space-y-1.5">
-                    <OptionalLabel>Buyer</OptionalLabel>
-                    <Controller
-                      name="buyerId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(val) =>
-                            field.onChange(val === "__none__" ? undefined : val)
-                          }
-                          value={field.value || "__none__"}
-                        >
-                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                            <SelectValue placeholder="Select a buyer..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">
-                              — No buyer attached —
+                <div className="space-y-1.5">
+                  <OptionalLabel>Buyer</OptionalLabel>
+                  <Controller
+                    name="buyerId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) =>
+                          field.onChange(val === "__none__" ? undefined : val)
+                        }
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                          <SelectValue placeholder="Select a buyer..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">
+                            — No buyer attached —
+                          </SelectItem>
+                          {buyers.map((b) => (
+                            <SelectItem key={b.id} value={b.id}>
+                              {b.name}
+                              {b.location ? ` (${b.location})` : ""}
                             </SelectItem>
-                            {buyers.map((b) => (
-                              <SelectItem key={b.id} value={b.id}>
-                                {b.name}
-                                {b.location ? ` (${b.location})` : ""}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <HelperText>
-                      Link this entry to a specific buyer for sub-ledger tracking.
-                      Leave blank for general entries.
-                    </HelperText>
-                  </div>
-                )}
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <HelperText>
+                    Link this entry to a specific buyer for sub-ledger tracking.
+                    Leave blank for general entries.
+                  </HelperText>
+                </div>
+              )}
 
               {/* Supplier sub-ledger (SUPPLIER_DUE / PAYMENT only) */}
               {(activeCategory === "SUPPLIER_DUE" ||
                 activeCategory === "PAYMENT") && (
-                  <div className="space-y-1.5">
-                    <OptionalLabel>Supplier</OptionalLabel>
-                    <Controller
-                      name="supplierId"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={(val) => {
-                            if (val === "__create__") {
-                              setIsSupplierFormOpen(true);
-                              // Reset the inner value so it doesn't stay stuck on "__create__"
-                              field.onChange(field.value);
-                            } else {
-                              field.onChange(val === "__none__" ? undefined : val);
-                            }
-                          }}
-                          value={field.value || "__none__"}
-                        >
-                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                            <SelectValue placeholder="Select a supplier..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">
-                              — No supplier attached —
+                <div className="space-y-1.5">
+                  <OptionalLabel>Supplier</OptionalLabel>
+                  <Controller
+                    name="supplierId"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={(val) => {
+                          if (val === "__create__") {
+                            setIsSupplierFormOpen(true);
+                            // Reset the inner value so it doesn't stay stuck on "__create__"
+                            field.onChange(field.value);
+                          } else {
+                            field.onChange(
+                              val === "__none__" ? undefined : val,
+                            );
+                          }
+                        }}
+                        value={field.value || "__none__"}
+                      >
+                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                          <SelectValue placeholder="Select a supplier..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">
+                            — No supplier attached —
+                          </SelectItem>
+                          <SelectItem
+                            value="__create__"
+                            className="text-indigo-600 font-medium"
+                          >
+                            + Create New Supplier
+                          </SelectItem>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.id} value={s.id}>
+                              {s.name}
                             </SelectItem>
-                            <SelectItem value="__create__" className="text-indigo-600 font-medium">
-                              + Create New Supplier
-                            </SelectItem>
-                            {suppliers.map((s) => (
-                              <SelectItem key={s.id} value={s.id}>
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <HelperText>
-                      Link this entry to a specific supplier for sub-ledger
-                      tracking. Leave blank for general entries.
-                    </HelperText>
-                  </div>
-                )}
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  <HelperText>
+                    Link this entry to a specific supplier for sub-ledger
+                    tracking. Leave blank for general entries.
+                  </HelperText>
+                </div>
+              )}
 
               {/* ── Voucher Lines ─────────────────────────────────────── */}
               <div className="space-y-4">
@@ -564,7 +631,7 @@ export default function BookkeepingCreatePage() {
                     <h3 className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
                       <FileText size={14} />
                       Voucher Lines
-                      <span className="text-red-500">*</span>
+                      <span className="text-destructive">*</span>
                     </h3>
                     <p className="text-xs text-zinc-400 mt-0.5">
                       Minimum 2 lines required. Total debits must equal total
@@ -587,8 +654,10 @@ export default function BookkeepingCreatePage() {
                 <div className="space-y-4">
                   {fields.map((field, index) => {
                     // Determine if this line should be fully locked to AR/AP
-                    const isLockedCredit = activeCategory === "RECEIPT" && index === 1;
-                    const isLockedDebit = activeCategory === "PAYMENT" && index === 0;
+                    const isLockedCredit =
+                      activeCategory === "RECEIPT" && index === 1;
+                    const isLockedDebit =
+                      activeCategory === "PAYMENT" && index === 0;
                     const isLineLocked = isLockedCredit || isLockedDebit;
 
                     return (
@@ -611,9 +680,10 @@ export default function BookkeepingCreatePage() {
                                 <SelectTrigger
                                   className={cn(
                                     "bg-white h-11 rounded-xl border-zinc-200",
-                                    isLineLocked && "opacity-60 cursor-not-allowed bg-zinc-50",
+                                    isLineLocked &&
+                                      "opacity-60 cursor-not-allowed bg-zinc-50",
                                     errors.lines?.[index]?.accountHeadId &&
-                                    "border-red-400 focus:ring-red-400",
+                                      "border-red-400 focus:ring-red-400",
                                   )}
                                 >
                                   <SelectValue placeholder="Select account head..." />
@@ -643,16 +713,23 @@ export default function BookkeepingCreatePage() {
                             <button
                               type="button"
                               onClick={() => {
-                                if (!isLineLocked) setValue(`lines.${index}.type`, "DEBIT")
+                                if (!isLineLocked)
+                                  setValue(`lines.${index}.type`, "DEBIT");
                               }}
                               disabled={isLineLocked}
                               className={cn(
-                                "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
+                                "flex-1 h-full text-[10px] font-black uppercase tracking-widest transition-all",
                                 watchLines[index]?.type === "DEBIT"
                                   ? "bg-zinc-900 text-white"
                                   : "bg-white text-zinc-400 hover:bg-zinc-50",
-                                isLineLocked && watchLines[index]?.type !== "DEBIT" ? "opacity-30 cursor-not-allowed hidden" : "",
-                                isLineLocked && watchLines[index]?.type === "DEBIT" ? "cursor-not-allowed opacity-80" : ""
+                                isLineLocked &&
+                                  watchLines[index]?.type !== "DEBIT"
+                                  ? "opacity-30 cursor-not-allowed hidden"
+                                  : "",
+                                isLineLocked &&
+                                  watchLines[index]?.type === "DEBIT"
+                                  ? "cursor-not-allowed opacity-80"
+                                  : "",
                               )}
                             >
                               DR
@@ -660,16 +737,23 @@ export default function BookkeepingCreatePage() {
                             <button
                               type="button"
                               onClick={() => {
-                                if (!isLineLocked) setValue(`lines.${index}.type`, "CREDIT")
+                                if (!isLineLocked)
+                                  setValue(`lines.${index}.type`, "CREDIT");
                               }}
                               disabled={isLineLocked}
                               className={cn(
-                                "flex-1 h-full text-[10px] font-black uppercase tracking-[0.1em] transition-all",
+                                "flex-1 h-full text-[10px] font-black uppercase tracking-widest transition-all",
                                 watchLines[index]?.type === "CREDIT"
                                   ? "bg-zinc-900 text-white"
                                   : "bg-white text-zinc-400 hover:bg-zinc-50",
-                                isLineLocked && watchLines[index]?.type !== "CREDIT" ? "opacity-30 cursor-not-allowed hidden" : "",
-                                isLineLocked && watchLines[index]?.type === "CREDIT" ? "cursor-not-allowed opacity-80" : ""
+                                isLineLocked &&
+                                  watchLines[index]?.type !== "CREDIT"
+                                  ? "opacity-30 cursor-not-allowed hidden"
+                                  : "",
+                                isLineLocked &&
+                                  watchLines[index]?.type === "CREDIT"
+                                  ? "cursor-not-allowed opacity-80"
+                                  : "",
                               )}
                             >
                               CR
@@ -690,7 +774,7 @@ export default function BookkeepingCreatePage() {
                             className={cn(
                               "font-mono bg-white h-11 rounded-xl border-zinc-200",
                               errors.lines?.[index]?.amount &&
-                              "border-red-400 focus:ring-red-400",
+                                "border-red-400 focus:ring-red-400",
                             )}
                           />
                           <FieldError
@@ -748,7 +832,8 @@ export default function BookkeepingCreatePage() {
                               />
                             </div>
                             <span className="text-[11px] text-zinc-400">
-                              Only fill if this line involves a specific bank account.
+                              Only fill if this line involves a specific bank
+                              account.
                             </span>
                           </div>
                         </div>

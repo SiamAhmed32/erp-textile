@@ -1,12 +1,12 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Order } from "./types";
+import { drawHeader } from "@/utils/pdfHeader";
 
-export const exportOrderToPdf = (order: Order) => {
+export const exportOrderToPdf = async (order: Order) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let yPosition = 20;
-
+  
   // Get order items
   const orderItems = Array.isArray(order.orderItems)
     ? order.orderItems
@@ -18,43 +18,9 @@ export const exportOrderToPdf = (order: Order) => {
   const labelItem = item?.labelItem;
   const cartonItem = item?.cartonItem;
 
-  // Header - Company Name
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text(order.companyProfile?.name || "Moon Textile", pageWidth / 2, yPosition, {
-    align: "center",
-  });
-  yPosition += 7;
-
-  // Company Address
-  if (order.companyProfile?.address) {
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text(order.companyProfile.address, pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 5;
-  }
-
-  // Company Phone
-  if (order.companyProfile?.phone) {
-    doc.setFontSize(10);
-    doc.text(order.companyProfile.phone, pageWidth / 2, yPosition, {
-      align: "center",
-    });
-    yPosition += 5;
-  }
-
-  // Horizontal line
-  doc.setLineWidth(0.5);
-  doc.line(15, yPosition, pageWidth - 15, yPosition);
-  yPosition += 10;
-
-  // Document Title
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("Order Invoice", pageWidth / 2, yPosition, { align: "center" });
-  yPosition += 10;
+  // Header - Logo, Company Info, Title
+  const startY = await drawHeader(doc, order.companyProfile, "Order Invoice", order.orderDate || undefined);
+  let yPosition = startY;
 
   // Buyer and Order Information
   doc.setFontSize(10);
@@ -85,7 +51,12 @@ export const exportOrderToPdf = (order: Order) => {
 
   // Right side - Order Details
   const rightX = pageWidth - 15;
-  let rightY = yPosition - 25;
+  let rightY = yPosition - (5 * 4); // Adjusted for the dynamic yPosition
+  // We should actually use a fixed top-right area or dynamic one.
+  // Given drawHeader returns the Y after the line, we can place order details on the right.
+  // Reset rightY to be consistent with startY if we want them aligned.
+  rightY = startY;
+
   doc.setFont("helvetica", "bold");
   doc.text("Date: ", rightX - 60, rightY);
   doc.setFont("helvetica", "normal");
@@ -117,7 +88,7 @@ export const exportOrderToPdf = (order: Order) => {
     );
   }
 
-  yPosition += 10;
+  yPosition = Math.max(yPosition, rightY) + 10;
 
   // Product Table
   if (order.productType === "FABRIC" && fabricItem?.fabricItemData) {

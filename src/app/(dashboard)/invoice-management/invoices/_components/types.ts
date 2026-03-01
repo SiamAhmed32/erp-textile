@@ -73,6 +73,7 @@ export type Invoice = {
     invoiceTermsId: string;
     createdAt: string;
     updatedAt: string;
+    totalAmount?: number;
     order?: OrderSummary | null;
     invoiceTerms?: InvoiceTerms | null;
     user?: UserSummary | null;

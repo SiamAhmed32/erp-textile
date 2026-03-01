@@ -39,11 +39,16 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
     }
   }, [orderError]);
 
+  const handleExport = React.useCallback(async () => {
+    if (!order) return;
+    await exportOrderToPdf(order);
+  }, [order]);
+
   React.useEffect(() => {
     if (!shouldExport || !order || exportTriggered.current) return;
     exportTriggered.current = true;
-    exportOrderToPdf(order);
-  }, [order, shouldExport]);
+    handleExport();
+  }, [order, shouldExport, handleExport]);
 
   return (
     <Container className="pb-10 pt-6">
@@ -67,7 +72,7 @@ const OrderDetails = ({ id, shouldExport = false }: Props) => {
                     variant="outline"
                     size="sm"
                     className="gap-2 border-slate-200 hover:bg-slate-50 shadow-sm"
-                    onClick={() => exportOrderToPdf(order)}
+                    onClick={handleExport}
                   >
                     <Download className="h-4 w-4" />
                     Export PDF

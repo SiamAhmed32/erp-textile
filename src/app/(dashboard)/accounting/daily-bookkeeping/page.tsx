@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import toast from "react-hot-toast";
+import { notify } from "@/lib/notifications";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JournalLine {
@@ -53,12 +53,12 @@ interface JournalEntry {
   voucherNo: string;
   date: string;
   category:
-  | "BUYER_DUE"
-  | "RECEIPT"
-  | "SUPPLIER_DUE"
-  | "PAYMENT"
-  | "JOURNAL"
-  | "CONTRA";
+    | "BUYER_DUE"
+    | "RECEIPT"
+    | "SUPPLIER_DUE"
+    | "PAYMENT"
+    | "JOURNAL"
+    | "CONTRA";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -438,14 +438,14 @@ export default function DailyBookkeepingList() {
         body: {},
         invalidate: [API_PATH],
       }).unwrap();
-      toast.success(`${postEntry.voucherNo} posted to General Ledger.`);
+      notify.success(`${postEntry.voucherNo} posted to General Ledger.`);
       setPostEntry(null);
       refetch();
     } catch (err: any) {
-      toast.error(
+      notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Failed to post entry.",
+          err?.data?.message ||
+          "Could not post the entry. Please try again.",
       );
     }
   };
@@ -457,14 +457,14 @@ export default function DailyBookkeepingList() {
         path: `${API_PATH}/${deleteEntry.id}`,
         invalidate: [API_PATH],
       }).unwrap();
-      toast.success(`Draft ${deleteEntry.voucherNo} deleted.`);
+      notify.success(`Draft ${deleteEntry.voucherNo} deleted.`);
       setDeleteEntry(null);
       refetch();
     } catch (err: any) {
-      toast.error(
+      notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Failed to delete draft.",
+          err?.data?.message ||
+          "Could not delete the draft. Please try again.",
       );
     }
   };
@@ -477,14 +477,14 @@ export default function DailyBookkeepingList() {
         body: {},
         invalidate: [API_PATH],
       }).unwrap();
-      toast.success(`Reversal entry created for ${reverseEntry.voucherNo}.`);
+      notify.success(`Reversal entry created for ${reverseEntry.voucherNo}.`);
       setReverseEntry(null);
       refetch();
     } catch (err: any) {
-      toast.error(
+      notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Failed to reverse entry.",
+          err?.data?.message ||
+          "Could not reverse the entry. Please try again.",
       );
     }
   };

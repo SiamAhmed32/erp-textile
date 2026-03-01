@@ -110,23 +110,23 @@ const LCDetails = ({ id, shouldExport = false }: Props) => {
   }, [lcError]);
 
   const handleExport = React.useCallback(
-    (type: string, date?: string) => {
-      if (!lc) return;
+    async (type: string, date?: string) => {
+      if (!lc || !enrichedLc) return;
       switch (type) {
         case "commercial-invoice":
-          exportCommercialInvoicePdf(enrichedLc!);
+          await exportCommercialInvoicePdf(enrichedLc);
           break;
         case "delivery-challan":
-          exportDeliveryChallanPdf(enrichedLc!);
+          await exportDeliveryChallanPdf(enrichedLc);
           break;
         case "beneficiary-certificate":
-          exportBeneficiaryCertificatePdf(enrichedLc!, date);
+          await exportBeneficiaryCertificatePdf(enrichedLc, date);
           break;
         case "certificate-of-origin":
-          exportCertificateOfOriginPdf(enrichedLc!, date);
+          await exportCertificateOfOriginPdf(enrichedLc, date);
           break;
         case "bill-of-exchange":
-          exportBillOfExchangePdf(enrichedLc!);
+          await exportBillOfExchangePdf(enrichedLc);
           break;
       }
     },

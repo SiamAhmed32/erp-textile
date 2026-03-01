@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { LCManagement } from "./types";
 import { numberToWords } from "@/utils/numberToWords";
 import { normalizeLCItems } from "./utils";
+import { drawHeader } from "@/utils/pdfHeader";
 
 /* ═══════════════════════════════════════════════════
    HELPERS
@@ -36,7 +37,7 @@ const money = (n: number) =>
    1. COMMERCIAL INVOICE
    ═══════════════════════════════════════════════════ */
 
-export const exportCommercialInvoicePdf = (lc: LCManagement) => {
+export const exportCommercialInvoicePdf = async (lc: LCManagement) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const margin = 12;
@@ -49,8 +50,11 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
   const company = order?.companyProfile;
   const items = normalizeLCItems(lc);
 
-  let y = 14;
+  // ── Company Header (Exporter) ──
+  const startY = await drawHeader(doc, company, "Commercial Invoice");
+  let y = startY;
 
+  y -= 2; // Adjust for LC specific layout
   // ── Outer border box ──
   const boxTop = y - 2;
 
@@ -94,13 +98,13 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
   doc.text(`:  ${fmt(lc.dateOfOpening)}`, rValX, ry);
   ry += 6;
   doc.text("L/C Issuing Bank", rLabelX, ry);
-  doc.text(`:  ${lc.lcIssueBankName.toUpperCase()}`, rValX, ry);
+  doc.text(`:  ${lc.lcIssueBankName?.toUpperCase() || ""}`, rValX, ry);
   ry += 4;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.text(`   ${lc.lcIssueBankBranch}`, rValX, ry);
+  doc.text(`   ${lc.lcIssueBankBranch || ""}`, rValX, ry);
 
-  y = Math.max(y + 13 + addrLines.length * 3.5, ry + 4);
+  y = Math.max(y + 13 + (Array.isArray(addrLines) ? addrLines.length : 1) * 3.5, ry + 4);
 
   // Vertical divider line in header
   doc.setLineWidth(0.3);
@@ -150,7 +154,7 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
   doc.setFontSize(7);
   const remarkLines = doc.splitTextToSize(lc.remarks || "", boxW - 30);
   doc.text(remarkLines, margin + 22, y);
-  y += Math.max(remarkLines.length * 3.5, 5) + 3;
+  y += Math.max((Array.isArray(remarkLines) ? remarkLines.length : 1) * 3.5, 5) + 3;
   doc.line(margin, y, pw - margin, y);
 
   // ── Items table ──
@@ -285,7 +289,7 @@ export const exportCommercialInvoicePdf = (lc: LCManagement) => {
    2. DELIVERY CHALLAN
    ═══════════════════════════════════════════════════ */
 
-export const exportDeliveryChallanPdf = (lc: LCManagement) => {
+export const exportDeliveryChallanPdf = async (lc: LCManagement) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -294,32 +298,9 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   const buyer = order?.buyer;
   const company = order?.companyProfile;
 
-  let y = 18;
-
   // ── Company Header ──
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.text((company?.name || "Company Name").toUpperCase(), pw / 2, y, { align: "center" });
-
-  y += 5;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
-  const companyAddr = company?.address || "";
-  if (companyAddr) {
-    const addrLines = doc.splitTextToSize(companyAddr, pw - margin * 2);
-    doc.text(addrLines, pw / 2, y, { align: "center" });
-    y += (addrLines.length * 4);
-  } else {
-    y += 4;
-  }
-
-  y += 4;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("DELIVERY CHALLAN", pw / 2, y, { align: "center" });
-  doc.setLineWidth(0.5);
-  const titleW = doc.getTextWidth("DELIVERY CHALLAN");
-  doc.line(pw / 2 - titleW / 2, y + 1, pw / 2 + titleW / 2, y + 1);
+  const startY = await drawHeader(doc, company, "DELIVERY CHALLAN", lc.dateOfOpening);
+  let y = startY;
 
   // ── Info rows ──
   y += 12;
@@ -375,7 +356,7 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
   if (displayAddr) {
     const addrLines = doc.splitTextToSize(displayAddr, pw - margin * 2 - 20);
     doc.text(addrLines, lx, y + 6);
-    y += (addrLines.length * 4);
+    y += ((Array.isArray(addrLines) ? addrLines.length : 1) * 4);
   }
 
   y += 14;
@@ -492,20 +473,20 @@ export const exportDeliveryChallanPdf = (lc: LCManagement) => {
    3. BENEFICIARY CERTIFICATE
    ═══════════════════════════════════════════════════ */
 
-export const exportBeneficiaryCertificatePdf = (lc: LCManagement, date?: string) => {
-  generateCertificatePdf(lc, "Beneficiary Certificate", date);
+export const exportBeneficiaryCertificatePdf = async (lc: LCManagement, date?: string) => {
+  await generateCertificatePdf(lc, "Beneficiary Certificate", date);
 };
 
 /* ═══════════════════════════════════════════════════
    4. CERTIFICATE OF ORIGIN
    ═══════════════════════════════════════════════════ */
 
-export const exportCertificateOfOriginPdf = (lc: LCManagement, date?: string) => {
-  generateCertificatePdf(lc, "Certificate of Origin", date);
+export const exportCertificateOfOriginPdf = async (lc: LCManagement, date?: string) => {
+  await generateCertificatePdf(lc, "Certificate of Origin", date);
 };
 
 /* ─── shared certificate generator ─── */
-const generateCertificatePdf = (lc: LCManagement, title: string, date?: string) => {
+const generateCertificatePdf = async (lc: LCManagement, title: string, date?: string) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -515,18 +496,9 @@ const generateCertificatePdf = (lc: LCManagement, title: string, date?: string) 
   const company = order?.companyProfile;
   const items = normalizeLCItems(lc);
 
-  let y = 18;
-
-  // ── Date ──
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.text(`Date : ${fmt(date || lc.dateOfOpening)}`, margin + 2, y);
-
-  // ── Title ──
-  y += 18;
-  doc.setFont("times", "normal");
-  doc.setFontSize(22);
-  doc.text(title, pw / 2, y, { align: "center" });
+  // ── Company Header & Title ──
+  const startY = await drawHeader(doc, company, title, date || lc.dateOfOpening);
+  let y = startY;
 
   // ── Body paragraph ──
   y += 16;
@@ -540,7 +512,7 @@ const generateCertificatePdf = (lc: LCManagement, title: string, date?: string) 
   const bodyLines = doc.splitTextToSize(bodyText, pw - margin * 2 - 4);
   doc.text(bodyLines, margin + 2, y);
 
-  y += bodyLines.length * 4 + 8;
+  y += (Array.isArray(bodyLines) ? bodyLines.length : 1) * 4 + 8;
 
   // ── Buyer's Name ──
   doc.setFont("helvetica", "italic");
@@ -645,7 +617,7 @@ const generateCertificatePdf = (lc: LCManagement, title: string, date?: string) 
    5. BILL OF EXCHANGE
    ═══════════════════════════════════════════════════ */
 
-export const exportBillOfExchangePdf = (lc: LCManagement) => {
+export const exportBillOfExchangePdf = async (lc: LCManagement) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const margin = 16;
@@ -653,6 +625,9 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
   const order = invoice?.order;
   const buyer = order?.buyer;
   const company = order?.companyProfile;
+
+  // ── Company Header ──
+  const startY = await drawHeader(doc, company); // Bill of Exchange title is handled per copy
 
   const bankFull = `${lc.lcIssueBankName}, ${lc.lcIssueBankBranch}`;
   const amountStr = `US $ ${money(Number(lc.amount))}`;
@@ -664,9 +639,9 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     copyNum: number,
     ordinal: string,
     otherOrdinal: string,
-    startY: number,
+    copyStartY: number,
   ) => {
-    let y = startY;
+    let y = copyStartY;
 
     // ── Title ──
     doc.setFont("times", "bold");
@@ -690,12 +665,12 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.setFontSize(9);
     const bodyText =
       `AT 120 SIGHT ${ordinal} of Exchange (${otherOrdinal} of the same tenor and date being unpaid) ` +
-      `pay to the order of ${lc.lcIssueBankName}, ${lc.lcIssueBankBranch}, ${location}, Bangladesh ` +
+      `pay to the order of ${lc.lcIssueBankName || ""}, ${lc.lcIssueBankBranch || ""}, ${location}, Bangladesh ` +
       `the sum of`;
     const bodyLines = doc.splitTextToSize(bodyText, pw - margin * 2 - 4);
     doc.text(bodyLines, pw / 2, y, { align: "center", maxWidth: pw - margin * 2 });
 
-    y += bodyLines.length * 4.5 + 4;
+    y += (Array.isArray(bodyLines) ? bodyLines.length : 1) * 4.5 + 4;
 
     // Amount in words
     doc.setFontSize(9);
@@ -705,7 +680,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.setFont("helvetica", "bold");
     doc.text(wordsLines, pw / 2, y, { align: "center", maxWidth: pw - margin * 2 });
 
-    y += wordsLines.length * 4 + 3;
+    y += (Array.isArray(wordsLines) ? wordsLines.length : 1) * 4 + 3;
 
     // Value received line
     doc.setFont("helvetica", "normal");
@@ -714,7 +689,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     doc.text(valueLine, pw / 2, y, { align: "center" });
 
     y += 5;
-    const issuedLine = `ISSUED BY: ${lc.lcIssueBankName.toUpperCase()}, ${lc.lcIssueBankBranch}, Bangladesh.`;
+    const issuedLine = `ISSUED BY: ${lc.lcIssueBankName?.toUpperCase() || ""}, ${lc.lcIssueBankBranch || ""}, Bangladesh.`;
     doc.text(issuedLine, pw / 2, y, { align: "center" });
 
     y += 5;
@@ -730,10 +705,10 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
     // ── TO block (left) ──
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text(lc.lcIssueBankName.toUpperCase(), margin + 12, y);
+    doc.text(lc.lcIssueBankName?.toUpperCase() || "", margin + 12, y);
     doc.setFont("helvetica", "normal");
     doc.text("TO :", margin + 2, y + 4);
-    doc.text(lc.lcIssueBankBranch, margin + 12, y + 4);
+    doc.text(lc.lcIssueBankBranch || "", margin + 12, y + 4);
     doc.text(`${location}, Bangladesh.`, margin + 12, y + 8);
 
     // ── Signature (right) ──
@@ -749,7 +724,7 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
   };
 
   // ── Copy 1 ──
-  const endOfCopy1 = drawCopy(1, "FIRST", "Second", 22);
+  const endOfCopy1 = drawCopy(1, "FIRST", "Second", startY + 10);
 
   // Separator line between copies
   doc.setDrawColor(180);
@@ -764,4 +739,3 @@ export const exportBillOfExchangePdf = (lc: LCManagement) => {
 
   doc.save(`Bill_of_Exchange_${lc.bblcNumber}.pdf`);
 };
-

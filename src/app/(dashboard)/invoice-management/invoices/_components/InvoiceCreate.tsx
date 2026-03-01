@@ -118,22 +118,29 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to create invoice";
-      console.error("Create Invoice Error:", message);
+        "Could not create the invoice. Please try again.";
+      console.error("Create Invoice Error:", err);
     } finally {
       setSaving(false);
     }
   };
 
-  // Basic Progress Calculation for Invoice
+  // Dynamic Progress Calculation for Invoice
   const progressData = React.useMemo(() => {
-    const fieldsToTrack = ["piNumber", "date", "orderId", "invoiceTermsId"];
+    const fieldsToTrack: (keyof InvoiceFormData)[] = [
+      "piNumber",
+      "date",
+      "orderId",
+      "invoiceTermsId",
+    ];
+
     const total = fieldsToTrack.length;
-    const filled = fieldsToTrack.filter(
-      (key) => !!draft[key as keyof InvoiceFormData],
-    ).length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      return !!val;
+    }).length;
+
     return {
       percentage: Math.round((filled / total) * 100),
       count: filled,

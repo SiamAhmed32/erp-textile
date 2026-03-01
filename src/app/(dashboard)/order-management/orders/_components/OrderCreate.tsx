@@ -160,7 +160,9 @@ const OrderCreate = ({ duplicateId }: Props) => {
         setActiveTab("details");
       }
 
-      notify.error("Please fill in the required fields");
+      notify.error(
+        "Some required fields are missing. Please review the highlighted fields.",
+      );
       return;
     }
     setErrors({});
@@ -182,27 +184,33 @@ const OrderCreate = ({ duplicateId }: Props) => {
       );
     } catch (err: any) {
       const msg =
-        err?.data?.message || err?.message || "Failed to create order";
-      console.error("Create Order Error:", msg);
+        err?.data?.message || "Could not create the order. Please try again.";
+      console.error("Create Order Error:", err);
       notify.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
-  // Basic Progress Calculation for Order
+  // Dynamic Progress Calculation for Order
   const progressData = React.useMemo(() => {
-    const fieldsToTrack = [
+    const fieldsToTrack: (keyof OrderFormData)[] = [
       "orderNumber",
       "orderDate",
       "buyerId",
       "companyProfileId",
       "productType",
+      "deliveryDate",
     ];
+
     const total = fieldsToTrack.length;
-    const filled = fieldsToTrack.filter(
-      (key) => !!draft[key as keyof OrderFormData],
-    ).length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "number") return true; // Any number since they default to something or are explicit
+      return !!val;
+    }).length;
+
     return {
       percentage: Math.round((filled / total) * 100),
       count: filled,

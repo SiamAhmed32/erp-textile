@@ -156,9 +156,7 @@ export function InvoiceFormModal({
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        `Failed to ${isCreate ? "create" : "update"} invoice`;
+        `Could not ${isCreate ? "create" : "update"} the invoice. Please try again.`;
       notify.error(message);
     } finally {
       setSaving(false);

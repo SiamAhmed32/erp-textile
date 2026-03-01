@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
-import { toast } from "sonner";
+import { notify } from "@/lib/notifications";
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface Loan {
@@ -131,11 +131,14 @@ function StakeholderFormModal({
         invalidate: ["accounting/loans"],
       }).unwrap();
 
-      toast.success("Debt stakeholder registered successfully");
+      notify.success("Debt stakeholder registered successfully");
       onClose();
       resetForm();
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to register loan");
+      notify.error(
+        err?.data?.message ||
+          "Could not register the stakeholder. Please try again.",
+      );
     }
   };
 

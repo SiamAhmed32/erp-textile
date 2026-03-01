@@ -84,8 +84,10 @@ const LCCreate = () => {
   React.useEffect(() => {
     const error = invoicesError as any;
     if (error) {
-      const msg = error?.data?.message || "Failed to load invoices";
-      console.error("Load Invoices Error:", msg);
+      const msg =
+        error?.data?.message ||
+        "Could not load invoices. Please refresh the page.";
+      console.error("Load Invoices Error:", error);
       notify.error(msg);
     }
   }, [invoicesError]);
@@ -138,7 +140,9 @@ const LCCreate = () => {
       setErrors(nextErrors);
       // Log for debugging
       console.log("Validation Errors:", nextErrors);
-      notify.error("Please fill in the required fields");
+      notify.error(
+        "Some required fields are missing. Please review the highlighted fields.",
+      );
       return;
     }
 
@@ -177,27 +181,50 @@ const LCCreate = () => {
           : "/lc-management/lc-managements",
       );
     } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "Failed to create LC";
-      console.error("Create LC Error:", msg);
+      const msg =
+        err?.data?.message || "Could not create the BBLC. Please try again.";
+      console.error("Create LC Error:", err);
       notify.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
-  // Basic Progress Calculation for LC
+  // Dynamic Progress Calculation for LC
   const progressData = React.useMemo(() => {
-    const fieldsToTrack = [
+    const fieldsToTrack: (keyof LCFormData)[] = [
       "bblcNumber",
       "dateOfOpening",
       "notifyParty",
       "lcIssueBankName",
+      "lcIssueBankBranch",
+      "destination",
+      "exportLcNo",
+      "exportLcDate",
+      "binNo",
+      "hsCodeNo",
+      "remarks",
+      "carrier",
+      "salesTerm",
+      "issueDate",
+      "expiryDate",
+      "amount",
+      "challanNo",
+      "transportMode",
+      "vehicleNo",
+      "driverName",
+      "contactNo",
       "invoiceId",
     ];
+
     const total = fieldsToTrack.length;
-    const filled = fieldsToTrack.filter(
-      (key) => !!draft[key as keyof LCFormData],
-    ).length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "number") return val > 0;
+      return !!val;
+    }).length;
+
     return {
       percentage: Math.round((filled / total) * 100),
       count: filled,

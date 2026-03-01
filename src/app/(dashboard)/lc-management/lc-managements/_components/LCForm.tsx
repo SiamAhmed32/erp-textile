@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -15,6 +15,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { LCFormData } from "./validation";
 import { Invoice } from "@/app/(dashboard)/invoice-management/invoices/_components/types";
+import { Flex } from "@/components/reusables";
+import { cn } from "@/lib/utils";
 import {
   Building2,
   FileText,
@@ -29,6 +31,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Save,
+  type LucideIcon,
 } from "lucide-react";
 
 type Props = {
@@ -71,10 +74,11 @@ const InputGroup = ({
         placeholder={placeholder}
         value={value ?? ""}
         onChange={(e) => onChange(id, e.target.value)}
-        className={`h-11 transition-all duration-200 border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary/20 ${error
+        className={`h-11 transition-all duration-200 border-slate-200 bg-white/50 focus:bg-white focus:ring-2 focus:ring-primary/20 ${
+          error
             ? "border-destructive ring-destructive/20"
             : "hover:border-primary/40"
-          }`}
+        }`}
       />
     </div>
     {error && (
@@ -85,16 +89,46 @@ const InputGroup = ({
   </div>
 );
 
-const SectionHeader = ({ title, description, icon: Icon }: any) => (
-  <div className="mb-6 flex items-start gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
-    <div className="p-2.5 rounded-lg bg-white  ring-1 ring-primary/10">
-      <Icon className="size-5 text-primary" />
+const SectionHeader = ({
+  icon: Icon,
+  title,
+  description,
+  rightLabel,
+  rightValue,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description?: string;
+  rightLabel?: string;
+  rightValue?: string;
+}) => (
+  <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+          <Icon size={20} />
+        </div>
+        <div>
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {description ? description.toUpperCase() : "MANAGEMENT MODULE"}
+          </p>
+          <h3 className="text-xl font-black text-white tracking-tight italic">
+            {title}
+          </h3>
+        </div>
+      </div>
+      {rightLabel && (
+        <div className="text-right">
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {rightLabel}
+          </p>
+          <p className="text-white font-black tracking-tight italic">
+            {rightValue}
+          </p>
+        </div>
+      )}
     </div>
-    <div>
-      <h3 className="text-base font-bold text-slate-900">{title}</h3>
-      <p className="text-sm text-slate-500 leading-relaxed">{description}</p>
-    </div>
-  </div>
+  </CardHeader>
 );
 
 const LCForm = ({
@@ -180,40 +214,45 @@ const LCForm = ({
         className="w-full"
       >
         <TabsList className="tab-premium-list">
-          <TabsTrigger
-            value="general"
-            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
-          >
-            <Info className="size-4" />
-            <span className="hidden sm:inline">General & PI</span>
+          <TabsTrigger value="general" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <Info className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                General & PI
+              </span>
+            </Flex>
           </TabsTrigger>
-          <TabsTrigger
-            value="export"
-            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
-          >
-            <Globe className="size-4" />
-            <span className="hidden sm:inline">Export Details</span>
+          <TabsTrigger value="export" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <Globe className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Export Details
+              </span>
+            </Flex>
           </TabsTrigger>
-          <TabsTrigger
-            value="boe"
-            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
-          >
-            <Banknote className="size-4" />
-            <span className="hidden sm:inline">Bill of Exchange</span>
+          <TabsTrigger value="boe" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <Banknote className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Bill of Exchange
+              </span>
+            </Flex>
           </TabsTrigger>
-          <TabsTrigger
-            value="delivery"
-            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
-          >
-            <Truck className="size-4" />
-            <span className="hidden sm:inline">Challan Info</span>
+          <TabsTrigger value="delivery" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <Truck className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Challan Info
+              </span>
+            </Flex>
           </TabsTrigger>
-          <TabsTrigger
-            value="remarks"
-            className="tab-premium-trigger data-[state=active]:gap-3 gap-2"
-          >
-            <ClipboardList className="size-4" />
-            <span className="hidden sm:inline">Certificates</span>
+          <TabsTrigger value="remarks" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <ClipboardList className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Certificates
+              </span>
+            </Flex>
           </TabsTrigger>
         </TabsList>
 
@@ -223,14 +262,15 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none rounded-3xl overflow-hidden bg-white/70 backdrop-blur-xl">
-              <CardContent className="pt-8 space-y-8">
-                <SectionHeader
-                  icon={Building2}
-                  title="Source PI & Banking Information"
-                  description="Connect this LC to a Proforma Invoice and define the issuing bank details."
-                />
-
+            <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+              <SectionHeader
+                icon={Building2}
+                title="Source PI & Banking Information"
+                description="General Info"
+                rightLabel="CURRENT SESSION"
+                rightValue={new Date().getFullYear().toString()}
+              />
+              <CardContent className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
@@ -332,14 +372,13 @@ const LCForm = ({
         {/* 2. Export & Logistics Tab */}
         <TabsContent value="export" className="mt-6 focus-visible:outline-none">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none rounded-3xl overflow-hidden">
-              <CardContent className="pt-8 space-y-8">
-                <SectionHeader
-                  icon={Globe}
-                  title="Export & Contractual Details"
-                  description="Define export contract numbers, values, HS codes, and essential validity dates."
-                />
-
+            <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+              <SectionHeader
+                icon={Globe}
+                title="Export & Contractual Details"
+                description="Logistics & Value"
+              />
+              <CardContent className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <InputGroup
                     id="exportLcNo"
@@ -442,14 +481,13 @@ const LCForm = ({
         {/* 3. Bill of Exchange Tab */}
         <TabsContent value="boe" className="mt-6 focus-visible:outline-none">
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none rounded-3xl overflow-hidden">
-              <CardContent className="pt-8 space-y-8">
-                <SectionHeader
-                  icon={Banknote}
-                  title="Bill of Exchange (DRAFT) Configuration"
-                  description="Set the locations, dates, and mandatory remarks for both Client and Bank drafts."
-                />
-
+            <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+              <SectionHeader
+                icon={Banknote}
+                title="Bill of Exchange (DRAFT) Configuration"
+                description="Financial Drafting"
+              />
+              <CardContent className="p-8 space-y-8">
                 <div className="space-y-8">
                   {/* Client Section */}
                   <div className="p-6 rounded-2xl bg-amber-50/30 border border-amber-100/50 space-y-6">
@@ -554,14 +592,13 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none rounded-3xl overflow-hidden">
-              <CardContent className="pt-8 space-y-8">
-                <SectionHeader
-                  icon={Truck}
-                  title="Delivery Challan & Dispatch Logistics"
-                  description="Manage the vehicle, driver, and challan details for the physical shipment."
-                />
-
+            <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+              <SectionHeader
+                icon={Truck}
+                title="Delivery Challan & Dispatch Logistics"
+                description="Shipping Info"
+              />
+              <CardContent className="p-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <InputGroup
                     id="challanNo"
@@ -621,14 +658,13 @@ const LCForm = ({
           className="mt-6 focus-visible:outline-none"
         >
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Card className="border-none rounded-3xl overflow-hidden">
-              <CardContent className="pt-8 space-y-8">
-                <SectionHeader
-                  icon={ClipboardList}
-                  title="General Remarks & Certifications"
-                  description="Consolidated text area for additional terms, beneficiary statements, or origin declarations."
-                />
-
+            <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+              <SectionHeader
+                icon={ClipboardList}
+                title="General Remarks & Certifications"
+                description="Declaration"
+              />
+              <CardContent className="p-8 space-y-8">
                 <div className="space-y-4">
                   <Label
                     htmlFor="remarks"
@@ -638,10 +674,11 @@ const LCForm = ({
                   </Label>
                   <textarea
                     id="remarks"
-                    className={`w-full min-h-[250px] p-6 rounded-3xl border border-slate-200 bg-slate-50/50 text-sm ring-offset-background placeholder:text-muted-foreground focus:bg-white focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all outline-none leading-relaxed ${errors.remarks
+                    className={`w-full min-h-[250px] p-6 rounded-3xl border border-slate-200 bg-slate-50/50 text-sm ring-offset-background placeholder:text-muted-foreground focus:bg-white focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all outline-none leading-relaxed ${
+                      errors.remarks
                         ? "border-destructive ring-destructive/20"
                         : ""
-                      }`}
+                    }`}
                     placeholder="Enter the full certification text or terms that should appear on generated documents..."
                     value={data.remarks}
                     onChange={(e) => onChange("remarks", e.target.value)}

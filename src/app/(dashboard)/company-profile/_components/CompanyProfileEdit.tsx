@@ -121,7 +121,8 @@ const CompanyProfileEdit = ({ id }: Props) => {
   React.useEffect(() => {
     const parsed = apiError as any;
     if (!parsed) return;
-    const message = parsed?.error || "Failed to load company profile";
+    const message =
+      parsed?.error || "Could not load the company profile. Please try again.";
     notify.error(message);
   }, [apiError]);
 
@@ -215,9 +216,7 @@ const CompanyProfileEdit = ({ id }: Props) => {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save company profile";
+        "Could not save the company profile. Please try again.";
       notify.error(message);
     } finally {
       setSaving(false);

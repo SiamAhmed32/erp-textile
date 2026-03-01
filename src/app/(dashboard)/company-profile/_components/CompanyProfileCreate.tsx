@@ -173,8 +173,7 @@ const CompanyProfileCreate = () => {
       const message =
         err?.data?.message ||
         err?.data?.error?.message ||
-        err?.message ||
-        "Failed to Create New Company profile";
+        "Could not create the company profile. Please try again.";
       notify.error(message);
     } finally {
       setSaving(false);

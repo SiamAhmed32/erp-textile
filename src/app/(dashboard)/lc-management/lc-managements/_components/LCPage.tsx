@@ -2,14 +2,12 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  useGetAllQuery,
-  usePatchMutation,
-} from "@/store/services/commonApi";
+import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import LCsTable from "./LCsTable";
 import { LCManagement } from "./types";
 import { PrimaryHeading, CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notifications";
 
 const LCPage = () => {
   const router = useRouter();
@@ -61,9 +59,9 @@ const LCPage = () => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load LC managements";
-    console.error("Load LC Error:", message);
+      "Could not load the LC documents. Please refresh the page.";
+    notify.error(message);
+    console.error("Load LC Error:", parsed);
   }, [lcsError]);
 
   const handleRowClick = useCallback(
@@ -94,12 +92,9 @@ const LCPage = () => {
     [router],
   );
 
-  const handleDelete = useCallback(
-    (row: LCManagement) => {
-      setDeletingLC(row);
-    },
-    [],
-  );
+  const handleDelete = useCallback((row: LCManagement) => {
+    setDeletingLC(row);
+  }, []);
 
   const confirmDelete = useCallback(async () => {
     if (!deletingLC) return;
@@ -110,11 +105,12 @@ const LCPage = () => {
         invalidate: ["lc-managements"],
       }).unwrap();
       refetch();
+      notify.success("LC management record deleted successfully.");
     } catch (err: any) {
-      console.error(
-        "Delete LC Error:",
-        err.message || "Failed to delete LC management",
+      notify.error(
+        "Could not delete the LC management record. Please try again.",
       );
+      console.error("Delete LC Error:", err);
     } finally {
       setDeletingLC(null);
     }
@@ -129,11 +125,12 @@ const LCPage = () => {
           invalidate: ["lc-managements"],
         }).unwrap();
         refetch();
+        notify.success("LC management record restored successfully.");
       } catch (err: any) {
-        console.error(
-          "Restore LC Error:",
-          err.message || "Failed to restore LC management",
+        notify.error(
+          "Could not restore the LC management record. Please try again.",
         );
+        console.error("Restore LC Error:", err);
       }
     },
     [patchItem, refetch],
@@ -200,16 +197,10 @@ const LCPage = () => {
             ? This is a soft delete operation.
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setDeletingLC(null)}
-            >
+            <Button variant="outline" onClick={() => setDeletingLC(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete
             </Button>
           </div>

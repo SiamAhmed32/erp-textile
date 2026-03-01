@@ -125,7 +125,9 @@ const LCEdit = ({ id }: Props) => {
     if (!schemaResult.success) {
       const nextErrors = toFieldErrors(schemaResult.error.issues) as any;
       setErrors(nextErrors);
-      notify.error("Please fill in the required fields");
+      notify.error(
+        "Some required fields are missing. Please review the highlighted fields.",
+      );
       return;
     }
 
@@ -161,13 +163,57 @@ const LCEdit = ({ id }: Props) => {
       notify.success("BBLC Updated Successfully");
       router.push(`/lc-management/lc-managements/${id}`);
     } catch (err: any) {
-      const msg = err?.data?.message || "Failed to update LC";
-      console.error("Update LC Error:", msg);
+      const msg =
+        err?.data?.message || "Could not update the BBLC. Please try again.";
+      console.error("Update LC Error:", err);
       notify.error(msg);
     } finally {
       setSaving(false);
     }
   };
+
+  // Dynamic Progress Calculation for LC
+  const progressData = React.useMemo(() => {
+    if (!draft) return { percentage: 0, count: 0, total: 0 };
+    const fieldsToTrack: (keyof LCFormData)[] = [
+      "bblcNumber",
+      "dateOfOpening",
+      "notifyParty",
+      "lcIssueBankName",
+      "lcIssueBankBranch",
+      "destination",
+      "exportLcNo",
+      "exportLcDate",
+      "binNo",
+      "hsCodeNo",
+      "remarks",
+      "carrier",
+      "salesTerm",
+      "issueDate",
+      "expiryDate",
+      "amount",
+      "challanNo",
+      "transportMode",
+      "vehicleNo",
+      "driverName",
+      "contactNo",
+      "invoiceId",
+    ];
+
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "number") return val > 0;
+      return !!val;
+    }).length;
+
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
 
   if (loadingLC || !draft) {
     return (
@@ -203,6 +249,7 @@ const LCEdit = ({ id }: Props) => {
           },
           { label: "Edit" },
         ]}
+        progress={progressData}
       />
 
       <div className="mt-8">

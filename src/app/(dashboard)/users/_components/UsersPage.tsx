@@ -5,13 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store/services/types";
-import { useGetAllQuery, usePutMutation } from "@/store/services/commonApi";
-import { useUpdateUserMutation } from "@/store/services/authApi";
+import {
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+} from "@/store/services/authApi";
+import { usePutMutation } from "@/store/services/commonApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
 import { PageHeader, CustomModal } from "@/components/reusables";
-import { Plus, Search, ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
+import { Plus, ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
 import { User } from "./types";
 import { notify } from "@/lib/notifications";
 import {
@@ -36,8 +40,7 @@ const UsersPage = () => {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
 
-  const { data, isLoading, refetch } = useGetAllQuery({
-    path: "users",
+  const { data, isLoading } = useGetUsersQuery({
     page,
     limit: 10,
     search: search || undefined,
@@ -48,6 +51,7 @@ const UsersPage = () => {
     },
   });
   const [updateUser] = useUpdateUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
   const [putItem] = usePutMutation();
 
   const currentUser = useSelector((state: RootState) => state.auth.user);
@@ -85,30 +89,30 @@ const UsersPage = () => {
   const handleDelete = async () => {
     if (!deletingUser) return;
     try {
-      await putItem({
-        path: `users/${deletingUser.id}`,
+      await deleteUser({
+        id: deletingUser.id,
         body: { isDeleted: true },
-        invalidate: ["users"],
       }).unwrap();
       notify.success("User deleted successfully (soft delete)");
       setDeletingUser(null);
-      refetch();
     } catch (error: any) {
-      notify.error(error?.data?.message || "Failed to delete user");
+      notify.error(
+        error?.data?.message || "Could not delete the user. Please try again.",
+      );
     }
   };
 
   const handleRestore = async (user: User) => {
     try {
-      await putItem({
-        path: `users/${user.id}`,
+      await deleteUser({
+        id: user.id,
         body: { isDeleted: false },
-        invalidate: ["users"],
       }).unwrap();
       notify.success("User restored successfully");
-      refetch();
     } catch (error: any) {
-      notify.error(error?.data?.message || "Failed to restore user");
+      notify.error(
+        error?.data?.message || "Could not restore the user. Please try again.",
+      );
     }
   };
 
@@ -248,7 +252,7 @@ const UsersPage = () => {
                   }
                   className={cn(
                     "rounded-lg my-0.5",
-                    sort.field === opt.field && sort.dir === opt.dir
+                    sort.field === opt.field && sort.dir === sort.dir
                       ? "bg-purple-50 text-purple-700"
                       : "",
                   )}

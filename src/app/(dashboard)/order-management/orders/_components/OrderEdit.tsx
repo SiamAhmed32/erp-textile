@@ -159,7 +159,9 @@ const OrderEdit = ({ id }: Props) => {
         setActiveTab("details");
       }
 
-      notify.error("Please fix the validation errors");
+      notify.error(
+        "Some required fields are missing. Please review the highlighted fields.",
+      );
       return;
     }
     setErrors({});
@@ -187,28 +189,34 @@ const OrderEdit = ({ id }: Props) => {
       router.push(`/order-management/orders/${id}`);
     } catch (err: any) {
       const msg =
-        err?.data?.message || err?.message || "Failed to update order";
-      console.error("Update Order Error:", msg);
+        err?.data?.message || "Could not update the order. Please try again.";
+      console.error("Update Order Error:", err);
       notify.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
-  // Basic Progress Calculation for Order
+  // Dynamic Progress Calculation for Order
   const progressData = React.useMemo(() => {
     if (!draft) return { percentage: 0, count: 0, total: 0 };
-    const fieldsToTrack = [
+    const fieldsToTrack: (keyof OrderFormData)[] = [
       "orderNumber",
       "orderDate",
       "buyerId",
       "companyProfileId",
       "productType",
+      "deliveryDate",
     ];
+
     const total = fieldsToTrack.length;
-    const filled = fieldsToTrack.filter(
-      (key) => !!draft[key as keyof OrderFormData],
-    ).length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "number") return true;
+      return !!val;
+    }).length;
+
     return {
       percentage: Math.round((filled / total) * 100),
       count: filled,

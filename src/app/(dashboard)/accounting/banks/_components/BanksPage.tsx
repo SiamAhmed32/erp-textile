@@ -12,7 +12,7 @@ import BanksTable from "./BanksTable";
 import BankCreateModal from "./BankCreateModal";
 import BankEditModal from "./BankEditModal";
 import BankDetailsModal from "./BankDetailsModal";
-import toast from "react-hot-toast";
+import { notify } from "@/lib/notifications";
 
 const BanksPage = () => {
   const [page, setPage] = useState(1);
@@ -64,13 +64,13 @@ const BanksPage = () => {
         body: { isDeleted: isArchiving },
         invalidate: ["accounting/banks"],
       }).unwrap();
-      toast.success(
+      notify.success(
         `Bank ${isArchiving ? "archived" : "restored"} successfully`,
       );
     } catch (error: any) {
-      toast.error(
+      notify.error(
         error?.data?.message ||
-          `Failed to ${isArchiving ? "archive" : "restore"} bank`,
+          `Could not ${isArchiving ? "archive" : "restore"} the bank account. Please try again.`,
       );
     }
   };

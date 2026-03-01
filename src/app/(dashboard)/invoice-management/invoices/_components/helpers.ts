@@ -9,27 +9,37 @@ const coerceStatus = (value?: string | null): PIStatus =>
 const coerceType = (value?: string | null): ProductType =>
     TYPES.includes(value as ProductType) ? (value as ProductType) : "FABRIC";
 
-export const normalizeInvoice = (item: InvoiceApiItem): Invoice => ({
-    id: item.id ?? "",
-    piNumber: item.piNumber ?? "",
-    date: item.date ?? "",
-    status: coerceStatus(item.status),
-    orderId: item.orderId ?? "",
-    invoiceTermsId: item.invoiceTermsId ?? "",
-    createdAt: item.createdAt ?? "",
-    updatedAt: item.updatedAt ?? "",
-    order: item.order
-        ? {
-            ...item.order,
-            productType: coerceType(item.order.productType),
-            orderItems: item.order.orderItems ?? [],
-            buyer: item.order.buyer ?? null,
-            companyProfile: item.order.companyProfile ?? null,
-        }
-        : null,
-    invoiceTerms: item.invoiceTerms ?? null,
-    user: item.user ?? null,
-});
+export const normalizeInvoice = (item: InvoiceApiItem): Invoice => {
+    let totalAmount = 0;
+    item.order?.orderItems?.forEach((oi) => {
+        totalAmount += Number(oi.fabricItem?.totalAmount || 0);
+        totalAmount += Number(oi.labelItem?.totalAmount || 0);
+        totalAmount += Number(oi.cartonItem?.totalAmount || 0);
+    });
+
+    return {
+        id: item.id ?? "",
+        piNumber: item.piNumber ?? "",
+        date: item.date ?? "",
+        status: coerceStatus(item.status),
+        orderId: item.orderId ?? "",
+        invoiceTermsId: item.invoiceTermsId ?? "",
+        createdAt: item.createdAt ?? "",
+        updatedAt: item.updatedAt ?? "",
+        totalAmount,
+        order: item.order
+            ? {
+                ...item.order,
+                productType: coerceType(item.order.productType),
+                orderItems: item.order.orderItems ?? [],
+                buyer: item.order.buyer ?? null,
+                companyProfile: item.order.companyProfile ?? null,
+            }
+            : null,
+        invoiceTerms: item.invoiceTerms ?? null,
+        user: item.user ?? null,
+    };
+};
 
 export const toInvoiceFormData = (invoice: Invoice): InvoiceFormData => ({
     piNumber: invoice.piNumber || "",

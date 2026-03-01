@@ -49,7 +49,10 @@ const ForgotPasswordModal = ({
       notify.success("Password reset code sent to your email");
       setStep("OTP");
     } catch (error: any) {
-      notify.error(error?.data?.message || "Failed to send reset code");
+      notify.error(
+        error?.data?.message ||
+          "Could not send the reset code. Please try again.",
+      );
     }
   };
 
@@ -60,7 +63,10 @@ const ForgotPasswordModal = ({
       notify.success("OTP verified successfully");
       setStep("RESET");
     } catch (error: any) {
-      notify.error(error?.data?.message || "Invalid or expired OTP");
+      notify.error(
+        error?.data?.message ||
+          "Invalid or expired code. Please request a new one.",
+      );
     }
   };
 
@@ -72,7 +78,10 @@ const ForgotPasswordModal = ({
       onOpenChange(false);
       resetState();
     } catch (error: any) {
-      notify.error(error?.data?.message || "Failed to reset password");
+      notify.error(
+        error?.data?.message ||
+          "Could not reset your password. Please try again.",
+      );
     }
   };
 

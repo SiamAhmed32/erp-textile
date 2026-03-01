@@ -49,8 +49,7 @@ export function BuyerDetailPage() {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load buyer";
+      "Could not load the buyer details. Please try again.";
     console.error("Load Buyer Error:", message);
   }, [buyerError]);
 
@@ -102,10 +101,8 @@ export function BuyerDetailPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to update buyer";
-      console.error("Update Buyer Error:", message);
+        "Could not update the buyer. Please try again.";
+      console.error("Update Buyer Error:", err);
     }
   };
 

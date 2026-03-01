@@ -1,54 +1,28 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { drawHeader } from "@/utils/pdfHeader";
 
-export const exportTrialBalanceToPdf = (data: any) => {
+export const exportTrialBalanceToPdf = async (data: any) => {
     const doc = new jsPDF("p", "mm", "a4");
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    let y = 20;
 
     const { report, company, period, generatedAt } = data;
 
     // --- Header Section ---
-    doc.setFontSize(22);
-    doc.setFont("helvetica", "bold");
-    doc.text(company?.name || "Trial Balance", pageWidth / 2, y, { align: "center" });
-    y += 8;
-
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    if (company?.address) {
-        doc.text(company.address, pageWidth / 2, y, { align: "center" });
-        y += 5;
-    }
-    if (company?.phone || company?.email) {
-        const contact = [company?.phone, company?.email].filter(Boolean).join(" | ");
-        doc.text(contact, pageWidth / 2, y, { align: "center" });
-        y += 5;
-    }
-
-    // --- Report Title ---
-    y += 5;
-    doc.setDrawColor(200);
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 10;
-
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(0);
-    doc.text("TRIAL BALANCE", margin, y);
+    const startY = await drawHeader(doc, company, "TRIAL BALANCE", generatedAt);
+    let y = startY;
 
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100);
     const periodText = `Period: ${format(new Date(period.startDate), "dd MMM yyyy")} to ${format(new Date(period.endDate), "dd MMM yyyy")}`;
-    doc.text(periodText, margin, y + 6);
-
+    doc.text(periodText, margin, y);
+    
     const genText = `Generated on: ${format(new Date(generatedAt), "dd/MM/yyyy HH:mm")}`;
-    doc.text(genText, pageWidth - margin, y + 6, { align: "right" });
-    y += 20;
+    doc.text(genText, pageWidth - margin, y, { align: "right" });
+    y += 10;
 
     // --- Table Data Preparation ---
     const tableRows = report.map((item: any) => [

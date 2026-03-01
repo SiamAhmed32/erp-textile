@@ -150,10 +150,8 @@ export function InvoiceTermsManagementPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to delete terms";
-      console.error("Delete Invoice Terms Error:", message);
+        "Could not delete the invoice terms. Please try again.";
+      console.error("Delete Invoice Terms Error:", err);
     } finally {
       setDeleteTarget(null);
     }
@@ -203,10 +201,8 @@ export function InvoiceTermsManagementPage() {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save terms";
-      console.error("Save Invoice Terms Error:", message);
+        "Could not save the invoice terms. Please try again.";
+      console.error("Save Invoice Terms Error:", err);
     }
   };
 

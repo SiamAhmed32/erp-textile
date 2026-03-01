@@ -34,7 +34,7 @@ const InputField: React.FC<InputFieldProps> = ({
     <div className="mb-4">
       {label && (
         <Label htmlFor={name}>
-          {label} {required && <span className="text-red-400">*</span>}
+          {label} {required && <span className="text-destructive">*</span>}
         </Label>
       )}
       <input
@@ -51,7 +51,7 @@ const InputField: React.FC<InputFieldProps> = ({
           error ? "border-destructive ring-destructive/20" : "border-input"
         }`}
       />
-      {error && <p className="text-sm text-red-400 mt-1">{error}</p>}
+      {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
   );
 };

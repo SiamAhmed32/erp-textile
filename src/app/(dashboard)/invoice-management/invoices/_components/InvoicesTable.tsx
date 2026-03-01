@@ -110,6 +110,12 @@ const InvoicesTable = ({
         ),
       },
       {
+        header: "Total Value",
+        className: "text-right font-mono font-bold text-indigo-600 w-[120px]",
+        accessor: (row: Invoice) =>
+          row.totalAmount ? `$${row.totalAmount.toLocaleString()}` : "-",
+      },
+      {
         header: "Terms",
         accessor: (row: Invoice) => row.invoiceTerms?.name || "-",
       },

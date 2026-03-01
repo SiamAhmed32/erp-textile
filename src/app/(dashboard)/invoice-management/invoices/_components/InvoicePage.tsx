@@ -2,10 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  useGetAllQuery,
-  usePatchMutation,
-} from "@/store/services/commonApi";
+import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
 import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
@@ -14,6 +11,7 @@ import { countByType, normalizeInvoice } from "./helpers";
 import { PageHeader, CustomModal } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notifications";
 
 const InvoicePage = () => {
   const router = useRouter();
@@ -74,9 +72,9 @@ const InvoicePage = () => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load invoices";
-    console.error("Load Invoices Error:", message);
+      "Could not load the invoice list. Please try again.";
+    notify.error(message);
+    console.error("Load Invoices Error:", parsed);
   }, [invoicesError]);
 
   const handleRowClick = useCallback(
@@ -108,12 +106,9 @@ const InvoicePage = () => {
     [router],
   );
 
-  const handleDelete = useCallback(
-    (row: Invoice) => {
-      setDeletingInvoice(row);
-    },
-    [],
-  );
+  const handleDelete = useCallback((row: Invoice) => {
+    setDeletingInvoice(row);
+  }, []);
 
   const confirmDelete = useCallback(async () => {
     if (!deletingInvoice) return;
@@ -124,11 +119,10 @@ const InvoicePage = () => {
         invalidate: ["invoices"],
       }).unwrap();
       refetch();
+      notify.success("Invoice deleted successfully.");
     } catch (err: any) {
-      console.error(
-        "Delete Invoice Error:",
-        err.message || "Failed to delete invoice",
-      );
+      notify.error("Could not delete the invoice. Please try again.");
+      console.error("Delete Invoice Error:", err);
     } finally {
       setDeletingInvoice(null);
     }
@@ -143,11 +137,10 @@ const InvoicePage = () => {
           invalidate: ["invoices"],
         }).unwrap();
         refetch();
+        notify.success("Invoice restored successfully.");
       } catch (err: any) {
-        console.error(
-          "Restore Invoice Error:",
-          err.message || "Failed to restore invoice",
-        );
+        notify.error("Could not restore the invoice. Please try again.");
+        console.error("Restore Invoice Error:", err);
       }
     },
     [patchItem, refetch],
@@ -259,16 +252,10 @@ const InvoicePage = () => {
             ? This is a soft delete operation.
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setDeletingInvoice(null)}
-            >
+            <Button variant="outline" onClick={() => setDeletingInvoice(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete
             </Button>
           </div>

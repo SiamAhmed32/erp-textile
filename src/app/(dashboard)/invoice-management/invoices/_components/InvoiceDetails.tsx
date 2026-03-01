@@ -2,13 +2,15 @@
 
 import { Container, PageHeader, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { useGetByIdQuery } from "@/store/services/commonApi";
+import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
+import { notify } from "@/lib/notifications";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ArrowLeft, Download, Pencil, Copy } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React from "react";
+import { drawHeader } from "@/utils/pdfHeader";
 import {
   formatDate,
   normalizeInvoice,
@@ -54,12 +56,13 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load invoice";
+      "Could not load the invoice details. Please try again.";
     setError(message);
+    notify.error(message);
+    console.error("Load Invoice Error:", parsed);
   }, [invoiceError]);
 
-  const handleExportPdf = React.useCallback(() => {
+  const handleExportPdf = React.useCallback(async () => {
     if (!invoice) return;
     const doc = new jsPDF();
     const order = invoice.order;
@@ -77,34 +80,14 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
       return `US Dollar ${numberToWords(amount)}`;
     };
 
-    // Header - Company Info
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    const companyName = company?.name || "Moon Textile.";
-    doc.text(companyName, 105, 15, { align: "center" });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    const companyAddress =
-      company?.address ||
-      "House No#16, Road No 01, Sector#10, Uttara, Dhaka-1230, Bangladesh.";
-    doc.text(companyAddress, 105, 20, { align: "center" });
-    const companyEmail = company?.email
-      ? `(Mail: ${company?.email})`
-      : "(Mail: moontes011@gmail.com)";
-    doc.text(companyEmail, 105, 24, { align: "center" });
-
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    const title = "Invoice";
-    const titleWidth = doc.getTextWidth(title);
-    doc.text(title, 105, 32, { align: "center" });
-    doc.line(105 - titleWidth / 2, 33, 105 + titleWidth / 2, 33); // Underline
-
-    // Info Grid
-    doc.setFontSize(9);
-    let currentY = 45;
+    // Header - Logo, Company Info, Title
+    const startY = await drawHeader(
+      doc,
+      company,
+      "Proforma Invoice",
+      invoice.date,
+    );
+    let currentY = startY;
 
     // Left Column: Buyer Info
     doc.setFont("helvetica", "bold");
@@ -184,22 +167,22 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-              {
-                content: item.fabricItem.styleNo || "-",
-                rowSpan: rows.length,
-                styles: { halign: "center", valign: "middle" },
-              },
-              {
-                content: item.fabricItem.discription || "-",
-                rowSpan: rows.length,
-                styles: { halign: "center", valign: "middle" },
-              },
-              {
-                content: item.fabricItem.width || "-",
-                rowSpan: rows.length,
-                styles: { halign: "center", valign: "middle" },
-              },
-            ]
+                {
+                  content: item.fabricItem.styleNo || "-",
+                  rowSpan: rows.length,
+                  styles: { halign: "center", valign: "middle" },
+                },
+                {
+                  content: item.fabricItem.discription || "-",
+                  rowSpan: rows.length,
+                  styles: { halign: "center", valign: "middle" },
+                },
+                {
+                  content: item.fabricItem.width || "-",
+                  rowSpan: rows.length,
+                  styles: { halign: "center", valign: "middle" },
+                },
+              ]
             : [];
 
         tableBody.push([
@@ -235,12 +218,12 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-              {
-                content: item.cartonItem.orderNo || "-",
-                rowSpan: rows.length,
-                styles: { halign: "center", valign: "middle" },
-              },
-            ]
+                {
+                  content: item.cartonItem.orderNo || "-",
+                  rowSpan: rows.length,
+                  styles: { halign: "center", valign: "middle" },
+                },
+              ]
             : [];
 
         tableBody.push([
@@ -277,12 +260,12 @@ const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
         const styleInfo =
           index === 0
             ? [
-              {
-                content: item.labelItem.styleNo || "-",
-                rowSpan: rows.length,
-                styles: { halign: "center", valign: "middle" },
-              },
-            ]
+                {
+                  content: item.labelItem.styleNo || "-",
+                  rowSpan: rows.length,
+                  styles: { halign: "center", valign: "middle" },
+                },
+              ]
             : [];
 
         tableBody.push([

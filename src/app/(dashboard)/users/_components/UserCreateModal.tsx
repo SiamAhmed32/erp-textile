@@ -101,7 +101,10 @@ const UserCreateModal = ({ open, onOpenChange }: Props) => {
       resetForm();
     } catch (error: any) {
       console.log(error.data);
-      notify.error(error?.data?.error?.message || "Failed to create user");
+      notify.error(
+        error?.data?.error?.message ||
+          "Could not create the user. Please try again.",
+      );
     }
   };
 

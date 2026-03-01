@@ -1,9 +1,11 @@
 import { TOKEN_NAME } from "@/lib/constants";
 import { LoginBodyType, LoginPayloadType, RootState } from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND;
-const tags = ["self"];
 import Cookies from "js-cookie";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND;
+const tags = ["self", "users"];
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: fetchBaseQuery({
@@ -12,7 +14,7 @@ export const authApi = createApi({
       const state = getState() as RootState;
       const token =
         state?.auth?.token ||
-        Cookies.get("token") || // ✅ js-cookie দিয়ে সহজে পাবেন
+        Cookies.get("token") ||
         (typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_NAME)
           : null);
@@ -23,7 +25,6 @@ export const authApi = createApi({
   }),
   tagTypes: tags,
   endpoints: (builder) => ({
-    // ✅ login matches old file (auth/login)
     login: builder.mutation<LoginPayloadType, LoginBodyType>({
       query: ({ email, password }) => ({
         url: `auth/login`,
@@ -33,7 +34,6 @@ export const authApi = createApi({
       invalidatesTags: ["self"],
     }),
 
-    // ✅ register matches old file (auth/register)
     register: builder.mutation<any, any>({
       query: (body) => ({
         url: `/auth/register`,
@@ -41,22 +41,30 @@ export const authApi = createApi({
         body,
         formData: true,
       }),
-      invalidatesTags: ["self", "users" as any],
+      invalidatesTags: ["self", "users"],
     }),
 
     getUsers: builder.query<
       any,
-      { search?: string; filters?: any; sort?: string }
+      {
+        search?: string;
+        filters?: any;
+        sort?: string;
+        page?: number;
+        limit?: number;
+      }
     >({
-      query: ({ search, filters, sort } = {}) => ({
+      query: ({ search, filters, sort, page, limit } = {}) => ({
         url: `/users`,
         params: {
           ...(search ? { search } : {}),
           ...(filters ? { filters: JSON.stringify(filters) } : {}),
           ...(sort ? { sort } : {}),
+          ...(page ? { page } : {}),
+          ...(limit ? { limit } : {}),
         },
       }),
-      providesTags: ["users" as any],
+      providesTags: ["users"],
     }),
 
     updateUser: builder.mutation<any, { id: string; body: any }>({
@@ -66,7 +74,7 @@ export const authApi = createApi({
         body,
         formData: true,
       }),
-      invalidatesTags: ["users" as any],
+      invalidatesTags: ["users"],
     }),
 
     deleteUser: builder.mutation<
@@ -78,7 +86,7 @@ export const authApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["users" as any],
+      invalidatesTags: ["users"],
     }),
 
     updatePassword: builder.mutation<any, any>({
@@ -129,7 +137,7 @@ export const authApi = createApi({
         method: "PUT",
         body: { field, preferences },
       }),
-      invalidatesTags: (result, error, { field }) => [field, "self"],
+      invalidatesTags: (_result, _error, { field }) => [field as any, "self"],
     }),
 
     patchUpdateSelf: builder.mutation<any, any>({

@@ -3,8 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { Container, Flex, PrimaryText } from "@/components/reusables";
+import {
+  Container,
+  PrimaryText,
+  FormHeader,
+  FormFooter,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
@@ -111,68 +115,78 @@ const InvoiceEdit = ({ id }: Props) => {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save invoice";
+        "Could not save the invoice. Please try again.";
       setError(message);
     } finally {
       setSaving(false);
     }
   };
 
+  // Dynamic Progress Calculation for Invoice
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack: (keyof InvoiceFormData)[] = [
+      "piNumber",
+      "date",
+      "orderId",
+      "invoiceTermsId",
+    ];
+
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      return !!val;
+    }).length;
+
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   return (
     <Container className="pb-10 pt-6">
-      <div className="mb-6">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/invoice-management/invoices/${id}`}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Link>
-        </Button>
-      </div>
+      <FormHeader
+        title="Edit Invoice"
+        backHref={`/invoice-management/invoices/${id}`}
+        breadcrumbItems={[
+          { label: "Dashboard", href: "/" },
+          { label: "Invoices", href: "/invoice-management/invoices" },
+          { label: "Edit" },
+        ]}
+        progress={progressData}
+      />
 
-      <div className="max-w-4xl mx-auto">
-        <div className="rounded-xl border bg-card text-card-foreground shadow-sm">
-          <div className="p-6 border-b">
-            <h2 className="text-xl font-semibold leading-none tracking-tight">
-              Edit Invoice
-            </h2>
-          </div>
-          <div className="p-6">
-            {error && (
-              <PrimaryText className="mb-4 text-sm text-destructive">
-                {error}
-              </PrimaryText>
-            )}
-            {loading && (
-              <PrimaryText className="mb-4 text-sm text-muted-foreground">
-                Loading invoice...
-              </PrimaryText>
-            )}
+      <div className="mt-8">
+        {error && (
+          <PrimaryText className="mb-6 text-sm text-destructive bg-destructive/10 p-4 rounded-xl border border-destructive/20 font-bold">
+            {error}
+          </PrimaryText>
+        )}
 
-            <InvoiceForm
-              data={draft}
-              orders={orders}
-              terms={terms}
-              onChange={handleChange}
-              errors={errors}
-              disableOrder
-            />
+        {loading && (
+          <PrimaryText className="mb-6 text-sm text-muted-foreground animate-pulse">
+            Loading invoice data...
+          </PrimaryText>
+        )}
 
-            <div className="mt-8 flex justify-end gap-3 border-t pt-6">
-              <Button variant="outline" asChild>
-                <Link href={`/invoice-management/invoices/${id}`}>Cancel</Link>
-              </Button>
-              <Button
-                className="bg-black text-white hover:bg-black/90"
-                onClick={handleSave}
-                disabled={saving}
-              >
-                {saving ? "Saving..." : "Save Changes"}
-              </Button>
-            </div>
-          </div>
-        </div>
+        <InvoiceForm
+          data={draft}
+          orders={orders}
+          terms={terms}
+          onChange={handleChange}
+          errors={errors}
+          disableOrder
+        />
+
+        <FormFooter
+          cancelHref={`/invoice-management/invoices/${id}`}
+          onSave={handleSave}
+          saving={saving}
+          saveLabel="Save Changes"
+          trustText="All invoice data is encrypted and stored according to industry standards."
+        />
       </div>
     </Container>
   );

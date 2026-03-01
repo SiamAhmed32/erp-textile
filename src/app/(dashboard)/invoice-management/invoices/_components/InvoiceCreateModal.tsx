@@ -77,9 +77,7 @@ const InvoiceCreateModal = ({ open, onOpenChange, onSuccess }: Props) => {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to create invoice";
+        "Could not create the invoice. Please try again.";
       notify.error(message);
     } finally {
       setSaving(false);

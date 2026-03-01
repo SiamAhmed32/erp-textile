@@ -159,7 +159,7 @@ export default function ProfilePage() {
       notify.error(
         error?.data?.message ||
           error?.data?.error?.message ||
-          "Failed to update password",
+          "Could not update your password. Please try again.",
       );
     }
   };

@@ -8,6 +8,7 @@ import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
 import { PrimaryHeading, CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notifications";
 
 const OrderPage = () => {
   const router = useRouter();
@@ -65,9 +66,9 @@ const OrderPage = () => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load orders";
-    console.error("Load Orders Error:", message);
+      "Could not load the order list. Please try again.";
+    notify.error(message);
+    console.error("Load Orders Error:", parsed);
   }, [ordersError]);
 
   const handleRowClick = useCallback(
@@ -107,34 +108,27 @@ const OrderPage = () => {
     [router],
   );
 
-  const handleDelete = useCallback(
-    (row: Order) => {
-      setDeletingOrder(row);
-    },
-    [],
-  );
+  const handleDelete = useCallback((row: Order) => {
+    setDeletingOrder(row);
+  }, []);
 
-  const confirmDelete = useCallback(
-    async () => {
-      if (!deletingOrder) return;
-      try {
-        await patchItem({
-          path: `orders/${deletingOrder.id}`,
-          body: { isDeleted: true },
-          invalidate: ["orders"],
-        }).unwrap();
-        refetch();
-      } catch (err: any) {
-        console.error(
-          "Delete Order Error:",
-          err.message || "Failed to delete order",
-        );
-      } finally {
-        setDeletingOrder(null);
-      }
-    },
-    [patchItem, refetch, deletingOrder],
-  );
+  const confirmDelete = useCallback(async () => {
+    if (!deletingOrder) return;
+    try {
+      await patchItem({
+        path: `orders/${deletingOrder.id}`,
+        body: { isDeleted: true },
+        invalidate: ["orders"],
+      }).unwrap();
+      refetch();
+      notify.success("Order deleted successfully.");
+    } catch (err: any) {
+      notify.error("Could not delete the order. Please try again.");
+      console.error("Delete Order Error:", err);
+    } finally {
+      setDeletingOrder(null);
+    }
+  }, [patchItem, refetch, deletingOrder]);
 
   const handleRestore = useCallback(
     async (row: Order) => {
@@ -145,11 +139,10 @@ const OrderPage = () => {
           invalidate: ["orders"],
         }).unwrap();
         refetch();
+        notify.success("Order restored successfully.");
       } catch (err: any) {
-        console.error(
-          "Restore Order Error:",
-          err.message || "Failed to restore order",
-        );
+        notify.error("Could not restore the order. Please try again.");
+        console.error("Restore Order Error:", err);
       }
     },
     [patchItem, refetch],
@@ -171,7 +164,9 @@ const OrderPage = () => {
         data={orders}
         loading={loading}
         error={
-          (ordersError as any)?.data?.message || (ordersError as any)?.error || ""
+          (ordersError as any)?.data?.message ||
+          (ordersError as any)?.error ||
+          ""
         }
         page={page}
         totalPages={totalPages}
@@ -217,16 +212,10 @@ const OrderPage = () => {
             ? This is a soft delete operation.
           </p>
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={() => setDeletingOrder(null)}
-            >
+            <Button variant="outline" onClick={() => setDeletingOrder(null)}>
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-            >
+            <Button variant="destructive" onClick={confirmDelete}>
               Delete
             </Button>
           </div>

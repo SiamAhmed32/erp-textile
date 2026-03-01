@@ -12,11 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useGetByIdQuery } from "@/store/services/commonApi";
+import { notify } from "@/lib/notifications";
 import { CompanyProfile, CompanyProfileApiItem } from "./types";
 import { isValidId, normalizeProfile } from "./helpers";
 import CompanyProfileReadOnly from "./CompanyProfileReadOnly";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { drawHeader } from "@/utils/pdfHeader";
 
 type Props = {
   id: string;
@@ -55,26 +57,29 @@ const CompanyProfileDetails = ({ id }: Props) => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load company profile";
-    console.error("Load Company Profile Error:", message);
+      "Could not load the company profile. Please try again.";
+    notify.error(message);
+    console.error("Load Company Profile Error:", parsed);
   }, [apiError]);
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!profile) return;
     const doc = new jsPDF();
-    const title = profile.name || "Company Profile";
-    doc.setFontSize(16);
-    doc.text(title, 14, 18);
-    doc.setFontSize(10);
-    doc.text("Company Profile Details", 14, 24);
+
+    // ── Company Header ──
+    const startY = await drawHeader(
+      doc,
+      profile,
+      "Company Profile Details",
+      new Date(),
+    );
+    let y = startY;
 
     const makeRows = (rows: Array<[string, string]>) =>
       rows.map(([label, value]) => [label, value || "-"]);
 
-    let startY = 30;
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Company Information", ""]],
       body: makeRows([
         ["Company Name", profile.name],
@@ -91,11 +96,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : 30;
+      : y + 30;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Contact Details", ""]],
       body: makeRows([
         ["Email", profile.email],
@@ -106,11 +112,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : startY;
+      : y;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Banking Details", ""]],
       body: makeRows([
         ["Bank Name", profile.bankName],
@@ -124,11 +131,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : startY;
+      : y;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Tax & Legal", ""]],
       body: makeRows([
         ["Tax ID", profile.taxId],
@@ -141,7 +149,10 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    const filename = `${title.replace(/\s+/g, "-").toLowerCase()}-profile.pdf`;
+    const safeName = (profile.name || "Company")
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    const filename = `${safeName}-profile.pdf`;
     doc.save(filename);
   };
 

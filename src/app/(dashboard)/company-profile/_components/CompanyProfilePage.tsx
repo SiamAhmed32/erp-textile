@@ -58,8 +58,7 @@ const CompanyProfilePage = () => {
     const message =
       apiErr?.data?.error?.message ||
       apiErr?.data?.message ||
-      apiErr?.error ||
-      "Failed to load company profiles";
+      "Could not load company profiles. Please refresh the page.";
     notify.error(message);
   }, [profilesError]);
 
@@ -136,25 +135,30 @@ const CompanyProfilePage = () => {
       setDeleteOpen(false);
       refetch();
     } catch (err: any) {
-      notify.error(err.message || "Failed to delete company profile");
+      notify.error("Could not delete the company profile. Please try again.");
     } finally {
       setDeleting(false);
     }
   }, [deleteTarget, patchItem, refetch]);
 
-  const handleRestore = useCallback(async (profile: CompanyProfile) => {
-    try {
-      await patchItem({
-        path: `company-profiles/${profile.id}`,
-        body: { isDeleted: false },
-        invalidate: ["company-profiles"],
-      }).unwrap();
-      notify.success("Company profile restored successfully");
-      refetch();
-    } catch (err: any) {
-      notify.error(err.message || "Failed to restore company profile");
-    }
-  }, [patchItem, refetch]);
+  const handleRestore = useCallback(
+    async (profile: CompanyProfile) => {
+      try {
+        await patchItem({
+          path: `company-profiles/${profile.id}`,
+          body: { isDeleted: false },
+          invalidate: ["company-profiles"],
+        }).unwrap();
+        notify.success("Company profile restored successfully");
+        refetch();
+      } catch (err: any) {
+        notify.error(
+          "Could not restore the company profile. Please try again.",
+        );
+      }
+    },
+    [patchItem, refetch],
+  );
 
   const handleToggleDeleted = useCallback(() => {
     setShowDeleted((prev) => !prev);
