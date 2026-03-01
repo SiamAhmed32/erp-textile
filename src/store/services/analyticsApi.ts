@@ -40,6 +40,13 @@ export const analyticsApi = mainApi.injectEndpoints({
             }),
             providesTags: ["buyers", "orders", "user"],
         }),
+
+        getFinancialOverview: builder.query({
+            query: () => ({
+                url: "analyticss/financial-overview",
+            }),
+            providesTags: ["accounting"],
+        }),
     }),
 });
 
@@ -49,4 +56,5 @@ export const {
     useGetOrderStatusAnalyticsQuery,
     useGetUserAnalyticsQuery,
     useGetSummaryAnalyticsQuery,
+    useGetFinancialOverviewQuery,
 } = analyticsApi;

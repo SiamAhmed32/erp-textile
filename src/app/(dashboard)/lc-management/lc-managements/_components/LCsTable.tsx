@@ -1,10 +1,24 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { SquarePen, Eye, FileDown, Trash2, RotateCcw } from "lucide-react";
+import {
+  SquarePen,
+  Eye,
+  FileDown,
+  Trash2,
+  RotateCcw,
+  ArrowUpDown,
+} from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +59,8 @@ export type LCsTableProps = {
   showDeleted?: boolean;
   onToggleDeleted?: () => void;
   onRestore?: (row: LCManagement) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
 };
 
 const LCsTable: React.FC<LCsTableProps> = ({
@@ -77,7 +93,33 @@ const LCsTable: React.FC<LCsTableProps> = ({
   showDeleted = false,
   onToggleDeleted = () => {},
   onRestore = () => {},
+  sort,
+  onSortChange,
 }) => {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
   const columns = useMemo(
     () => [
       {
@@ -275,6 +317,43 @@ const LCsTable: React.FC<LCsTableProps> = ({
               onChange={(e) => onMaxAmountChange(e.target.value)}
               className="h-11 w-24 border-slate-200"
             />
+          </div>
+
+          {/* Sort Group */}
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>

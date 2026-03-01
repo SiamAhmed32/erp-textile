@@ -250,11 +250,17 @@ function StakeholderFormModal({
 
 export default function LoanManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState({ field: "createdAt", dir: "desc" });
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
 
   const { data: loansResponse, isLoading: isLoadingLoans } = useGetAllQuery({
     path: "accounting/loans",
+    page,
+    limit: 10,
     search: search || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
@@ -428,35 +434,47 @@ export default function LoanManagementPage() {
               placeholder="Search lender entity or liability type..."
               className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <Button
             className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg"
-            onClick={() => {}}
+            onClick={() => setPage(1)}
           >
             Search
           </Button>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="w-full sm:min-w-[200px]">
+          {/* Sort Group */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
             <Select
               value={sort.field + "_" + sort.dir}
               onValueChange={(value: string) => {
                 const [f, d] = value.split("_");
                 setSort({ field: f, dir: d as any });
+                setPage(1);
               }}
             >
-              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
                 <SelectValue placeholder="Sort entries" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl shadow-xl">
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
                 {sortOptions.map((o) => (
                   <SelectItem
                     key={o.field + "_" + o.dir}
                     value={o.field + "_" + o.dir}
-                    className="text-xs font-semibold rounded-lg my-0.5"
+                    className="text-xs font-semibold py-2.5"
                   >
                     {o.label}
                   </SelectItem>
@@ -473,8 +491,8 @@ export default function LoanManagementPage() {
             <span>Audit Trail</span>
           </Button>
 
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
-            {loans.length} Records
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block whitespace-nowrap">
+            {(loansResponse as any)?.meta?.total || 0} Records
           </p>
         </div>
       </div>
@@ -483,6 +501,11 @@ export default function LoanManagementPage() {
         data={loans}
         columns={listColumns}
         isLoading={isLoadingLoans}
+        pagination={{
+          currentPage: page,
+          totalPages: (loansResponse as any)?.meta?.pagination?.totalPages || 1,
+          onPageChange: setPage,
+        }}
         scrollAreaHeight="h-[calc(100vh-350px)]"
         rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
       />

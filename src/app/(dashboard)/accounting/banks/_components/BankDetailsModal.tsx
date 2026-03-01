@@ -54,7 +54,7 @@ const BankDetailsModal = ({ open, onOpenChange, bank }: Props) => {
                             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-1">
                                 Account No.
                             </p>
-                            <span className="font-mono text-sm font-bold text-zinc-700 bg-white border border-zinc-200 px-2.5 py-1 rounded-md inline-block">
+                            <span className=" text-sm font-bold text-zinc-700 bg-white border border-zinc-200 px-2.5 py-1 rounded-md inline-block">
                                 {bank.accountNumber}
                             </span>
                         </div>
@@ -84,7 +84,7 @@ const BankDetailsModal = ({ open, onOpenChange, bank }: Props) => {
                     />
                     <DetailRow
                         label="Internal ID"
-                        value={<span className="font-mono text-[11px] text-zinc-400 break-all">{bank.id}</span>}
+                        value={<span className=" text-[11px] text-zinc-400 break-all">{bank.id}</span>}
                         icon={<Hash className="w-3.5 h-3.5" />}
                     />
                 </div>

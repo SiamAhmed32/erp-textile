@@ -16,8 +16,7 @@ import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Invoice } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import InvoiceActions from "./InvoiceActions";
-import StatsCard from "@/components/dashboard/StatsCard";
-import { FileText, Tag, Layers, Box, Trash2 } from "lucide-react";
+import { Trash2, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -30,7 +29,7 @@ type Props = {
   typeFilter: string;
   startDate: string;
   endDate: string;
-  counts: { all: number; FABRIC: number; LABEL_TAG: number; CARTON: number };
+
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onStatusFilterChange: (value: string) => void;
@@ -44,9 +43,11 @@ type Props = {
   onDuplicate: (row: Invoice) => void;
   onExport: (row: Invoice) => void;
   onDelete: (row: Invoice) => void;
-  showDeleted?: boolean;
-  onToggleDeleted?: () => void;
-  onRestore?: (row: Invoice) => void;
+  showDeleted: boolean;
+  onToggleDeleted: () => void;
+  onRestore: (row: Invoice) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
 };
 
 const InvoicesTable = ({
@@ -59,7 +60,7 @@ const InvoicesTable = ({
   typeFilter,
   startDate,
   endDate,
-  counts,
+
   onSearchChange,
   onSearchSubmit,
   onStatusFilterChange,
@@ -76,7 +77,33 @@ const InvoicesTable = ({
   showDeleted = false,
   onToggleDeleted = () => {},
   onRestore = () => {},
+  sort,
+  onSortChange,
 }: Props) => {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
   const columns = useMemo(
     () => [
       {
@@ -109,12 +136,7 @@ const InvoicesTable = ({
           </span>
         ),
       },
-      {
-        header: "Total Value",
-        className: "text-right font-mono font-bold text-indigo-600 w-[120px]",
-        accessor: (row: Invoice) =>
-          row.totalAmount ? `$${row.totalAmount.toLocaleString()}` : "-",
-      },
+
       {
         header: "Terms",
         accessor: (row: Invoice) => row.invoiceTerms?.name || "-",
@@ -147,13 +169,6 @@ const InvoicesTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="All Invoices" value={counts.all} icon={FileText} />
-        <StatsCard title="Labels & Tags" value={counts.LABEL_TAG} icon={Tag} />
-        <StatsCard title="Fabric" value={counts.FABRIC} icon={Layers} />
-        <StatsCard title="Cartons" value={counts.CARTON} icon={Box} />
-      </div>
-
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <Input
@@ -223,6 +238,43 @@ const InvoicesTable = ({
             }}
             placeholder="Invoice Dates"
           />
+
+          {/* Sort Group */}
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

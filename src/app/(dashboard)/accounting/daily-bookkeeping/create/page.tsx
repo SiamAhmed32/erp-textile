@@ -772,7 +772,7 @@ export default function BookkeepingCreatePage() {
                               valueAsNumber: true,
                             })}
                             className={cn(
-                              "font-mono bg-white h-11 rounded-xl border-zinc-200",
+                              " bg-white h-11 rounded-xl border-zinc-200",
                               errors.lines?.[index]?.amount &&
                                 "border-red-400 focus:ring-red-400",
                             )}
@@ -871,7 +871,7 @@ export default function BookkeepingCreatePage() {
                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
                     Total Debits
                   </span>
-                  <span className="font-mono font-black text-xl text-zinc-900 italic">
+                  <span className=" font-black text-xl text-zinc-900 italic">
                     ৳ {totals.debit.toLocaleString()}
                   </span>
                 </div>
@@ -879,7 +879,7 @@ export default function BookkeepingCreatePage() {
                   <span className="text-zinc-400 text-xs font-bold uppercase tracking-widest">
                     Total Credits
                   </span>
-                  <span className="font-mono font-black text-xl text-zinc-900 italic">
+                  <span className=" font-black text-xl text-zinc-900 italic">
                     ৳ {totals.credit.toLocaleString()}
                   </span>
                 </div>

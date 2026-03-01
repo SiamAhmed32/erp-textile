@@ -25,6 +25,7 @@ import {
 import { format } from "date-fns";
 import {
   AlertTriangle,
+  ArrowUpDown,
   CheckCircle2,
   Clock,
   Eye,
@@ -102,7 +103,7 @@ function ViewModal({
       title={
         <span className="text-sm font-semibold text-zinc-700">
           Voucher —{" "}
-          <span className="font-mono text-zinc-900">{entry.voucherNo}</span>
+          <span className="font-semibold text-zinc-900">{entry.voucherNo}</span>
         </span>
       }
       maxWidth="660px"
@@ -151,14 +152,14 @@ function ViewModal({
                   <p className="text-sm font-semibold text-zinc-900">
                     {line.accountHead.name}
                   </p>
-                  <p className="text-xs font-mono text-zinc-400">
+                  <p className="text-xs font-medium text-zinc-400">
                     {line.accountHead.code || "—"}
                   </p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span
                     className={cn(
-                      "font-mono text-sm font-bold",
+                      "text-sm font-bold",
                       line.type === "DEBIT"
                         ? "text-indigo-600"
                         : "text-zinc-700",
@@ -187,7 +188,7 @@ function ViewModal({
             <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
               Total
             </span>
-            <span className="font-mono font-bold">
+            <span className="font-bold">
               ৳ {total.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
@@ -252,11 +253,10 @@ function PostConfirmModal({
               This action is irreversible
             </p>
             <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-              Posting{" "}
-              <span className="font-mono font-bold">{entry?.voucherNo}</span>{" "}
-              will permanently update all account balances in the General
-              Ledger. You will not be able to edit or delete this entry
-              afterwards — only reverse it.
+              Posting <span className="font-bold">{entry?.voucherNo}</span> will
+              permanently update all account balances in the General Ledger. You
+              will not be able to edit or delete this entry afterwards — only
+              reverse it.
             </p>
           </div>
         </div>
@@ -306,10 +306,8 @@ function DeleteConfirmModal({
       <div className="space-y-4 pt-2">
         <p className="text-sm text-zinc-600 leading-relaxed">
           Are you sure you want to permanently delete draft voucher{" "}
-          <span className="font-mono font-bold text-zinc-900">
-            {entry?.voucherNo}
-          </span>
-          ? This cannot be undone.
+          <span className="font-bold text-zinc-900">{entry?.voucherNo}</span>?
+          This cannot be undone.
         </p>
         <div className="flex justify-end gap-2 pt-2 border-t border-zinc-100">
           <Button
@@ -363,7 +361,7 @@ function ReverseConfirmModal({
             </p>
             <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
               This will create a new journal entry that cancels the effect of{" "}
-              <span className="font-mono font-bold">{entry?.voucherNo}</span>.
+              <span className=" font-bold">{entry?.voucherNo}</span>.
               Both entries will remain in the ledger as a permanent audit
               record.
             </p>
@@ -399,6 +397,10 @@ export default function DailyBookkeepingList() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
 
   // Modal state
   const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null);
@@ -413,8 +415,8 @@ export default function DailyBookkeepingList() {
     limit: 10,
     search: search || undefined,
     sort: null,
-    sortBy: "createdAt",
-    sortOrder: "desc",
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(categoryFilter !== "all" ? { category: categoryFilter } : {}),
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
@@ -428,6 +430,45 @@ export default function DailyBookkeepingList() {
   const [reverseMutation, { isLoading: isReversing }] = usePostMutation();
 
   const entries = useMemo(() => (data?.data || []) as JournalEntry[], [data]);
+
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "date_desc",
+      label: "Transaction Date (Newest)",
+      field: "date",
+      dir: "desc",
+    },
+    {
+      value: "date_asc",
+      label: "Transaction Date (Oldest)",
+      field: "date",
+      dir: "asc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
+
+  const handleSortChange = (newSort: {
+    field: string;
+    dir: "asc" | "desc";
+  }) => {
+    setSort(newSort);
+    setPage(1);
+  };
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handlePost = async () => {
@@ -496,7 +537,7 @@ export default function DailyBookkeepingList() {
         header: "Voucher No.",
         accessor: (row: JournalEntry) => (
           <div className="flex flex-col">
-            <span className="font-mono text-sm font-semibold text-zinc-900">
+            <span className="text-sm font-semibold text-zinc-900">
               {row.voucherNo}
             </span>
             <span className="text-xs text-zinc-400 flex items-center gap-1 mt-0.5">
@@ -532,7 +573,7 @@ export default function DailyBookkeepingList() {
       {
         header: "Amount",
         accessor: (row: JournalEntry) => (
-          <span className="font-mono text-sm font-semibold text-zinc-900">
+          <span className="text-sm font-semibold text-zinc-900">
             ৳{" "}
             {getTotalAmount(row.lines).toLocaleString(undefined, {
               minimumFractionDigits: 2,
@@ -774,6 +815,43 @@ export default function DailyBookkeepingList() {
             startLabel="From Date"
             endLabel="To Date"
           />
+
+          {/* Sort Group */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  handleSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

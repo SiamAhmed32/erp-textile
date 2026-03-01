@@ -24,23 +24,29 @@ export const navMain = [
         url: "/",
         icon: Home,
     },
+    // {
+    //     title: "Order Management",
+    //     module: 'orders',
+    //     icon: ShoppingCart,
+    //     items: [
+    //         {
+    //             title: "Order List",
+    //             url: "/order-management/orders",
+    //             icon: ClipboardList,
+    //         },
+    //         // {
+    //         //     title: "Order Delivered",
+    //         //     url: "/order-management/delivered",
+    //         //     icon: Truck,
+    //         // },
+    //     ],
+    // },
     {
-        title: "Order Management",
+            title: "Order Management",
         module: 'orders',
-        icon: ShoppingCart,
-        items: [
-            {
-                title: "Order List",
-                url: "/order-management/orders",
+                        url: "/order-management/orders",
                 icon: ClipboardList,
             },
-            // {
-            //     title: "Order Delivered",
-            //     url: "/order-management/delivered",
-            //     icon: Truck,
-            // },
-        ],
-    },
     {
         title: "Buyers",
         module: 'buyers',
@@ -66,28 +72,34 @@ export const navMain = [
         icon: Building2,
     },
 
+    // {
+    //     title: "LC Management",
+    //     module: 'lcManagement',
+    //     icon: FileText,
+    //     items: [
+    //         {
+    //             title: "LC List",
+    //             url: "/lc-management/lc-managements",
+    //             icon: ClipboardList,
+    //         },
+    //     ],
+    // },
     {
         title: "LC Management",
         module: 'lcManagement',
-        icon: FileText,
-        items: [
-            {
-                title: "LC List",
-                url: "/lc-management/lc-managements",
-                icon: ClipboardList,
-            },
-        ],
+        url: "/lc-management/lc-managements",
+        icon: ClipboardList,
     },
     {
         title: "Accounting",
         module: 'accounts',
         icon: Calculator,
         items: [
-            {
-                title: "Overview",
-                url: "/accounting/overview",
-                icon: LayoutDashboard,
-            },
+            // {
+            //     title: "Overview",
+            //     url: "/accounting/overview",
+            //     icon: LayoutDashboard,
+            // },
 
             {
                 title: "Buyer Ledger",

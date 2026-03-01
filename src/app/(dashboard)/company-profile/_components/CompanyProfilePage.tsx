@@ -37,7 +37,12 @@ const CompanyProfilePage = () => {
     path: "company-profiles",
     page,
     limit: 10,
+    search: search || undefined,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
+      ...(typeFilter !== "all" ? { companyType: typeFilter } : {}),
+      ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(showDeleted ? { isDeleted: true } : {}),
     },
   });
@@ -49,58 +54,26 @@ const CompanyProfilePage = () => {
       ),
     [profilesPayload],
   );
-  const totalPages =
-    (profilesPayload as any)?.meta?.pagination?.totalPages || 1;
 
-  useEffect(() => {
-    const apiErr = profilesError as any;
-    if (!apiErr) return;
-    const message =
-      apiErr?.data?.error?.message ||
-      apiErr?.data?.message ||
-      "Could not load company profiles. Please refresh the page.";
-    notify.error(message);
-  }, [profilesError]);
+  const handleSearch = (val: string) => {
+    setSearch(val);
+    setPage(1);
+  };
 
-  const filteredProfiles = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-    const result = profiles.filter((profile: CompanyProfile) => {
-      const matchesType =
-        typeFilter === "all" || profile.companyType === typeFilter;
-      const matchesStatus =
-        statusFilter === "all" || profile.status === statusFilter;
-      if (!matchesType || !matchesStatus) return false;
-      if (!normalizedSearch) return true;
-      const haystack = [
-        profile.name,
-        profile.email,
-        profile.website,
-        profile.city,
-        profile.country,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return haystack.includes(normalizedSearch);
-    });
+  const handleTypeFilter = (val: string) => {
+    setTypeFilter(val);
+    setPage(1);
+  };
 
-    // Apply Sorting
-    result.sort((a: any, b: any) => {
-      const fieldA = a[sort.field];
-      const fieldB = b[sort.field];
+  const handleStatusFilter = (val: string) => {
+    setStatusFilter(val);
+    setPage(1);
+  };
 
-      if (typeof fieldA === "string") {
-        return sort.dir === "asc"
-          ? fieldA.localeCompare(fieldB)
-          : fieldB.localeCompare(fieldA);
-      }
-      return sort.dir === "asc"
-        ? new Date(fieldA).getTime() - new Date(fieldB).getTime()
-        : new Date(fieldB).getTime() - new Date(fieldA).getTime();
-    });
-
-    return result;
-  }, [profiles, search, statusFilter, typeFilter, sort]);
+  const handleSort = (newSort: { field: string; dir: "asc" | "desc" }) => {
+    setSort(newSort);
+    setPage(1);
+  };
 
   const handleRowClick = useCallback(
     (row: CompanyProfile) => {
@@ -168,18 +141,18 @@ const CompanyProfilePage = () => {
   return (
     <div className="space-y-4">
       <CompanyProfilesTable
-        data={filteredProfiles}
+        data={profiles}
         loading={loading}
         page={page}
-        totalPages={totalPages}
+        totalPages={profilesPayload?.meta?.pagination?.totalPages || 1}
         search={search}
         typeFilter={typeFilter}
         statusFilter={statusFilter}
-        onSearchChange={setSearch}
-        onTypeFilterChange={setTypeFilter}
-        onStatusFilterChange={setStatusFilter}
+        onSearchChange={handleSearch}
+        onTypeFilterChange={handleTypeFilter}
+        onStatusFilterChange={handleStatusFilter}
         sort={sort}
-        onSortChange={setSort}
+        onSortChange={handleSort}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onDelete={handleDelete}

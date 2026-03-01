@@ -99,7 +99,7 @@ export default function BankForm({
               {...register("accountNumber")}
               placeholder="e.g. 100-245-8890"
               className={cn(
-                "h-11 border-zinc-200 font-mono font-bold",
+                "h-11 border-zinc-200  font-bold",
                 errors.accountNumber &&
                   "border-red-500 focus-visible:ring-red-500",
               )}
@@ -137,7 +137,7 @@ export default function BankForm({
               {...register("swiftCode")}
               placeholder="e.g. CIBLBDDH"
               className={cn(
-                "h-11 border-zinc-200 font-mono",
+                "h-11 border-zinc-200  ",
                 errors.swiftCode && "border-red-500",
               )}
             />
@@ -151,7 +151,7 @@ export default function BankForm({
               {...register("routingNumber")}
               placeholder="e.g. 010260136"
               className={cn(
-                "h-11 border-zinc-200 font-mono",
+                "h-11 border-zinc-200  ",
                 errors.routingNumber && "border-red-500",
               )}
             />

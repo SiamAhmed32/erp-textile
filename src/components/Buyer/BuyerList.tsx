@@ -13,11 +13,12 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Buyer } from "./types";
 import { cn } from "@/lib/utils";
@@ -56,22 +57,6 @@ export function BuyerList({
   onRestore = () => {},
 }: Props) {
   const sortOptions = [
-    { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
-    { value: "name_desc", label: "Name Z → A", field: "name", dir: "desc" },
-    { value: "email_asc", label: "Email A → Z", field: "email", dir: "asc" },
-    { value: "email_desc", label: "Email Z → A", field: "email", dir: "desc" },
-    {
-      value: "location_asc",
-      label: "Location A → Z",
-      field: "location",
-      dir: "asc",
-    },
-    {
-      value: "location_desc",
-      label: "Location Z → A",
-      field: "location",
-      dir: "desc",
-    },
     {
       value: "createdAt_desc",
       label: "Newest First",
@@ -91,6 +76,10 @@ export function BuyerList({
       dir: "desc",
     },
   ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
 
   const columns = useMemo(
     () => [
@@ -219,52 +208,41 @@ export function BuyerList({
 
         {/* Right: Sort Group */}
         <div className="flex items-center gap-2 lg:justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  (sort.field !== "name" || sort.dir !== "asc") &&
-                    "bg-purple-50 border-purple-200 text-purple-700",
-                )}
-              >
-                <ArrowUpDown className="h-4 w-4 opacity-50" />
-                <span>
-                  {sort.field === "createdAt" && sort.dir === "desc"
-                    ? "Sort By"
-                    : sortOptions.find(
-                        (opt) =>
-                          opt.field === sort.field && opt.dir === sort.dir,
-                      )?.label}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
             >
-              {sortOptions.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() =>
-                    onSortChange({
-                      field: opt.field,
-                      dir: opt.dir as "asc" | "desc",
-                    })
-                  }
-                  className={cn(
-                    "rounded-lg my-0.5",
-                    sort.field === opt.field && sort.dir === opt.dir
-                      ? "bg-purple-50 text-purple-700"
-                      : "",
-                  )}
-                >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

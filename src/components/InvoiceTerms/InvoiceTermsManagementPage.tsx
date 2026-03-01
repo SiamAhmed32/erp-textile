@@ -98,8 +98,8 @@ export function InvoiceTermsManagementPage() {
     path: "invoice-terms",
     page,
     limit: 10,
-    search,
-    sort: sort.field ? `${sort.field}:${sort.dir}` : null,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
   });
   const terms = ((termsPayload as any)?.data || []) as InvoiceTerms[];
   const totalPages = (termsPayload as any)?.meta?.pagination?.totalPages || 1;

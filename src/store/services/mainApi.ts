@@ -1,4 +1,5 @@
 
+import Cookies from 'js-cookie';
 import { URL } from '@/lib/constants';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
@@ -44,7 +45,7 @@ export const mainApi = createApi({
 		baseUrl: `${URL.api}`,
 		prepareHeaders: (headers, { getState }) => {
 			const state = getState() as RootState;
-			const token = state.auth?.token || process.env.NEXT_PUBLIC_TOKEN;
+			const token = state.auth?.token || Cookies.get('token');
 
 			if (token) {
 				headers.set('Authorization', `Bearer ${token}`);

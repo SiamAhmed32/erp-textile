@@ -6,7 +6,7 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
 import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
-import { countByType, normalizeInvoice } from "./helpers";
+import { normalizeInvoice } from "./helpers";
 
 import { PageHeader, CustomModal } from "@/components/reusables";
 import { Plus } from "lucide-react";
@@ -29,6 +29,10 @@ const InvoicePage = () => {
   );
   const [showDeleted, setShowDeleted] = useState(false);
   const [deletingInvoice, setDeletingInvoice] = useState<Invoice | null>(null);
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
   const [patchItem] = usePatchMutation();
 
   //  console.log("edit invoice:", editInvoiceId);
@@ -48,6 +52,8 @@ const InvoicePage = () => {
     page,
     limit: 10,
     search: debouncedSearch || "",
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
@@ -156,8 +162,6 @@ const InvoicePage = () => {
     setPage(1);
   }, [search]);
 
-  const counts = useMemo(() => countByType(invoices), [invoices]);
-
   const handleCreateSuccess = useCallback(() => {
     refetch();
   }, [refetch]);
@@ -199,7 +203,6 @@ const InvoicePage = () => {
         typeFilter={typeFilter}
         startDate={startDate}
         endDate={endDate}
-        counts={counts}
         onSearchChange={setSearch}
         onSearchSubmit={handleSearchSubmit}
         onStatusFilterChange={setStatusFilter}
@@ -208,6 +211,8 @@ const InvoicePage = () => {
         onEndDateChange={setEndDate}
         onPageChange={setPage}
         onRowClick={handleRowClick}
+        sort={sort}
+        onSortChange={setSort}
         onView={handleView}
         onEdit={handleEdit}
         onDuplicate={handleDuplicate}

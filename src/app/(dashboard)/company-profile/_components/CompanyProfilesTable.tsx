@@ -6,11 +6,12 @@ import { ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PrimaryText } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { CompanyProfile } from "./types";
@@ -62,10 +63,30 @@ const CompanyProfilesTable = ({
   onRestore = () => {},
 }: Props) => {
   const sortOptions = [
-    { label: "Company Name (A-Z)", field: "name", dir: "asc" },
-    { label: "Created Date (Newest)", field: "createdAt", dir: "desc" },
-    { label: "Created Date (Oldest)", field: "createdAt", dir: "asc" },
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+    { value: "name_asc", label: "Title (A-Z)", field: "name", dir: "asc" },
   ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "name_asc";
 
   const columns = useMemo(
     () => [
@@ -174,162 +195,105 @@ const CompanyProfilesTable = ({
         {/* Right: Filters Group */}
         <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           {/* Type Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  typeFilter !== "all" &&
-                    "bg-blue-50 border-blue-200 text-blue-700",
-                )}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Type
+            </span>
+            <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
               >
-                <span>
-                  {typeFilter === "all"
-                    ? "All Types"
-                    : companyTypeOptions.find((o) => o.value === typeFilter)
-                        ?.label || typeFilter}
-                </span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
-            >
-              <DropdownMenuItem
-                onClick={() => onTypeFilterChange("all")}
-                className={cn(
-                  "rounded-lg my-0.5",
-                  typeFilter === "all" ? "bg-blue-50 text-blue-700" : "",
-                )}
-              >
-                All Types
-              </DropdownMenuItem>
-              {companyTypeOptions.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => onTypeFilterChange(opt.value)}
-                  className={cn(
-                    "rounded-lg my-0.5",
-                    typeFilter === opt.value ? "bg-blue-50 text-blue-700" : "",
-                  )}
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold py-2.5"
                 >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  All Types
+                </SelectItem>
+                {companyTypeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Status Filter */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  statusFilter !== "all" &&
-                    "bg-amber-50 border-amber-200 text-amber-700",
-                )}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Status
+            </span>
+            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[110px]">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
               >
-                <span>
-                  {statusFilter === "all"
-                    ? "All Status"
-                    : statusOptions.find((o) => o.value === statusFilter)
-                        ?.label || statusFilter}
-                </span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
-            >
-              <DropdownMenuItem
-                onClick={() => onStatusFilterChange("all")}
-                className={cn(
-                  "rounded-lg my-0.5",
-                  statusFilter === "all" ? "bg-amber-50 text-amber-700" : "",
-                )}
-              >
-                All Status
-              </DropdownMenuItem>
-              {statusOptions.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.value}
-                  onClick={() => onStatusFilterChange(opt.value)}
-                  className={cn(
-                    "rounded-lg my-0.5",
-                    statusFilter === opt.value
-                      ? "bg-amber-50 text-amber-700"
-                      : "",
-                  )}
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold py-2.5"
                 >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  All Status
+                </SelectItem>
+                {statusOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          {/* Sort Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium",
-                  (sort.field !== "name" || sort.dir !== "asc") &&
-                    "bg-purple-50 border-purple-200 text-purple-700",
-                )}
-              >
-                <ArrowUpDown className="h-4 w-4 opacity-50" />
-                <span>
-                  {sort.field === "name" && sort.dir === "asc"
-                    ? "Sort By"
-                    : sortOptions.find(
-                        (opt) =>
-                          opt.field === sort.field && opt.dir === sort.dir,
-                      )?.label}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+          {/* Sort Filter */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
+            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
             >
-              {[
-                { label: "Company Name (A-Z)", field: "name", dir: "asc" },
-                {
-                  label: "Created Date (Newest)",
-                  field: "createdAt",
-                  dir: "desc",
-                },
-                {
-                  label: "Created Date (Oldest)",
-                  field: "createdAt",
-                  dir: "asc",
-                },
-              ].map((opt, idx) => (
-                <DropdownMenuItem
-                  key={idx}
-                  onClick={() =>
-                    onSortChange({
-                      field: opt.field,
-                      dir: opt.dir as "asc" | "desc",
-                    })
-                  }
-                  className={cn(
-                    "rounded-lg my-0.5",
-                    sort.field === opt.field && sort.dir === opt.dir
-                      ? "bg-purple-50 text-purple-700"
-                      : "",
-                  )}
-                >
-                  {opt.label}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

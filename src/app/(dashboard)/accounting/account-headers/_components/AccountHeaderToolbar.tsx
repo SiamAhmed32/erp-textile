@@ -5,11 +5,12 @@ import { ChevronDown, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface AccountHeaderToolbarProps {
@@ -41,10 +42,6 @@ export default function AccountHeaderToolbar({
   ];
 
   const sortOptions = [
-    { value: "name_asc", label: "Name A → Z", field: "name", dir: "asc" },
-    { value: "name_desc", label: "Name Z → A", field: "name", dir: "desc" },
-    { value: "code_asc", label: "Code A → Z", field: "code", dir: "asc" },
-    { value: "code_desc", label: "Code Z → A", field: "code", dir: "desc" },
     {
       value: "createdAt_desc",
       label: "Newest First",
@@ -57,13 +54,17 @@ export default function AccountHeaderToolbar({
       field: "createdAt",
       dir: "asc",
     },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
   ];
 
-  const activeSortLabel = sortOptions.find(
-    (opt) => opt.field === sort.field && opt.dir === sort.dir,
-  )?.label;
-
-  const isDefaultSort = sort.field === "createdAt" && sort.dir === "desc";
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
 
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -88,79 +89,62 @@ export default function AccountHeaderToolbar({
 
       {/* Right: Filters Group */}
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">
-        {/* Type Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-semibold text-xs uppercase tracking-wider",
-                type !== "all" &&
-                  "bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200",
-              )}
+        {/* Type Filter */}
+        <div className="w-full sm:max-w-[160px]">
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-sm font-semibold text-xs uppercase tracking-wider">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent
+              align="end"
+              className="rounded-xl shadow-xl border-slate-200"
             >
-              <span>{typeOptions.find((t) => t.value === type)?.label}</span>
-              <ChevronDown className="h-4 w-4 opacity-50 text-slate-400" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
-          >
-            {typeOptions.map((opt) => (
-              <DropdownMenuItem
-                key={opt.value}
-                onClick={() => setType(opt.value)}
-                className={cn(
-                  "rounded-lg my-0.5 font-semibold text-xs tracking-wide transition-colors",
-                  type === opt.value
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "text-zinc-500 hover:bg-zinc-50",
-                )}
-              >
-                {opt.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              {typeOptions.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="text-xs font-semibold py-2.5"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        {/* Sort Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "h-11 px-4 gap-2 bg-white border-slate-200 rounded-lg font-semibold text-xs uppercase tracking-wider",
-                !isDefaultSort &&
-                  "bg-zinc-100 border-zinc-300 text-zinc-900 hover:bg-zinc-200",
-              )}
-            >
-              <ArrowUpDown className="h-4 w-4 opacity-50 text-slate-400" />
-              <span>{isDefaultSort ? "Sort by" : activeSortLabel}</span>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-48 rounded-xl shadow-xl border-slate-200/60 p-1"
+        {/* Sort Group */}
+        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm">
+          <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+            Sort By
+          </span>
+          <Select
+            value={currentSortValue}
+            onValueChange={(val) => {
+              const opt = sortOptions.find((o) => o.value === val);
+              if (opt)
+                setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
+            }}
           >
-            {sortOptions.map((opt) => (
-              <DropdownMenuItem
-                key={opt.value}
-                onClick={() =>
-                  setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" })
-                }
-                className={cn(
-                  "rounded-lg my-0.5 font-semibold text-xs tracking-wide transition-colors",
-                  sort.field === opt.field && sort.dir === opt.dir
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "text-zinc-500 hover:bg-zinc-50",
-                )}
-              >
-                {opt.label}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectValue placeholder="Newest First" />
+            </SelectTrigger>
+            <SelectContent
+              align="end"
+              className="rounded-xl shadow-xl border-slate-200"
+            >
+              {sortOptions.map((opt) => (
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  className="text-xs font-semibold py-2.5"
+                >
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </div>
   );

@@ -221,8 +221,7 @@ export default function TrialBalancePage() {
         </div>
       </div>
 
-      {/* Report Table Group */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden min-h-[400px]">
+      <div className="min-h-[400px]">
         {isLoading ? (
           <div className="p-8 space-y-4">
             {[...Array(8)].map((_, i) => (
@@ -239,7 +238,7 @@ export default function TrialBalancePage() {
             />
 
             {/* Premium Totals Footer - Sticky */}
-            <div className="bg-white border-t-2 border-slate-200 flex items-stretch h-12 sticky bottom-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+            <div className="bg-slate-50 border-t-2 border-slate-200 flex items-stretch h-12 sticky bottom-0 z-20 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
               <div className="w-[30%] flex items-center px-6 font-bold text-[10px] uppercase tracking-widest text-slate-500">
                 Grand Summary Totals
               </div>

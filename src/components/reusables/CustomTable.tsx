@@ -238,9 +238,9 @@ function CustomTable<T extends Record<string, any>>({
         </Table>
       </div>
       {pagination && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
+        <div className="mt-8 flex justify-center pb-4">
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent className="gap-2">
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
@@ -250,11 +250,11 @@ function CustomTable<T extends Record<string, any>>({
                       pagination.onPageChange(pagination.currentPage - 1);
                     }
                   }}
-                  className={
-                    pagination.currentPage <= 1
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
+                  className={cn(
+                    "text-slate-500 hover:text-zinc-900 transition-colors border-none bg-transparent hover:bg-zinc-50 font-bold text-xs uppercase tracking-wider",
+                    pagination.currentPage <= 1 &&
+                      "pointer-events-none opacity-40",
+                  )}
                 />
               </PaginationItem>
               {renderPaginationItems()}
@@ -267,11 +267,11 @@ function CustomTable<T extends Record<string, any>>({
                       pagination.onPageChange(pagination.currentPage + 1);
                     }
                   }}
-                  className={
-                    pagination.currentPage >= pagination.totalPages
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
+                  className={cn(
+                    "text-slate-500 hover:text-zinc-900 transition-colors border-none bg-transparent hover:bg-zinc-50 font-bold text-xs uppercase tracking-wider",
+                    pagination.currentPage >= pagination.totalPages &&
+                      "pointer-events-none opacity-40",
+                  )}
                 />
               </PaginationItem>
             </PaginationContent>

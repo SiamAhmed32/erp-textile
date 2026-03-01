@@ -11,11 +11,13 @@ const coerceType = (value?: string | null): ProductType =>
 
 export const normalizeInvoice = (item: InvoiceApiItem): Invoice => {
     let totalAmount = 0;
-    item.order?.orderItems?.forEach((oi) => {
-        totalAmount += Number(oi.fabricItem?.totalAmount || 0);
-        totalAmount += Number(oi.labelItem?.totalAmount || 0);
-        totalAmount += Number(oi.cartonItem?.totalAmount || 0);
-    });
+    if (Array.isArray(item.order?.orderItems)) {
+        item.order.orderItems.forEach((oi: any) => {
+            totalAmount += Number(oi.fabricItem?.totalAmount || 0);
+            totalAmount += Number(oi.labelItem?.totalAmount || 0);
+            totalAmount += Number(oi.cartonItem?.totalAmount || 0);
+        });
+    }
 
     return {
         id: item.id ?? "",

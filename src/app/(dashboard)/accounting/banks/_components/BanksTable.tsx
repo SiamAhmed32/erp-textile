@@ -52,7 +52,7 @@ const BanksTable = ({
         header: "Account Logic",
         accessor: (row: Bank) => (
           <div className="flex flex-col">
-            <span className="font-mono font-bold text-zinc-700 text-sm tracking-tight">
+            <span className=" font-bold text-zinc-700 text-sm tracking-tight">
               {row.accountNumber.replace(/(.{4})/g, "$1 ")}
             </span>
             <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
@@ -70,7 +70,7 @@ const BanksTable = ({
                 <span className="text-[9px] font-bold text-zinc-400 uppercase">
                   Swift
                 </span>
-                <span className="font-mono text-[11px] font-semibold text-zinc-600">
+                <span className=" text-[11px] font-semibold text-zinc-600">
                   {row.swiftCode}
                 </span>
               </div>
@@ -80,7 +80,7 @@ const BanksTable = ({
                 <span className="text-[9px] font-bold text-zinc-400 uppercase">
                   Rtn
                 </span>
-                <span className="font-mono text-[11px] font-semibold text-zinc-600">
+                <span className=" text-[11px] font-semibold text-zinc-600">
                   {row.routingNumber}
                 </span>
               </div>
@@ -94,7 +94,7 @@ const BanksTable = ({
           <div className="flex flex-col">
             <span
               className={cn(
-                "font-mono font-bold text-[14px] tracking-tight",
+                " font-bold text-[14px] tracking-tight",
                 row.balance < 0 ? "text-rose-600" : "text-emerald-600",
               )}
             >

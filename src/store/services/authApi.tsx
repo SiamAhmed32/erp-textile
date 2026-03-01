@@ -19,7 +19,10 @@ export const authApi = createApi({
           ? localStorage.getItem(TOKEN_NAME)
           : null);
       if (token) {
-        headers.set("Authorization", `${token}`);
+        headers.set(
+          "Authorization",
+          token.startsWith("Bearer") ? token : `Bearer ${token}`,
+        );
       }
     },
   }),
@@ -50,16 +53,30 @@ export const authApi = createApi({
         search?: string;
         filters?: any;
         sort?: string;
+        sortBy?: string;
+        sortOrder?: string;
         page?: number;
         limit?: number;
       }
     >({
-      query: ({ search, filters, sort, page, limit } = {}) => ({
+      query: ({
+        search,
+        filters,
+        sort,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      } = {}) => ({
         url: `/users`,
         params: {
           ...(search ? { search } : {}),
           ...(filters ? { filters: JSON.stringify(filters) } : {}),
-          ...(sort ? { sort } : {}),
+          ...(sortBy
+            ? { sortBy, sortOrder: sortOrder || "desc" }
+            : sort
+              ? { sort }
+              : {}),
           ...(page ? { page } : {}),
           ...(limit ? { limit } : {}),
         },

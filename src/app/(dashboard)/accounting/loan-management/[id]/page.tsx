@@ -444,7 +444,7 @@ export default function LoanDetailPage({
             Net Outstandings
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-white font-mono">
+            <span className="text-2xl font-black text-white  ">
               {fmt(stats.outstanding)}
             </span>
           </div>
@@ -465,7 +465,7 @@ export default function LoanDetailPage({
             <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
               Total Installments
             </span>
-            <p className="font-bold text-zinc-900 font-mono text-sm">
+            <p className="font-bold text-zinc-900  text-sm">
               {loan.repayments?.length || 0}
             </p>
           </div>

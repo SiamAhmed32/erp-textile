@@ -247,7 +247,7 @@ export default function RecordPaymentModal({
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="font-mono text-lg font-bold h-12 border-zinc-200 focus:border-zinc-400"
+              className=" text-lg font-bold h-12 border-zinc-200 focus:border-zinc-400"
               required
             />
           </div>

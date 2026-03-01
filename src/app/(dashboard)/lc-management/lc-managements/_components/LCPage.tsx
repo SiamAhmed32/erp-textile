@@ -21,6 +21,10 @@ const LCPage = () => {
   const [minAmount, setMinAmount] = useState("");
   const [maxAmount, setMaxAmount] = useState("");
   const [showDeleted, setShowDeleted] = useState(false);
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
   const [deletingLC, setDeletingLC] = useState<LCManagement | null>(null);
   const [patchItem] = usePatchMutation();
 
@@ -39,6 +43,8 @@ const LCPage = () => {
     page,
     limit: 10,
     search: debouncedSearch || "",
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(dateFrom ? { startDate: dateFrom } : {}),
       ...(dateTo ? { endDate: dateTo } : {}),
@@ -177,6 +183,8 @@ const LCPage = () => {
         onEdit={handleEdit}
         onExport={handleExport}
         onDelete={handleDelete}
+        sort={sort}
+        onSortChange={setSort}
         showDeleted={showDeleted}
         onToggleDeleted={handleToggleDeleted}
         onRestore={handleRestore}

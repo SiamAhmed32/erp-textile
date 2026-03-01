@@ -22,6 +22,10 @@ const OrderPage = () => {
   const [dateTo, setDateTo] = useState("");
   const [deliveryDateFrom, setDeliveryDateFrom] = useState("");
   const [deliveryDateTo, setDeliveryDateTo] = useState("");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [patchItem] = usePatchMutation();
 
@@ -40,11 +44,13 @@ const OrderPage = () => {
     page,
     limit: 10,
     search: debouncedSearch || "",
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
-      ...(dateFrom ? { dateFrom } : {}),
-      ...(dateTo ? { dateTo } : {}),
+      ...(dateFrom ? { startDate: dateFrom } : {}),
+      ...(dateTo ? { endDate: dateTo } : {}),
       ...(deliveryDateFrom ? { deliveryDateFrom } : {}),
       ...(deliveryDateTo ? { deliveryDateTo } : {}),
       ...(showDeleted ? { isDeleted: true } : {}),
@@ -185,6 +191,8 @@ const OrderPage = () => {
         onDateToChange={setDateTo}
         onDeliveryDateFromChange={setDeliveryDateFrom}
         onDeliveryDateToChange={setDeliveryDateTo}
+        sort={sort}
+        onSortChange={setSort}
         onPageChange={setPage}
         onRowClick={handleRowClick}
         onView={handleView}

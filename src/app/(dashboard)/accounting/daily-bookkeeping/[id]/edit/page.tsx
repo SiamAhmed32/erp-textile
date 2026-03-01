@@ -306,7 +306,7 @@ export default function BookkeepingEditPage() {
             </p>
             <p className="text-xs text-amber-700 mt-1">
               Voucher{" "}
-              <span className="font-mono font-bold">{entry.voucherNo}</span> is
+              <span className=" font-bold">{entry.voucherNo}</span> is
               already POSTED and is locked. To correct it, use the Reverse
               action from the list page.
             </p>
@@ -591,7 +591,7 @@ export default function BookkeepingEditPage() {
                             valueAsNumber: true,
                           })}
                           className={cn(
-                            "font-mono bg-white",
+                            " bg-white",
                             errors.lines?.[index]?.amount && "border-red-400",
                           )}
                         />
@@ -676,13 +676,13 @@ export default function BookkeepingEditPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-3 border-b border-white/10">
                   <span className="text-zinc-400 text-sm">Total Debits</span>
-                  <span className="font-mono font-bold text-lg">
+                  <span className=" font-bold text-lg">
                     ৳ {totals.debit.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-3 border-b border-white/10">
                   <span className="text-zinc-400 text-sm">Total Credits</span>
-                  <span className="font-mono font-bold text-lg">
+                  <span className=" font-bold text-lg">
                     ৳ {totals.credit.toLocaleString()}
                   </span>
                 </div>

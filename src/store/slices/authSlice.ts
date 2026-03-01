@@ -29,12 +29,8 @@ type LoginPayloadType = {
 
 // Define the initial state
 const initialState: AuthStateType = {
-	token:
-		typeof window !== 'undefined' && localStorage.getItem(TOKEN_NAME) != null
-			? localStorage.getItem(TOKEN_NAME)
-			: null,
-	loggedIn:
-		typeof window !== 'undefined' && localStorage.getItem(TOKEN_NAME) !== null,
+	token: Cookies.get('token') || null,
+	loggedIn: !!Cookies.get('token'),
 	user:
 		typeof window !== 'undefined' && localStorage.getItem("user") != null
 			? decryptData(localStorage.getItem("user"))

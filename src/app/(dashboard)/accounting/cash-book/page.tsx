@@ -10,10 +10,17 @@ import {
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, History, Eye } from "lucide-react";
+import { Search, Plus, History, Eye, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useGetAllQuery } from "@/store/services/commonApi";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import TransactionEntryModal from "./_components/TransactionEntryModal";
 
 const fmt = (n: number) =>
@@ -21,12 +28,55 @@ const fmt = (n: number) =>
 
 export default function CashBookPage() {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
+
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+    { value: "name_asc", label: "Name (A-Z)", field: "name", dir: "asc" },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
+
+  const handleSortChange = (newSort: {
+    field: string;
+    dir: "asc" | "desc";
+  }) => {
+    setSort(newSort);
+    setPage(1);
+  };
 
   const { data: apiResponse, isFetching: loading } = useGetAllQuery({
     path: "moi-cash-books/summaries",
+    page,
+    limit: 10,
     search,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       startDate: dateRange.start,
       endDate: dateRange.end,
@@ -121,13 +171,12 @@ export default function CashBookPage() {
     <Container className="pb-10 pt-4">
       <PageHeader
         title="MOI (Staff Cash Book)"
-        description="Monitor advances, settlements and expenses for existing staff members."
         breadcrumbItems={[
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Cash Book" },
         ]}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="items-center gap-2 hidden lg:flex">
             <Button
               className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
               onClick={() => setIsEntryModalOpen(true)}
@@ -148,7 +197,10 @@ export default function CashBookPage() {
               <Input
                 placeholder="Search staff members..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 className="h-11 bg-white border-slate-200 rounded-lg pl-10 shadow-sm"
               />
             </div>
@@ -164,20 +216,62 @@ export default function CashBookPage() {
             <DateRangeFilter
               start={dateRange.start}
               end={dateRange.end}
-              onFilterChange={setDateRange}
+              onFilterChange={(range) => {
+                setDateRange(range);
+                setPage(1);
+              }}
             />
+
+            {/* Sort Group */}
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+              <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+                Sort By
+              </span>
+              <Select
+                value={currentSortValue}
+                onValueChange={(val) => {
+                  const opt = sortOptions.find((o) => o.value === val);
+                  if (opt)
+                    handleSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    });
+                }}
+              >
+                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                  <SelectValue placeholder="Newest First" />
+                </SelectTrigger>
+                <SelectContent
+                  align="end"
+                  className="rounded-xl shadow-xl border-slate-200"
+                >
+                  {sortOptions.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs font-semibold py-2.5"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        {/* Table - Standard Design */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <CustomTable
-            data={staffMembers}
-            columns={columns}
-            isLoading={loading}
-            scrollAreaHeight="h-[calc(100vh-320px)]"
-          />
-        </div>
+        <CustomTable
+          data={staffMembers}
+          columns={columns}
+          isLoading={loading}
+          pagination={{
+            currentPage: page,
+            totalPages: (apiResponse as any)?.meta?.pagination?.totalPages || 1,
+            onPageChange: setPage,
+          }}
+          scrollAreaHeight="h-[calc(100vh-320px)]"
+        />
       </div>
 
       <TransactionEntryModal

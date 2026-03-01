@@ -115,7 +115,7 @@ const AccountHeaderDetailsModal = ({ open, onOpenChange, header }: Props) => {
                     <DetailRow
                         label="System UUID"
                         value={
-                            <span className="font-mono text-[11px] text-zinc-400 break-all">
+                            <span className=" text-[11px] text-zinc-400 break-all">
                                 {header.id}
                             </span>
                         }

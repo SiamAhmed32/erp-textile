@@ -74,7 +74,8 @@ export function BuyerManagementPage() {
     page,
     limit: 10,
     search: search || undefined,
-    sort: sort.field ? `${sort.field}:${sort.dir}` : undefined,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(showDeleted ? { isDeleted: true } : {}),
     },

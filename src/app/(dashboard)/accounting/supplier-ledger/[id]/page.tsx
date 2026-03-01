@@ -96,7 +96,7 @@ export default function SupplierLedgerDetailPage() {
             {
                 header: "Voucher",
                 accessor: (row: LedgerEntry) => (
-                    <span className="font-mono text-sm font-semibold text-zinc-900">
+                    <span className=" text-sm font-semibold text-zinc-900">
                         {row.voucherNo}
                     </span>
                 ),
@@ -131,7 +131,7 @@ export default function SupplierLedgerDetailPage() {
                 accessor: (row: LedgerEntry) => (
                     <div className="text-right">
                         <span className={cn(
-                            "font-mono text-sm font-bold",
+                            " text-sm font-bold",
                             row.debit > 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
                             {row.debit > 0 ? "-" : "+"} {fmt(row.debit || row.credit)}
@@ -146,7 +146,7 @@ export default function SupplierLedgerDetailPage() {
                     <div className="text-right">
                         <span
                             className={cn(
-                                "font-mono text-sm font-bold",
+                                " text-sm font-bold",
                                 row.balance > 0
                                     ? "text-rose-600"
                                     : row.balance < 0
@@ -204,7 +204,7 @@ export default function SupplierLedgerDetailPage() {
                         Total Paid
                     </p>
                     <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-emerald-600 font-mono">
+                        <p className="text-3xl font-bold text-emerald-600  ">
                             {fmt(totalDebit)}
                         </p>
                         <ArrowDownLeft className="text-emerald-200 w-8 h-8 opacity-50" />
@@ -216,7 +216,7 @@ export default function SupplierLedgerDetailPage() {
                         Total Billed
                     </p>
                     <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-rose-600 font-mono">
+                        <p className="text-3xl font-bold text-rose-600  ">
                             {fmt(totalCredit)}
                         </p>
                         <ArrowUpRight className="text-rose-200 w-8 h-8 opacity-50" />
@@ -238,7 +238,7 @@ export default function SupplierLedgerDetailPage() {
                     </p>
                     <p
                         className={cn(
-                            "text-3xl font-bold font-mono",
+                            "text-3xl font-bold  ",
                             closingBalance > 0
                                 ? "text-rose-700"
                                 : closingBalance < 0
