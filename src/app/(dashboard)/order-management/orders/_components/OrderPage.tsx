@@ -30,7 +30,10 @@ const OrderPage = () => {
   const [patchItem] = usePatchMutation();
 
   useEffect(() => {
-    const handle = setTimeout(() => setDebouncedSearch(search), 300);
+    const handle = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
     return () => clearTimeout(handle);
   }, [search]);
 
@@ -164,6 +167,51 @@ const OrderPage = () => {
     setPage(1);
   }, [search]);
 
+  const handleStatusChange = useCallback((val: string) => {
+    setStatusFilter(val);
+    setPage(1);
+  }, []);
+
+  const handleTypeChange = useCallback((val: string) => {
+    setTypeFilter(val);
+    setPage(1);
+  }, []);
+
+  const handleDateRangeChange = useCallback((from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateRangeChange = useCallback(
+    (from: string, to: string) => {
+      setDeliveryDateFrom(from);
+      setDeliveryDateTo(to);
+      setPage(1);
+    },
+    [],
+  );
+
+  const handleDateFromChange = useCallback((val: string) => {
+    setDateFrom(val);
+    setPage(1);
+  }, []);
+
+  const handleDateToChange = useCallback((val: string) => {
+    setDateTo(val);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateFromChange = useCallback((val: string) => {
+    setDeliveryDateFrom(val);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateToChange = useCallback((val: string) => {
+    setDeliveryDateTo(val);
+    setPage(1);
+  }, []);
+
   return (
     <>
       <OrdersTable
@@ -185,12 +233,12 @@ const OrderPage = () => {
         deliveryDateTo={deliveryDateTo}
         onSearchChange={setSearch}
         onSearchSubmit={handleSearchSubmit}
-        onStatusFilterChange={setStatusFilter}
-        onTypeFilterChange={setTypeFilter}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
-        onDeliveryDateFromChange={setDeliveryDateFrom}
-        onDeliveryDateToChange={setDeliveryDateTo}
+        onStatusFilterChange={handleStatusChange}
+        onTypeFilterChange={handleTypeChange}
+        onDateFromChange={handleDateFromChange}
+        onDateToChange={handleDateToChange}
+        onDeliveryDateFromChange={handleDeliveryDateFromChange}
+        onDeliveryDateToChange={handleDeliveryDateToChange}
         sort={sort}
         onSortChange={setSort}
         onPageChange={setPage}

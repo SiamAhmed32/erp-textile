@@ -119,7 +119,7 @@ export function BuyerManagementPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await putItem({
+      await patchItem({
         path: `buyers/${deleteTarget.id}`,
         body: { isDeleted: true },
         invalidate: ["buyers"],
@@ -138,7 +138,7 @@ export function BuyerManagementPage() {
 
   const handleRestore = async (buyer: Buyer) => {
     try {
-      await putItem({
+      await patchItem({
         path: `buyers/${buyer.id}`,
         body: { isDeleted: false },
         invalidate: ["buyers"],

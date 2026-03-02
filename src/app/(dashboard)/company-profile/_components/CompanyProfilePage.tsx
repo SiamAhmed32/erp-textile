@@ -19,8 +19,8 @@ const CompanyProfilePage = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
-    field: "name",
-    dir: "asc",
+    field: "createdAt",
+    dir: "desc",
   });
   const [deleteTarget, setDeleteTarget] = useState<CompanyProfile | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);

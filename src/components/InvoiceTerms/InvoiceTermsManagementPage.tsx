@@ -140,7 +140,7 @@ export function InvoiceTermsManagementPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await putItem({
+      await patchItem({
         path: `invoice-terms/${deleteTarget.id}`,
         body: { isDeleted: true },
         invalidate: ["invoice-terms"],

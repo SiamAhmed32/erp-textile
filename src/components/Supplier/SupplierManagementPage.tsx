@@ -120,7 +120,7 @@ export function SupplierManagementPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await putItem({
+      await patchItem({
         path: `suppliers/${deleteTarget.id}`,
         body: { isDeleted: true },
         invalidate: ["suppliers"],
@@ -140,7 +140,7 @@ export function SupplierManagementPage() {
 
   const handleRestore = async (supplier: Supplier) => {
     try {
-      await putItem({
+      await patchItem({
         path: `suppliers/${supplier.id}`,
         body: { isDeleted: false },
         invalidate: ["suppliers"],

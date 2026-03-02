@@ -201,6 +201,7 @@ const OrderCreate = ({ duplicateId }: Props) => {
       "companyProfileId",
       "productType",
       "deliveryDate",
+      "status",
     ];
 
     const total = fieldsToTrack.length;

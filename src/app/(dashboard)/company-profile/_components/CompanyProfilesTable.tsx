@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
+import { ChevronDown, ArrowUpDown, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -86,7 +86,7 @@ const CompanyProfilesTable = ({
 
   const currentSortValue =
     sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
-      ?.value || "name_asc";
+      ?.value || "createdAt_desc";
 
   const columns = useMemo(
     () => [
@@ -103,9 +103,6 @@ const CompanyProfilesTable = ({
               >
                 {row.name || "Unnamed Company"}
               </Link>
-              <p className="text-xs text-muted-foreground">
-                {row.city || "-"} {row.country ? `, ${row.country}` : ""}
-              </p>
             </div>
           </div>
         ),
@@ -162,24 +159,25 @@ const CompanyProfilesTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         {/* Left: Search Group */}
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
           <div className="relative flex-1">
             <Input
-              placeholder="Search by company name, email, or website"
+              placeholder="Search..."
               value={search}
               onChange={(e) => onSearchChange(e.target.value)}
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg">
-            Search
+          <Button className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0">
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-4 gap-2 rounded-lg font-medium",
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
@@ -188,19 +186,21 @@ const CompanyProfilesTable = ({
             }
           >
             <Trash2 className="h-4 w-4" />
-            {showDeleted ? "Exit Trash" : "Trash"}
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
 
         {/* Right: Filters Group */}
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
           {/* Type Filter */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Type
             </span>
             <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[120px]">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent
@@ -227,12 +227,12 @@ const CompanyProfilesTable = ({
           </div>
 
           {/* Status Filter */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Status
             </span>
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[110px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[110px]">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent
@@ -259,9 +259,9 @@ const CompanyProfilesTable = ({
           </div>
 
           {/* Sort Filter */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
             <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Sort By
             </span>
             <Select
@@ -275,7 +275,7 @@ const CompanyProfilesTable = ({
                   });
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Sort By" />
               </SelectTrigger>
               <SelectContent

@@ -5,7 +5,11 @@ import { PageHeader } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import StatsCard from "@/components/dashboard/StatsCard";
 import { Button } from "@/components/ui/button";
-import { useGetAllQuery, usePutMutation } from "@/store/services/commonApi";
+import {
+  useGetAllQuery,
+  usePutMutation,
+  usePatchMutation,
+} from "@/store/services/commonApi";
 import { Bank } from "./types";
 import BankToolbar from "./BankToolbar";
 import BanksTable from "./BanksTable";
@@ -37,6 +41,7 @@ const BanksPage = () => {
   });
 
   const [putItem] = usePutMutation();
+  const [patchItem] = usePatchMutation();
 
   const handleSearchSubmit = () => {
     setSearch(searchInput);
@@ -59,7 +64,7 @@ const BanksPage = () => {
   const handleArchive = async (bank: Bank) => {
     const isArchiving = !bank.isDeleted;
     try {
-      await putItem({
+      await patchItem({
         path: `accounting/banks/${bank.id}`,
         body: { isDeleted: isArchiving },
         invalidate: ["accounting/banks"],

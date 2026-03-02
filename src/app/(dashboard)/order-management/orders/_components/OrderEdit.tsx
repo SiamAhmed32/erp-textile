@@ -207,6 +207,7 @@ const OrderEdit = ({ id }: Props) => {
       "companyProfileId",
       "productType",
       "deliveryDate",
+      "status",
     ];
 
     const total = fieldsToTrack.length;

@@ -185,24 +185,32 @@ export function SupplierList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         {/* Left: Search Group */}
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
           <div className="relative flex-1">
             <Input
-              placeholder="Search supplier name, email, code..."
+              placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                onPageChange(1);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && onPageChange(1)}
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg">
-            Search
+          <Button
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            onClick={() => onPageChange(1)}
+          >
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-4 gap-2 rounded-lg font-medium",
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
@@ -211,15 +219,17 @@ export function SupplierList({
             }
           >
             <Trash2 className="h-4 w-4" />
-            {showDeleted ? "Exit Trash" : "Trash"}
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
 
-        {/* Right: Sort Group */}
-        <div className="flex items-center gap-2 lg:justify-end">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm">
+        {/* Right: Filters Group */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
             <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Sort By
             </span>
             <Select
@@ -233,7 +243,7 @@ export function SupplierList({
                   });
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Newest First" />
               </SelectTrigger>
               <SelectContent

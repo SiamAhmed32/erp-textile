@@ -4,204 +4,262 @@ import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { notify } from "@/lib/notifications";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import {
   useForgotPasswordMutation,
   useVerifyResetOTPMutation,
   useResetPasswordMutation,
 } from "@/store/services/authApi";
-import { Eye, EyeOff } from "lucide-react";
-
-type Step = "EMAIL" | "OTP" | "RESET";
+import { notify } from "@/lib/notifications";
+import { Loader2, KeyRound, Mail, ShieldCheck, Lock } from "lucide-react";
 
 interface ForgotPasswordModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const ForgotPasswordModal = ({
+type Stage = "EMAIL" | "OTP" | "RESET";
+
+export default function ForgotPasswordModal({
   open,
   onOpenChange,
-}: ForgotPasswordModalProps) => {
-  const [step, setStep] = useState<Step>("EMAIL");
+}: ForgotPasswordModalProps) {
+  const [stage, setStage] = useState<Stage>("EMAIL");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [forgotPassword, { isLoading: isSendingEmail }] =
+  const [forgotPassword, { isLoading: isForgotLoading }] =
     useForgotPasswordMutation();
-  const [verifyOTP, { isLoading: isVerifyingOTP }] =
+  const [verifyOTP, { isLoading: isVerifyLoading }] =
     useVerifyResetOTPMutation();
-  const [resetPassword, { isLoading: isResettingPassword }] =
+  const [resetPassword, { isLoading: isResetLoading }] =
     useResetPasswordMutation();
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await forgotPassword({ email }).unwrap();
-      notify.success("Password reset code sent to your email");
-      setStep("OTP");
-    } catch (error: any) {
+      notify.success("Verification code sent to your email");
+      setStage("OTP");
+    } catch (err: any) {
       notify.error(
-        error?.data?.message ||
-          "Could not send the reset code. Please try again.",
+        err?.data?.message ||
+          err?.data?.error?.message ||
+          "Failed to send verification code. Please try again.",
       );
     }
   };
 
-  const handleOTPSubmit = async (e: React.FormEvent) => {
+  const handleVerifyOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await verifyOTP({ email, code: otp }).unwrap();
-      notify.success("OTP verified successfully");
-      setStep("RESET");
-    } catch (error: any) {
+      notify.success("Verification successful");
+      setStage("RESET");
+    } catch (err: any) {
       notify.error(
-        error?.data?.message ||
-          "Invalid or expired code. Please request a new one.",
+        err?.data?.message ||
+          err?.data?.error?.message ||
+          "Invalid or expired verification code.",
       );
     }
   };
 
-  const handleResetSubmit = async (e: React.FormEvent) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      notify.error("Passwords do not match");
+      return;
+    }
+    if (password.length < 6) {
+      notify.error("Password must be at least 6 characters long");
+      return;
+    }
     try {
-      await resetPassword({ email, newPassword }).unwrap();
-      notify.success("Password reset successfully. You can now login.");
-      onOpenChange(false);
-      resetState();
-    } catch (error: any) {
+      await resetPassword({ email, password, code: otp }).unwrap();
+      notify.success(
+        "Password reset successful. You can now login with your new password.",
+      );
+      resetAndClose();
+    } catch (err: any) {
       notify.error(
-        error?.data?.message ||
-          "Could not reset your password. Please try again.",
+        err?.data?.message ||
+          err?.data?.error?.message ||
+          "Failed to reset password. Please try again.",
       );
     }
   };
 
-  const resetState = () => {
-    setStep("EMAIL");
-    setEmail("");
-    setOtp("");
-    setNewPassword("");
+  const resetAndClose = () => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setStage("EMAIL");
+      setEmail("");
+      setOtp("");
+      setPassword("");
+      setConfirmPassword("");
+    }, 300);
   };
 
   return (
     <Dialog
       open={open}
       onOpenChange={(val) => {
-        onOpenChange(val);
-        if (!val) resetState();
+        if (!val) resetAndClose();
+        else onOpenChange(true);
       }}
     >
-      <DialogContent className="sm:max-w-[425px] w-[calc(100%-2rem)] mx-auto rounded-xl">
-        <DialogHeader>
-          <DialogTitle>
-            {step === "EMAIL" && "Forgot Password"}
-            {step === "OTP" && "Verify OTP"}
-            {step === "RESET" && "Reset Password"}
+      <DialogContent className="sm:max-w-[400px] rounded-xl">
+        <DialogHeader className="flex flex-col items-center gap-2">
+          <div className="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center mb-2">
+            {stage === "EMAIL" && <Mail className="h-6 w-6 text-black" />}
+            {stage === "OTP" && <ShieldCheck className="h-6 w-6 text-black" />}
+            {stage === "RESET" && <KeyRound className="h-6 w-6 text-black" />}
+          </div>
+          <DialogTitle className="text-xl font-bold">
+            {stage === "EMAIL" && "Forgot Password"}
+            {stage === "OTP" && "Verify OTP"}
+            {stage === "RESET" && "Set New Password"}
           </DialogTitle>
-          <DialogDescription>
-            {step === "EMAIL" &&
-              "Enter your email to receive a password reset code."}
-            {step === "OTP" && `We've sent a 6-digit code to ${email}.`}
-            {step === "RESET" && "Enter your new password below."}
+          <DialogDescription className="text-center">
+            {stage === "EMAIL" &&
+              "Enter your email address and we'll send you a code to reset your password."}
+            {stage === "OTP" &&
+              `We've sent a 6-digit verification code to ${email}`}
+            {stage === "RESET" &&
+              "Create a new strong password for your account."}
           </DialogDescription>
         </DialogHeader>
 
-        {step === "EMAIL" && (
-          <form onSubmit={handleEmailSubmit} className="space-y-4 pt-4">
-            <Input
-              type="email"
-              placeholder="m@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isSendingEmail}
-            />
-            <Button
-              type="submit"
-              className="w-full bg-black text-white hover:bg-black/90"
-              isLoading={isSendingEmail}
-            >
-              Send Reset Code
-            </Button>
+        {stage === "EMAIL" && (
+          <form onSubmit={handleSendOTP} className="space-y-4 pt-2">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Account Email</FieldLabel>
+                <Input
+                  type="email"
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11"
+                  required
+                />
+              </Field>
+              <Button
+                type="submit"
+                className="w-full h-11 bg-black text-white hover:bg-black/90 rounded-lg font-bold"
+                disabled={isForgotLoading}
+              >
+                {isForgotLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sending Code...
+                  </>
+                ) : (
+                  "Send Verification Code"
+                )}
+              </Button>
+            </FieldGroup>
           </form>
         )}
 
-        {step === "OTP" && (
-          <form onSubmit={handleOTPSubmit} className="space-y-4 pt-4">
-            <Input
-              type="text"
-              placeholder="Enter 6-digit code"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-              maxLength={6}
-              disabled={isVerifyingOTP}
-            />
-            <Button
-              type="submit"
-              className="w-full bg-black text-white hover:bg-black/90"
-              isLoading={isVerifyingOTP}
-            >
-              Verify OTP
-            </Button>
-            <Button
-              type="button"
-              variant="link"
-              className="w-full text-xs"
-              onClick={() => setStep("EMAIL")}
-            >
-              Change Email
-            </Button>
-          </form>
-        )}
-
-        {step === "RESET" && (
-          <form onSubmit={handleResetSubmit} className="space-y-4 pt-4">
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                disabled={isResettingPassword}
-                className="pr-10"
-              />
+        {stage === "OTP" && (
+          <form onSubmit={handleVerifyOTP} className="space-y-4 pt-2">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Verification Code</FieldLabel>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="h-11 text-center tracking-widest text-lg font-bold"
+                  maxLength={6}
+                  required
+                />
+              </Field>
+              <Button
+                type="submit"
+                className="w-full h-11 bg-black text-white hover:bg-black/90 rounded-lg font-bold"
+                disabled={isVerifyLoading}
+              >
+                {isVerifyLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify & Continue"
+                )}
+              </Button>
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
-                disabled={isResettingPassword}
-                tabIndex={-1}
+                className="w-full text-sm text-muted-foreground hover:text-black transition-colors"
+                onClick={() => setStage("EMAIL")}
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
+                Back to email entry
               </button>
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-black text-white hover:bg-black/90"
-              isLoading={isResettingPassword}
-            >
-              Reset Password
-            </Button>
+            </FieldGroup>
+          </form>
+        )}
+
+        {stage === "RESET" && (
+          <form onSubmit={handleResetPassword} className="space-y-4 pt-2">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>New Password</FieldLabel>
+                <div className="relative">
+                  <Input
+                    type="password"
+                    placeholder="Min. 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-11 pl-10"
+                    required
+                  />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </Field>
+              <Field>
+                <FieldLabel>Confirm New Password</FieldLabel>
+                <div className="relative">
+                  <Input
+                    type="password"
+                    placeholder="Repeat password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-11 pl-10"
+                    required
+                  />
+                  <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                </div>
+              </Field>
+              <Button
+                type="submit"
+                className="w-full h-11 bg-black text-white hover:bg-black/90 rounded-lg font-bold"
+                disabled={isResetLoading}
+              >
+                {isResetLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Resetting...
+                  </>
+                ) : (
+                  "Set New Password"
+                )}
+              </Button>
+            </FieldGroup>
           </form>
         )}
       </DialogContent>
     </Dialog>
   );
-};
-
-export default ForgotPasswordModal;
+}

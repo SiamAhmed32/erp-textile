@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Check, X, Trash2, ArrowUpDown } from "lucide-react";
+import { Check, X, Trash2, ArrowUpDown, Search } from "lucide-react";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
@@ -371,34 +372,41 @@ const OrdersTable = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
           <Input
-            placeholder="Search order number, buyer, company"
+            placeholder="Search..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
             className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
           />
           <Button
-            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
             onClick={onSearchSubmit}
           >
-            Search
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
           <Button
             variant={showDeleted ? "destructive" : "outline"}
-            className={showDeleted ? "" : "text-slate-500"}
+            className={cn(
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
             onClick={onToggleDeleted}
             title={showDeleted ? "Show Active Orders" : "Show Deleted Orders"}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {showDeleted ? "Exit Trash" : "Trash"}
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <div className="w-full sm:max-w-[180px]">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 xl:w-auto xl:shrink-0">
+          <div className="w-full">
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 text-[10px] sm:text-xs">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -418,9 +426,9 @@ const OrdersTable = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full sm:max-w-[180px]">
+          <div className="w-full">
             <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 text-[10px] sm:text-xs">
                 <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent>
@@ -433,29 +441,35 @@ const OrdersTable = ({
               </SelectContent>
             </Select>
           </div>
-          <DateRangeFilter
-            start={dateFrom}
-            end={dateTo}
-            onFilterChange={({ start, end }) => {
-              onDateFromChange(start);
-              onDateToChange(end);
-            }}
-            placeholder="Order Dates"
-          />
-          <DateRangeFilter
-            start={deliveryDateFrom}
-            end={deliveryDateTo}
-            onFilterChange={({ start, end }) => {
-              onDeliveryDateFromChange(start);
-              onDeliveryDateToChange(end);
-            }}
-            placeholder="Delivery Dates"
-          />
+          <div className="w-full col-span-2 sm:col-auto">
+            <DateRangeFilter
+              start={dateFrom}
+              end={dateTo}
+              onFilterChange={({ start, end }) => {
+                onDateFromChange(start);
+                onDateToChange(end);
+              }}
+              placeholder="Order Dates"
+              className="h-11 text-[10px] sm:text-xs w-full"
+            />
+          </div>
+          <div className="w-full col-span-2 sm:col-auto">
+            <DateRangeFilter
+              start={deliveryDateFrom}
+              end={deliveryDateTo}
+              onFilterChange={({ start, end }) => {
+                onDeliveryDateFromChange(start);
+                onDeliveryDateToChange(end);
+              }}
+              placeholder="Delivery Dates"
+              className="h-11 text-[10px] sm:text-xs w-full"
+            />
+          </div>
 
           {/* Sort Group */}
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
             <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Sort By
             </span>
             <Select
@@ -469,7 +483,7 @@ const OrdersTable = ({
                   });
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Newest First" />
               </SelectTrigger>
               <SelectContent

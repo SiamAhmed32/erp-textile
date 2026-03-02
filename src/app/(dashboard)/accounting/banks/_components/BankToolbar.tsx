@@ -57,13 +57,13 @@ export default function BankToolbar({
     )?.value || "createdAt_desc";
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-1">
+    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between px-1">
       {/* Left: Search Group */}
-      <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+      <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input
-            placeholder="Search bank name or account no..."
+            placeholder="Search..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
@@ -72,18 +72,19 @@ export default function BankToolbar({
         </div>
         <Button
           onClick={onSearch}
-          className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
+          className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
         >
-          Search
+          <Search className="h-5 w-5 sm:hidden" />
+          <span className="hidden sm:inline">Search</span>
         </Button>
       </div>
 
       {/* Right: Actions Group */}
-      <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
         {/* Sort Group */}
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm">
+        <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm">
           <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+          <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
             Sort By
           </span>
           <Select
@@ -94,7 +95,7 @@ export default function BankToolbar({
                 setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
             }}
           >
-            <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+            <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
               <SelectValue placeholder="Newest First" />
             </SelectTrigger>
             <SelectContent
