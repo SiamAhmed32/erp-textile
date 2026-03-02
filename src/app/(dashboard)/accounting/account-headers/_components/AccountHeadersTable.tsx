@@ -157,14 +157,14 @@ const AccountHeadersTable = ({
       data={data}
       columns={columns}
       isLoading={loading}
-      skeletonRows={8}
+      skeletonRows={10}
       pagination={{
         currentPage: page,
         totalPages,
         onPageChange,
       }}
-      scrollAreaHeight="h-[calc(100vh-420px)]"
-      rowClassName="group hover:bg-zinc-50/50 transition-all cursor-default overflow-visible"
+      scrollAreaHeight="h-[calc(100vh-320px)]"
+      rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
     />
   );
 };

@@ -19,7 +19,7 @@ import {
   ExternalLink,
   MapPin,
   Phone,
-  Users
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -43,9 +43,24 @@ export default function SupplierLedgerPage() {
   });
 
   const suppliers = useMemo(
-    () => ((supplierResponse as any)?.data || []) as any[],
+    () =>
+      ((supplierResponse as any)?.data ||
+        (supplierResponse as any)?.data?.data ||
+        []) as any[],
     [supplierResponse],
   );
+
+  const totalPages = useMemo(() => {
+    const meta =
+      (supplierResponse as any)?.meta || (supplierResponse as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [supplierResponse]);
+
+  const totalRecords = useMemo(() => {
+    const meta =
+      (supplierResponse as any)?.meta || (supplierResponse as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
+  }, [supplierResponse]);
 
   const totalLiability = useMemo(() => {
     return suppliers.reduce((sum, s) => sum + (Number(s.balance) || 0), 0);
@@ -168,18 +183,15 @@ export default function SupplierLedgerPage() {
       {/* Toolbar - Standardized for Consistency */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" /> */}
-            <Input
-              placeholder="Search by name or location..."
-              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
+          <Input
+            placeholder="Search by name or location..."
+            className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
           <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
             Search
           </Button>
@@ -224,7 +236,7 @@ export default function SupplierLedgerPage() {
             </Select>
           </div>
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
-            {supplierResponse?.meta?.total || 0} Records
+            {totalRecords} Records Found
           </p>
         </div>
       </div>
@@ -233,14 +245,14 @@ export default function SupplierLedgerPage() {
         data={suppliers}
         columns={columns}
         isLoading={isLoading}
-        skeletonRows={8}
+        skeletonRows={10}
         pagination={{
           currentPage: page,
-          totalPages:
-            (supplierResponse as any)?.meta?.pagination?.totalPages || 1,
+          totalPages,
           onPageChange: setPage,
         }}
-        scrollAreaHeight="h-[55vh]"
+        scrollAreaHeight="h-[calc(100vh-320px)]"
+        rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
       />
     </Container>
   );

@@ -36,7 +36,7 @@ const AccountHeadersPage = () => {
     null,
   );
 
-  const { data, isLoading } = useGetAllQuery({
+  const { data: apiResponse, isLoading } = useGetAllQuery({
     path: "accounting/accountHeads",
     page,
     limit: 10,
@@ -48,6 +48,24 @@ const AccountHeadersPage = () => {
       ...(typeFilter !== "all" ? { type: typeFilter } : {}),
     },
   });
+
+  const headers = useMemo(
+    () =>
+      ((apiResponse as any)?.data ||
+        (apiResponse as any)?.data?.data ||
+        []) as AccountHeader[],
+    [apiResponse],
+  );
+
+  const totalPages = useMemo(() => {
+    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [apiResponse]);
+
+  const totalRecords = useMemo(() => {
+    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
+  }, [apiResponse]);
 
   const handleSearchSubmit = () => {
     setSearch(searchInput);
@@ -66,8 +84,6 @@ const AccountHeadersPage = () => {
     setSort(newSort);
     setPage(1);
   };
-
-  const headers = useMemo(() => (data?.data || []) as AccountHeader[], [data]);
 
   return (
     <div className="space-y-6">
@@ -89,21 +105,28 @@ const AccountHeadersPage = () => {
         }
       />
 
-      <AccountHeaderToolbar
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        onSearch={handleSearchSubmit}
-        type={typeFilter}
-        setType={handleTypeChange}
-        sort={sort}
-        setSort={handleSortChange}
-      />
+      <div className="flex flex-col gap-4">
+        <AccountHeaderToolbar
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearchSubmit}
+          type={typeFilter}
+          setType={handleTypeChange}
+          sort={sort}
+          setSort={handleSortChange}
+        />
+        <div className="flex justify-end pr-2">
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+            {totalRecords} Records Found
+          </p>
+        </div>
+      </div>
 
       <AccountHeadersTable
         data={headers}
         loading={isLoading}
         page={page}
-        totalPages={data?.lastPage || 1}
+        totalPages={totalPages}
         onPageChange={setPage}
         onEdit={setEditingHeader}
         onDelete={setDeletingHeader}

@@ -27,7 +27,7 @@ import {
   Landmark,
   Plus,
   TrendingDown,
-  UserCircle2
+  UserCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
@@ -130,7 +130,7 @@ function StakeholderFormModal({
     } catch (err: any) {
       notify.error(
         err?.data?.message ||
-        "Could not register the stakeholder. Please try again.",
+          "Could not register the stakeholder. Please try again.",
       );
     }
   };
@@ -259,8 +259,24 @@ export default function LoanManagementPage() {
     sortOrder: sort.dir,
   });
 
-  const loans = useMemo(() => {
-    return ((loansResponse as any)?.data || []) as Loan[];
+  const loans = useMemo(
+    () =>
+      ((loansResponse as any)?.data ||
+        (loansResponse as any)?.data?.data ||
+        []) as Loan[],
+    [loansResponse],
+  );
+
+  const totalPages = useMemo(() => {
+    const meta =
+      (loansResponse as any)?.meta || (loansResponse as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [loansResponse]);
+
+  const totalRecords = useMemo(() => {
+    const meta =
+      (loansResponse as any)?.meta || (loansResponse as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
   }, [loansResponse]);
 
   const sortOptions = [
@@ -421,17 +437,15 @@ export default function LoanManagementPage() {
       {/* Toolbar - Standardized for Consistency */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search lender entity or liability type..."
-              className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
-          </div>
+          <Input
+            placeholder="Search lender entity or liability type..."
+            className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
           <Button
             className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg"
             onClick={() => setPage(1)}
@@ -484,7 +498,7 @@ export default function LoanManagementPage() {
           </Button>
 
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block whitespace-nowrap">
-            {(loansResponse as any)?.meta?.total || 0} Records
+            {totalRecords} Records Found
           </p>
         </div>
       </div>
@@ -493,13 +507,14 @@ export default function LoanManagementPage() {
         data={loans}
         columns={listColumns}
         isLoading={isLoadingLoans}
+        skeletonRows={10}
         pagination={{
           currentPage: page,
-          totalPages: (loansResponse as any)?.meta?.pagination?.totalPages || 1,
+          totalPages,
           onPageChange: setPage,
         }}
-        scrollAreaHeight="h-[calc(100vh-350px)]"
-        rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
+        scrollAreaHeight="h-[calc(100vh-320px)]"
+        rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
       />
 
       <StakeholderFormModal

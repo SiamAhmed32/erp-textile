@@ -67,9 +67,9 @@ export default function AccountHeaderToolbar({
       ?.value || "createdAt_desc";
 
   return (
-    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
       {/* Left: Search Group */}
-      <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+      <div className="flex w-full gap-2 lg:max-w-sm lg:flex-1">
         <div className="relative flex-1">
           <Input
             placeholder="Search..."
@@ -89,7 +89,7 @@ export default function AccountHeaderToolbar({
       </div>
 
       {/* Right: Filters Group */}
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+      <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center gap-2 lg:justify-end">
         {/* Type Filter */}
         <div className="w-full">
           <Select value={type} onValueChange={setType}>

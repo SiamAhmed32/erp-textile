@@ -184,7 +184,7 @@ function CustomTable<T extends Record<string, any>>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-[60vh] text-center bg-white"
+                  className="h-[40vh] text-center bg-white"
                 >
                   <div className="flex flex-col items-center justify-center space-y-3 opacity-60">
                     <div className="p-4 bg-muted rounded-full">
