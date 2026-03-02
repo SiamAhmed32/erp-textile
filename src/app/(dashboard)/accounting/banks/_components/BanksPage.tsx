@@ -17,6 +17,7 @@ import BankCreateModal from "./BankCreateModal";
 import BankEditModal from "./BankEditModal";
 import BankDetailsModal from "./BankDetailsModal";
 import { notify } from "@/lib/notifications";
+import { useDebounce } from "use-debounce";
 
 const BanksPage = () => {
   const [page, setPage] = useState(1);
@@ -26,7 +27,7 @@ const BanksPage = () => {
     field: "createdAt",
     dir: "desc",
   });
-
+  const [searchValue] = useDebounce(search, 500);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingBank, setEditingBank] = useState<Bank | null>(null);
   const [viewingBank, setViewingBank] = useState<Bank | null>(null);
@@ -35,7 +36,7 @@ const BanksPage = () => {
     path: "accounting/banks",
     page,
     limit: 10,
-    search: search !== "" ? search : undefined,
+    search: searchValue !== "" ? searchValue : undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
   });

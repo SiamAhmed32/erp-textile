@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import TransactionEntryModal from "./_components/TransactionEntryModal";
+import { useDebounce } from "use-debounce";
 
 const fmt = (n: number) =>
   "TK " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -35,7 +36,7 @@ export default function CashBookPage() {
     field: "createdAt",
     dir: "desc",
   });
-
+  const [searchValue] = useDebounce(search, 500);
   const sortOptions = [
     {
       value: "createdAt_desc",
@@ -74,7 +75,7 @@ export default function CashBookPage() {
     path: "moi-cash-books/summaries",
     page,
     limit: 10,
-    search,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {

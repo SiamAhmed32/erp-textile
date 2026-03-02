@@ -16,6 +16,7 @@ import {
   usePutMutation,
 } from "@/store/services/commonApi";
 import { notify } from "@/lib/notifications";
+import { useDebounce } from "use-debounce";
 
 const emptySupplier: SupplierFormData = {
   name: "",
@@ -63,7 +64,7 @@ export function SupplierManagementPage() {
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
-
+  const [searchValue] = useDebounce(search, 500);
   const {
     data: suppliersPayload,
     isFetching: loading,
@@ -73,7 +74,7 @@ export function SupplierManagementPage() {
     path: "suppliers",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {

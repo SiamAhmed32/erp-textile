@@ -20,7 +20,7 @@ import {
   usePostMutation,
   usePutMutation,
 } from "@/store/services/commonApi";
-
+import { useDebounce } from "use-debounce";
 const emptyBuyer: BuyerFormData = {
   name: "",
   email: "",
@@ -64,6 +64,7 @@ export function BuyerManagementPage() {
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
+  const [searchValue] = useDebounce(search, 500);
   const {
     data: buyersPayload,
     isFetching: loading,
@@ -73,7 +74,7 @@ export function BuyerManagementPage() {
     path: "buyers",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {

@@ -11,6 +11,7 @@ import { CustomModal } from "@/components/reusables";
 import CompanyProfilesTable from "./CompanyProfilesTable";
 import { CompanyProfile, CompanyProfileApiItem } from "./types";
 import { isValidId, normalizeProfile } from "./helpers";
+import { useDebounce } from "use-debounce";
 
 const CompanyProfilePage = () => {
   const router = useRouter();
@@ -27,7 +28,7 @@ const CompanyProfilePage = () => {
   const [deleting, setDeleting] = useState(false);
   const [showDeleted, setShowDeleted] = useState(false);
   const [patchItem] = usePatchMutation();
-
+  const [searchValue] = useDebounce(search, 500);
   const {
     data: profilesPayload,
     isFetching: loading,
@@ -37,7 +38,7 @@ const CompanyProfilePage = () => {
     path: "company-profiles",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {
