@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, ArrowUpDown, Search } from "lucide-react";
+import { ArrowUpDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 
 interface AccountHeaderToolbarProps {
   searchInput: string;
@@ -67,74 +66,151 @@ export default function AccountHeaderToolbar({
       ?.value || "createdAt_desc";
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
-      {/* Left: Search Group */}
-      <div className="flex w-full gap-2 lg:max-w-sm lg:flex-1">
-        <div className="relative flex-1">
-          <Input
-            placeholder="Search..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-          />
+    <div className="flex flex-col gap-3 py-2">
+      {/* DESKTOP VIEW (>1280px): Search + Type + Sort in one row */}
+      <div className="hidden xl:flex items-center justify-between gap-3">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 max-w-md flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearch()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button
+            onClick={onSearch}
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+          >
+            Search
+          </Button>
         </div>
-        <Button
-          onClick={onSearch}
-          className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-        >
-          <Search className="h-5 w-5 sm:hidden" />
-          <span className="hidden sm:inline">Search</span>
-        </Button>
+
+        {/* Right: Type Filter + Sort */}
+        <div className="flex items-center gap-2">
+          {/* Type Filter */}
+          <div className="w-[140px]">
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-sm font-semibold text-xs uppercase tracking-wider">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {typeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Sort Group */}
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
-      {/* Right: Filters Group */}
-      <div className="grid grid-cols-2 lg:flex lg:flex-wrap items-center gap-2 lg:justify-end">
-        {/* Type Filter */}
-        <div className="w-full">
-          <Select value={type} onValueChange={setType}>
-            <SelectTrigger className="h-11 bg-white border-slate-200 rounded-lg shadow-sm font-semibold text-[10px] sm:text-xs uppercase tracking-wider">
-              <SelectValue placeholder="All Types" />
-            </SelectTrigger>
-            <SelectContent
-              align="end"
-              className="rounded-xl shadow-xl border-slate-200"
+      {/* TABLET & MOBILE VIEW (<1280px): Stacked rows */}
+      <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
+        {/* Row 1: Search + Sort */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1">
+            <Input
+              placeholder="Search..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearch()}
+              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+            />
+            <Button
+              onClick={onSearch}
+              className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
             >
-              {typeOptions.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="text-xs font-semibold py-2.5"
-                >
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <Search className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline text-xs">Search</span>
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="hidden sm:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-[80px] sm:w-[130px]">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Sort Group */}
-        <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm">
-          <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
-            Sort By
-          </span>
-          <Select
-            value={currentSortValue}
-            onValueChange={(val) => {
-              const opt = sortOptions.find((o) => o.value === val);
-              if (opt)
-                setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
-            }}
-          >
-            <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
-              <SelectValue placeholder="Newest First" />
+        {/* Row 2: Type Filter */}
+        <div className="flex items-center gap-2">
+          <Select value={type} onValueChange={setType}>
+            <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs min-w-[120px] flex-1 font-bold bg-white border-slate-200 rounded-lg shadow-sm uppercase tracking-wider">
+              <SelectValue placeholder="All Types" />
             </SelectTrigger>
-            <SelectContent
-              align="end"
-              className="rounded-xl shadow-xl border-slate-200"
-            >
-              {sortOptions.map((opt) => (
+            <SelectContent className="rounded-xl shadow-xl border-slate-200">
+              {typeOptions.map((opt) => (
                 <SelectItem
                   key={opt.value}
                   value={opt.value}

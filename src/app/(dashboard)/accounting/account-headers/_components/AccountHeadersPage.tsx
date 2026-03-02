@@ -116,9 +116,9 @@ const AccountHeadersPage = () => {
           setSort={handleSortChange}
         />
         <div className="flex justify-end pr-2">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+          {/* <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
             {totalRecords} Records Found
-          </p>
+          </p> */}
         </div>
       </div>
 

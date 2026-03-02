@@ -178,46 +178,81 @@ export default function TrialBalancePage() {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Trial Balance" },
         ]}
-        actions={
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
-            onClick={handleExportPdf}
-            disabled={isExporting}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export Report"}
-          </Button>
-        }
+        // actions={
+        //   <Button
+        //     className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
+        //     onClick={handleExportPdf}
+        //     disabled={isExporting}
+        //   >
+        //     <Download className="mr-2 h-4 w-4" />
+        //     {isExporting ? "Exporting..." : "Export Report"}
+        //   </Button>
+        // }
       />
 
-      {/* Filter Toolbar Group */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-1">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+      {/* Toolbar — Search + DateRange (single filter → fits one row on xl) */}
+      <div className="flex flex-col gap-3 py-2">
+        {/* DESKTOP VIEW (>1280px): Single row */}
+        <div className="hidden xl:flex items-center justify-between gap-3">
+          <div className="flex w-full gap-2 max-w-md flex-1">
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search by account name or code..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+              />
+            </div>
+            <Button
+              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+              disabled={isFetching || isLoading}
+              onClick={handleGenerateReport}
+            >
+              Search
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-[200px]">
+              <DateRangeFilter
+                start={dateRange.start}
+                end={dateRange.end}
+                onFilterChange={setDateRange}
+                placeholder="Report Dates"
+                className="h-11 text-xs"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* TABLET & MOBILE VIEW (<1280px) */}
+        <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
+          {/* Row 1: Search */}
+          <div className="flex items-center gap-2">
             <Input
               placeholder="Search by account name or code..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-11 bg-white border-slate-200 rounded-lg pl-10 shadow-sm focus-visible:ring-slate-200"
+              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+            />
+            <Button
+              className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+              disabled={isFetching || isLoading}
+              onClick={handleGenerateReport}
+            >
+              <Search className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline text-xs">Search</span>
+            </Button>
+          </div>
+          {/* Row 2: Date Range */}
+          <div className="flex items-center gap-2">
+            <DateRangeFilter
+              start={dateRange.start}
+              end={dateRange.end}
+              onFilterChange={setDateRange}
+              placeholder="Report Dates"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
             />
           </div>
-          <Button
-            className="h-11 px-8 bg-black hover:bg-black/90 text-white font-bold text-xs uppercase tracking-widest rounded-lg transition-all"
-            disabled={isFetching || isLoading}
-            onClick={handleGenerateReport}
-          >
-            Search
-          </Button>
-        </div>
-
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <DateRangeFilter
-            start={dateRange.start}
-            end={dateRange.end}
-            onFilterChange={setDateRange}
-            placeholder="Report Dates"
-          />
         </div>
       </div>
 

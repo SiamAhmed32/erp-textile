@@ -26,6 +26,9 @@ import { format } from "date-fns";
 import {
   AlertTriangle,
   ArrowUpDown,
+  BookOpen,
+  Activity,
+  Calendar,
   CheckCircle2,
   Clock,
   Eye,
@@ -38,7 +41,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { notify } from "@/lib/notifications";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -54,12 +57,12 @@ interface JournalEntry {
   voucherNo: string;
   date: string;
   category:
-  | "BUYER_DUE"
-  | "RECEIPT"
-  | "SUPPLIER_DUE"
-  | "PAYMENT"
-  | "JOURNAL"
-  | "CONTRA";
+    | "BUYER_DUE"
+    | "RECEIPT"
+    | "SUPPLIER_DUE"
+    | "PAYMENT"
+    | "JOURNAL"
+    | "CONTRA";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -361,9 +364,8 @@ function ReverseConfirmModal({
             </p>
             <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
               This will create a new journal entry that cancels the effect of{" "}
-              <span className=" font-bold">{entry?.voucherNo}</span>.
-              Both entries will remain in the ledger as a permanent audit
-              record.
+              <span className=" font-bold">{entry?.voucherNo}</span>. Both
+              entries will remain in the ledger as a permanent audit record.
             </p>
           </div>
         </div>
@@ -401,6 +403,16 @@ export default function DailyBookkeepingList() {
     field: "createdAt",
     dir: "desc",
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // Modal state
   const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null);
@@ -413,7 +425,7 @@ export default function DailyBookkeepingList() {
     path: API_PATH,
     page,
     limit: 10,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     sort: null,
     sortBy: sort.field,
     sortOrder: sort.dir,
@@ -470,6 +482,186 @@ export default function DailyBookkeepingList() {
     setPage(1);
   };
 
+  // ── Helper variables for responsive toolbar items ──────────────────────────
+  const searchGroup = (isMobile = false) => (
+    <div
+      className={
+        isMobile
+          ? "flex w-full gap-2"
+          : "flex w-full gap-2 lg:max-w-md lg:flex-1"
+      }
+    >
+      <div className="relative flex-1">
+        <Input
+          placeholder={
+            isMobile ? "Search..." : "Search voucher no. or narration..."
+          }
+          className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+        />
+      </div>
+      <Button
+        className={cn(
+          "bg-black text-white hover:bg-black/90 font-bold h-11 rounded-lg shrink-0",
+          isMobile ? "px-4" : "px-6",
+        )}
+      >
+        {isMobile ? <Search className="h-4 w-4" /> : "Search"}
+      </Button>
+    </div>
+  );
+
+  const categorySelectComp = (
+    <div className="w-full">
+      <Select
+        value={categoryFilter}
+        onValueChange={(v) => {
+          setCategoryFilter(v);
+          setPage(1);
+        }}
+      >
+        <SelectTrigger className="h-11 text-xs font-bold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider w-full">
+          <SelectValue placeholder="Category" />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl shadow-xl border-zinc-200">
+          <SelectItem
+            value="all"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            All Categories
+          </SelectItem>
+          <SelectItem
+            value="RECEIPT"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Receipt
+          </SelectItem>
+          <SelectItem
+            value="PAYMENT"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Payment
+          </SelectItem>
+          <SelectItem
+            value="JOURNAL"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Journal
+          </SelectItem>
+          <SelectItem
+            value="CONTRA"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Contra
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const statusSelectComp = (
+    <div className="w-full">
+      <Select
+        value={statusFilter}
+        onValueChange={(v) => {
+          setStatusFilter(v);
+          setPage(1);
+        }}
+      >
+        <SelectTrigger className="h-11 text-xs font-bold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider w-full">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent className="rounded-xl shadow-xl border-zinc-200">
+          <SelectItem
+            value="all"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            All Status
+          </SelectItem>
+          <SelectItem
+            value="DRAFT"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Draft
+          </SelectItem>
+          <SelectItem
+            value="POSTED"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            Posted
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
+  const dateFilterComp = (
+    <div className="w-full">
+      <DateRangeFilter
+        start={dateFrom}
+        end={dateTo}
+        onFilterChange={({ start, end }) => {
+          setDateFrom(start);
+          setDateTo(end);
+          setPage(1);
+        }}
+        placeholder="Entry Date"
+        startLabel="From Date"
+        endLabel="To Date"
+        className="h-11 w-full text-xs font-bold"
+      />
+    </div>
+  );
+
+  const totalRecords = useMemo(() => {
+    const meta = (data as any)?.meta || (data as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
+  }, [data]);
+
+  const sortGroupComp = (
+    <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0 w-full">
+      <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
+      <span className="text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+        Sort By
+      </span>
+      <Select
+        value={currentSortValue}
+        onValueChange={(val) => {
+          const opt = sortOptions.find((o) => o.value === val);
+          if (opt)
+            handleSortChange({
+              field: opt.field,
+              dir: opt.dir as "asc" | "desc",
+            });
+        }}
+      >
+        <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider flex-1 overflow-hidden">
+          <div className="flex-1 text-left truncate">
+            <SelectValue placeholder="Newest First" />
+          </div>
+        </SelectTrigger>
+        <SelectContent
+          align="end"
+          className="rounded-xl shadow-xl border-zinc-200"
+        >
+          {sortOptions.map((opt) => (
+            <SelectItem
+              key={opt.value}
+              value={opt.value}
+              className="text-xs font-semibold py-2.5"
+            >
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handlePost = async () => {
     if (!postEntry) return;
@@ -485,8 +677,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Could not post the entry. Please try again.",
+          err?.data?.message ||
+          "Could not post the entry. Please try again.",
       );
     }
   };
@@ -504,8 +696,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Could not delete the draft. Please try again.",
+          err?.data?.message ||
+          "Could not delete the draft. Please try again.",
       );
     }
   };
@@ -524,8 +716,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-        err?.data?.message ||
-        "Could not reverse the entry. Please try again.",
+          err?.data?.message ||
+          "Could not reverse the entry. Please try again.",
       );
     }
   };
@@ -691,166 +883,59 @@ export default function DailyBookkeepingList() {
         }
       />
 
-      {/* Toolbar - Standardized for Consistency */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2 mb-4">
-        {/* Search Group */}
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search voucher no. or narration..."
-              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-            />
+      {/* Toolbar - Responsive Layout Patterns from Orders/LC */}
+      <div className="flex flex-col gap-3 py-2 mb-4">
+        {/* 1. DESKTOP VIEW (>1280px) */}
+        <div className="hidden xl:flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 lg:w-full lg:max-w-md xl:max-w-lg">
+            {searchGroup()}
           </div>
-          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
-            Search
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="w-[240px]">{sortGroupComp}</div>
+            <div className="w-[210px]">{dateFilterComp}</div>
+            <div className="w-[135px]">{statusSelectComp}</div>
+            <div className="w-[160px]">{categorySelectComp}</div>
+          </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Category */}
-          <div className="w-[170px]">
-            <Select
-              value={categoryFilter}
-              onValueChange={(v) => {
-                setCategoryFilter(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl shadow-xl">
-                <SelectItem
-                  value="all"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  All Categories
-                </SelectItem>
-                <SelectItem
-                  value="RECEIPT"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Receipt
-                </SelectItem>
-                <SelectItem
-                  value="PAYMENT"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Payment
-                </SelectItem>
-                <SelectItem
-                  value="JOURNAL"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Journal
-                </SelectItem>
-                <SelectItem
-                  value="CONTRA"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Contra
-                </SelectItem>
-                <SelectItem
-                  value="CONTRA"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Contra
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        {/* 2. TABLET / 1024px VIEW (768px - 1280px) */}
+        <div className="hidden md:flex xl:hidden flex-col gap-3">
+          {/* Row 1: Search, Sort */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1">{searchGroup()}</div>
+            <div className="w-[240px]">{sortGroupComp}</div>
+          </div>
+          {/* Row 2: Date, Status, Category */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1">{dateFilterComp}</div>
+            <div className="w-[135px]">{statusSelectComp}</div>
+            <div className="w-[170px]">{categorySelectComp}</div>
+          </div>
+        </div>
+
+        {/* 3. MOBILE VIEW (<768px) */}
+        <div className="flex md:hidden flex-col gap-2">
+          {/* Row 1: Search */}
+          <div className="w-full">{searchGroup(true)}</div>
+
+          {/* Row 2: Sort, Date */}
+          <div className="grid grid-cols-2 gap-2">
+            {sortGroupComp}
+            {dateFilterComp}
           </div>
 
-          {/* Status */}
-          <div className="w-[140px]">
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => {
-                setStatusFilter(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-11 text-xs font-semibold border-zinc-200 bg-white shadow-sm rounded-lg uppercase tracking-wider">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl shadow-xl">
-                <SelectItem
-                  value="all"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  All Status
-                </SelectItem>
-                <SelectItem
-                  value="DRAFT"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Draft
-                </SelectItem>
-                <SelectItem
-                  value="POSTED"
-                  className="text-xs font-semibold rounded-lg my-0.5"
-                >
-                  Posted
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Row 3: Status, Category */}
+          <div className="grid grid-cols-2 gap-2">
+            {statusSelectComp}
+            {categorySelectComp}
           </div>
+        </div>
 
-          {/* Date Range */}
-          <DateRangeFilter
-            start={dateFrom}
-            end={dateTo}
-            onFilterChange={({ start, end }) => {
-              setDateFrom(start);
-              setDateTo(end);
-              setPage(1);
-            }}
-            placeholder="Entry Date"
-            startLabel="From Date"
-            endLabel="To Date"
-          />
-
-          {/* Sort Group */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
-              Sort By
-            </span>
-            <Select
-              value={currentSortValue}
-              onValueChange={(val) => {
-                const opt = sortOptions.find((o) => o.value === val);
-                if (opt)
-                  handleSortChange({
-                    field: opt.field,
-                    dir: opt.dir as "asc" | "desc",
-                  });
-              }}
-            >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
-                <SelectValue placeholder="Newest First" />
-              </SelectTrigger>
-              <SelectContent
-                align="end"
-                className="rounded-xl shadow-xl border-zinc-200"
-              >
-                {sortOptions.map((opt) => (
-                  <SelectItem
-                    key={opt.value}
-                    value={opt.value}
-                    className="text-xs font-semibold py-2.5"
-                  >
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Multi-Breakpoint Record Count */}
+        <div className="flex justify-end px-1">
+          {/* <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+            {totalRecords} Records Found
+          </p> */}
         </div>
       </div>
 
@@ -859,13 +944,17 @@ export default function DailyBookkeepingList() {
         data={entries}
         columns={columns}
         isLoading={isLoading}
-        skeletonRows={8}
+        skeletonRows={10}
         pagination={{
           currentPage: page,
-          totalPages: data?.meta?.pagination?.totalPages || 1,
+          totalPages:
+            (data as any)?.meta?.pagination?.totalPages ||
+            (data as any)?.data?.meta?.pagination?.totalPages ||
+            1,
           onPageChange: setPage,
         }}
-        scrollAreaHeight="h-[67vh]"
+        scrollAreaHeight="h-[calc(100vh-320px)]"
+        rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
       />
 
       {/* Modals */}

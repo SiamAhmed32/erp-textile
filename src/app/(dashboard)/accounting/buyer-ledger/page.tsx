@@ -18,6 +18,7 @@ import {
   UserCheck,
   Users,
   XCircle,
+  ArrowUpDown,
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -29,16 +30,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown } from "lucide-react";
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function BuyerLedgerPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
     dir: "desc",
   });
+
+  const handleSearchSubmit = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
 
   const { data: buyerResponse, isLoading } = useGetAllQuery({
     path: "accounting/ledger/buyers/balances",
@@ -61,12 +67,6 @@ export default function BuyerLedgerPage() {
     const meta =
       (buyerResponse as any)?.meta || (buyerResponse as any)?.data?.meta;
     return meta?.pagination?.totalPages || meta?.totalPages || 1;
-  }, [buyerResponse]);
-
-  const totalRecords = useMemo(() => {
-    const meta =
-      (buyerResponse as any)?.meta || (buyerResponse as any)?.data?.meta;
-    return meta?.pagination?.total || meta?.total || 0;
   }, [buyerResponse]);
 
   const columns = useMemo(
@@ -205,27 +205,33 @@ export default function BuyerLedgerPage() {
         }
       />
 
-      {/* Toolbar - Standardized for Consistency */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <Input
-            placeholder="Search by name, merchandiser or location..."
-            className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-          />
-          <Button className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg">
-            Search
+      {/* Toolbar — Search + Sort (single filter → fits one row) */}
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2 mb-4">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search by name, merchandiser or location..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button
+            onClick={handleSearchSubmit}
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+          >
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Sort Group */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+
+        {/* Right: Sort Group */}
+        <div className="flex items-center gap-2 xl:justify-end">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Sort By
             </span>
             <Select
@@ -241,12 +247,12 @@ export default function BuyerLedgerPage() {
                 }
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Newest First" />
               </SelectTrigger>
               <SelectContent
                 align="end"
-                className="rounded-xl shadow-xl border-zinc-200"
+                className="rounded-xl shadow-xl border-slate-200"
               >
                 {sortOptions.map((opt) => (
                   <SelectItem
@@ -260,9 +266,6 @@ export default function BuyerLedgerPage() {
               </SelectContent>
             </Select>
           </div>
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
-            {totalRecords} Records Found
-          </p>
         </div>
       </div>
 
