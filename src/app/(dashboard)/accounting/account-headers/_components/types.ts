@@ -14,6 +14,7 @@ export const AccountHeaderFormSchema = z
         description: z.string().max(200).optional(),
         parentId: z.string().uuid().nullable().optional(),
         isControlAccount: z.boolean().default(false).optional(),
+        companyProfileId: z.string().uuid("Please select a company"),
     });
 
 export type AccountHeaderFormData = z.infer<typeof AccountHeaderFormSchema>;
@@ -29,6 +30,7 @@ export interface AccountHeader {
     parent?: AccountHeader;
     isControlAccount: boolean;
     companyProfileId: string;
+    level?: number;
     isDeleted: boolean;
     createdAt: string;
     updatedAt: string;

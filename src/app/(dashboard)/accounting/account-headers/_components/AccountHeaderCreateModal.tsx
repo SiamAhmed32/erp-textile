@@ -1,5 +1,6 @@
 "use client";
-
+import React, { useEffect, useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,6 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
 import { notify } from "@/lib/notifications";
 import {
   AccountHeader,
@@ -38,6 +38,14 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
   });
 
   const allAccounts = (accountsData?.data || []) as AccountHeader[];
+  const { data: companiesPayload } = useGetAllQuery({
+    path: "company-profiles",
+    limit: 100,
+  });
+  const companies = useMemo(
+    () => (companiesPayload?.data || []) as any[],
+    [companiesPayload],
+  );
 
   const accountTypeOptions = [
     {
@@ -82,8 +90,16 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
       description: "",
       parentId: null,
       isControlAccount: false,
+      companyProfileId: "",
     },
   });
+
+  // Auto-select first company if available
+  useEffect(() => {
+    if (companies.length > 0 && !watch("companyProfileId")) {
+      reset((prev) => ({ ...prev, companyProfileId: companies[0].id }));
+    }
+  }, [companies, reset, watch]);
 
   const selectedType = watch("type");
 
@@ -94,10 +110,7 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
     try {
       await postItem({
         path: "accounting/accountHeads",
-        body: {
-          companyProfileId: "3d0afbda-6b2b-4013-895c-7680da86376e",
-          ...data,
-        },
+        body: data,
         invalidate: ["accounting/accountHeads"],
       }).unwrap();
       notify.success("Account head registered successfully");
@@ -106,7 +119,7 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
     } catch (error: any) {
       notify.error(
         error?.data?.message ||
-          "Could not create the account head. Please try again.",
+        "Could not create the account head. Please try again.",
       );
     }
   };
@@ -125,6 +138,35 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
         {/* ── Group & Mode Section ────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-1.5">
+              <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                Associated Company <span className="text-destructive">*</span>
+              </Label>
+              <Controller
+                name="companyProfileId"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <SelectTrigger className="h-11 bg-white border-zinc-200 font-semibold text-zinc-800">
+                      <SelectValue placeholder="Select Business Profile" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {companies.map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.companyProfileId && (
+                <p className="text-[10px] text-destructive font-bold uppercase">
+                  {errors.companyProfileId.message}
+                </p>
+              )}
+            </div>
+
             <div className="space-y-1.5">
               <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
                 Financial Group
@@ -155,27 +197,27 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
                 )}
               />
             </div>
+          </div>
 
-            <div className="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-zinc-200">
-              <div className="space-y-0.5">
-                <Label className="text-zinc-800 font-bold text-sm">
-                  Control Account
-                </Label>
-                <p className="text-[10px] text-zinc-400 font-medium">
-                  Allow sub-accounts
-                </p>
-              </div>
-              <Controller
-                name="isControlAccount"
-                control={control}
-                render={({ field }) => (
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                )}
-              />
+          <div className="mt-5 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-zinc-200 shadow-sm">
+            <div className="space-y-0.5">
+              <Label className="text-zinc-800 font-bold text-sm">
+                Control Account
+              </Label>
+              <p className="text-[10px] text-zinc-400 font-medium">
+                Enable nesting of sub-headers within this category
+              </p>
             </div>
+            <Controller
+              name="isControlAccount"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              )}
+            />
           </div>
         </div>
 

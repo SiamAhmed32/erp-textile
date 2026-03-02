@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, ArrowUpDown, Search } from "lucide-react";
+import { ChevronDown, ArrowUpDown, Search, History } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -32,6 +33,7 @@ export default function AccountHeaderToolbar({
   sort,
   setSort,
 }: AccountHeaderToolbarProps) {
+  const router = useRouter();
   const typeOptions = [
     { value: "all", label: "All Types" },
     { value: "ASSET", label: "Asset" },
@@ -67,29 +69,32 @@ export default function AccountHeaderToolbar({
       ?.value || "createdAt_desc";
 
   return (
-    <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* Left: Search Group */}
-      <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+      <div className="flex w-full gap-2 lg:max-w-sm lg:flex-1">
         <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
-            placeholder="Search..."
+            placeholder="Search accounts..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            className="h-11 bg-white border-slate-200 rounded-lg pl-10 shadow-sm"
           />
         </div>
-        <Button
-          onClick={onSearch}
-          className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+        {/* <Button
+          variant="outline"
+          onClick={() => router.push("/accounting/audit-trail")}
+          className="h-11 px-4 border-slate-200 text-slate-600 hover:text-zinc-900 hover:bg-slate-50 font-bold rounded-lg shrink-0"
+          title="View Audit Trail"
         >
-          <Search className="h-5 w-5 sm:hidden" />
-          <span className="hidden sm:inline">Search</span>
-        </Button>
+          <History className="h-5 w-5" />
+          <span className="hidden sm:inline ml-2">History</span>
+        </Button> */}
       </div>
 
       {/* Right: Filters Group */}
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+      <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 lg:justify-end">
         {/* Type Filter */}
         <div className="w-full">
           <Select value={type} onValueChange={setType}>

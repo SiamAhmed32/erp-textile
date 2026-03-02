@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const AccountHeadersPage = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
@@ -36,11 +36,20 @@ const AccountHeadersPage = () => {
     null,
   );
 
+  // Debounced search logic like order management
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data, isLoading } = useGetAllQuery({
     path: "accounting/accountHeads",
-    page,
-    limit: 10,
-    search: search !== "" ? search : undefined,
+    page: 1,
+    limit: 500,
+    search: debouncedSearch || undefined,
     sort: null,
     sortBy: sort.field,
     sortOrder: sort.dir,
@@ -50,7 +59,7 @@ const AccountHeadersPage = () => {
   });
 
   const handleSearchSubmit = () => {
-    setSearch(searchInput);
+    setDebouncedSearch(search);
     setPage(1);
   };
 
@@ -67,7 +76,73 @@ const AccountHeadersPage = () => {
     setPage(1);
   };
 
-  const headers = useMemo(() => (data?.data || []) as AccountHeader[], [data]);
+  const headers = useMemo(() => {
+    const rawData = (data?.data || []) as AccountHeader[];
+
+    // Custom sort order for financial types
+    const typeOrder: Record<string, number> = {
+      ASSET: 1,
+      LIABILITY: 2,
+      EQUITY: 3,
+      INCOME: 4,
+      REVENUE: 4,
+      EXPENSE: 5,
+    };
+
+    // Build hierarchy within a set of accounts
+    const buildTree = (accounts: AccountHeader[]) => {
+      const accountMap: Record<string, AccountHeader & { children: any[] }> = {};
+      const roots: any[] = [];
+
+      accounts.forEach((acc) => {
+        accountMap[acc.id] = { ...acc, children: [] };
+      });
+
+      accounts.forEach((acc) => {
+        if (acc.parentId && accountMap[acc.parentId]) {
+          accountMap[acc.parentId].children.push(accountMap[acc.id]);
+        } else {
+          roots.push(accountMap[acc.id]);
+        }
+      });
+
+      return roots;
+    };
+
+    // Flatten tree for table display with depth level
+    const flattenTree = (nodes: any[], level = 0): any[] => {
+      return nodes.reduce((acc, node) => {
+        const { children, ...rest } = node;
+        const sortedChildren = [...children].sort((a, b) => a.name.localeCompare(b.name));
+        return [
+          ...acc,
+          { ...rest, level },
+          ...flattenTree(sortedChildren, level + 1)
+        ];
+      }, []);
+    };
+
+    const categories: Record<string, AccountHeader[]> = {};
+    rawData.forEach((acc) => {
+      const type = acc.type || "OTHER";
+      if (!categories[type]) categories[type] = [];
+      categories[type].push(acc);
+    });
+
+    const sortedTypes = Object.keys(categories).sort(
+      (a, b) => (typeOrder[a] || 99) - (typeOrder[b] || 99),
+    );
+
+    let result: AccountHeader[] = [];
+    sortedTypes.forEach((type) => {
+      const categoryAccounts = categories[type];
+      const tree = buildTree(categoryAccounts);
+      tree.sort((a, b) => a.name.localeCompare(b.name));
+      result = [...result, ...flattenTree(tree)];
+    });
+
+    return result;
+  }, [data]);
 
   return (
     <div className="space-y-6">
@@ -90,8 +165,8 @@ const AccountHeadersPage = () => {
       />
 
       <AccountHeaderToolbar
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
+        searchInput={search}
+        setSearchInput={setSearch}
         onSearch={handleSearchSubmit}
         type={typeFilter}
         setType={handleTypeChange}
@@ -102,9 +177,6 @@ const AccountHeadersPage = () => {
       <AccountHeadersTable
         data={headers}
         loading={isLoading}
-        page={page}
-        totalPages={data?.lastPage || 1}
-        onPageChange={setPage}
         onEdit={setEditingHeader}
         onDelete={setDeletingHeader}
         onView={setViewingHeader}
