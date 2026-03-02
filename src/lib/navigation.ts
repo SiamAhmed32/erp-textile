@@ -20,87 +20,56 @@ import {
 export const navMain = [
     {
         title: "Dashboard",
-        module: 'dashboard',
+        module: "dashboard",
         url: "/",
         icon: Home,
     },
-    // {
-    //     title: "Order Management",
-    //     module: 'orders',
-    //     icon: ShoppingCart,
-    //     items: [
-    //         {
-    //             title: "Order List",
-    //             url: "/order-management/orders",
-    //             icon: ClipboardList,
-    //         },
-    //         // {
-    //         //     title: "Order Delivered",
-    //         //     url: "/order-management/delivered",
-    //         //     icon: Truck,
-    //         // },
-    //     ],
-    // },
     {
-            title: "Order Management",
-        module: 'orders',
-                        url: "/order-management/orders",
-                icon: ClipboardList,
-            },
+        title: "Order Management",
+        module: "orders",
+        url: "/order-management/orders",
+        icon: ClipboardList,
+    },
+    {
+        title: "Proforma Invoice",
+        module: "piManagement",
+        icon: FileText,
+        url: "/invoice-management/invoices",
+    },
+    {
+        title: "Invoice Terms",
+        module: "invoiceTerms",
+        url: "/invoice-terms",
+        icon: FileText,
+    },
     {
         title: "Buyers",
-        module: 'buyers',
+        module: "buyers",
         url: "/buyers",
         icon: Contact,
     },
     {
         title: "Suppliers",
-        module: 'suppliers', // Temporarily using 'buyers' permission since 'suppliers' is not in the backend enum yet
+        module: "suppliers", // Temporarily using 'buyers' permission since 'suppliers' is not in the backend enum yet
         url: "/suppliers",
         icon: Truck,
     },
     {
-        title: "Users",
-        module: 'users',
-        url: "/users",
-        icon: Users,
-    },
-    {
-        title: "Company Profile",
-        module: 'companyProfile',
-        url: "/company-profile",
-        icon: Building2,
-    },
-
-    // {
-    //     title: "LC Management",
-    //     module: 'lcManagement',
-    //     icon: FileText,
-    //     items: [
-    //         {
-    //             title: "LC List",
-    //             url: "/lc-management/lc-managements",
-    //             icon: ClipboardList,
-    //         },
-    //     ],
-    // },
-    {
         title: "LC Management",
-        module: 'lcManagement',
+        module: "lcManagement",
         url: "/lc-management/lc-managements",
         icon: ClipboardList,
     },
     {
         title: "Accounting",
-        module: 'accounts',
+        module: "accounts",
         icon: Calculator,
         items: [
-            // {
-            //     title: "Overview",
-            //     url: "/accounting/overview",
-            //     icon: LayoutDashboard,
-            // },
-
+            {
+                title: "Daily Bookkeeping",
+                url: "/accounting/daily-bookkeeping",
+                icon: BookOpen,
+            },
             {
                 title: "Buyer Ledger",
                 url: "/accounting/buyer-ledger",
@@ -112,9 +81,9 @@ export const navMain = [
                 icon: Building,
             },
             {
-                title: "Daily Bookkeeping",
-                url: "/accounting/daily-bookkeeping",
-                icon: BookOpen,
+                title: "Bank Management",
+                url: "/accounting/banks",
+                icon: Landmark,
             },
             {
                 title: "MOI (Cash Book)",
@@ -122,24 +91,19 @@ export const navMain = [
                 icon: ReceiptText,
             },
             {
+                title: "Loan Management",
+                url: "/accounting/loan-management",
+                icon: Wallet,
+            },
+            {
                 title: "Trial Balance",
                 url: "/accounting/trial-balance",
                 icon: FileText,
             },
             {
-                title: "Bank Management",
-                url: "/accounting/banks",
-                icon: Landmark,
-            },
-            {
                 title: "Audit Trail",
                 url: "/accounting/audit-trail",
                 icon: HistoryIcon,
-            },
-            {
-                title: "Loan Management",
-                url: "/accounting/loan-management",
-                icon: Wallet,
             },
             {
                 title: "Account Headers",
@@ -149,15 +113,15 @@ export const navMain = [
         ],
     },
     {
-        title: "Proforma Invoice",
-        module: 'piManagement',
-        icon: FileText,
-        url: "/invoice-management/invoices",
+        title: "Users",
+        module: "users",
+        url: "/users",
+        icon: Users,
     },
     {
-        title: "Invoice Terms",
-        module: 'invoiceTerms',
-        url: "/invoice-terms",
-        icon: FileText,
+        title: "Company Profile",
+        module: "companyProfile",
+        url: "/company-profile",
+        icon: Building2,
     },
 ];
