@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useGetAllQuery, useLazyGetAllQuery } from "@/store/services/commonApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { exportTrialBalanceToPdf } from "./trailBalancePdf";
+import { useDebounce } from "use-debounce";
 
 const fmt = (n: number) =>
   n === 0 ? "0.00" : n.toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -25,7 +26,7 @@ export default function TrialBalancePage() {
   const [appliedDateRange, setAppliedDateRange] = useState(dateRange);
   const [search, setSearch] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-
+  const [searchValue] = useDebounce(search, 500);
   const {
     data: apiResponse,
     isLoading,
@@ -71,15 +72,15 @@ export default function TrialBalancePage() {
   const reportData = useMemo(() => apiResponse?.data || [], [apiResponse]);
 
   const filteredData = useMemo(() => {
-    if (!search) return reportData;
-    const lowerSearch = search.toLowerCase();
+    if (!searchValue) return reportData;
+    const lowerSearch = searchValue.toLowerCase();
     return reportData.filter(
       (item: any) =>
         item.accountName.toLowerCase().includes(lowerSearch) ||
         (item.accountCode &&
           item.accountCode.toLowerCase().includes(lowerSearch)),
     );
-  }, [reportData, search]);
+  }, [reportData, searchValue]);
 
   const totals = useMemo(() => {
     return filteredData.reduce(
@@ -194,7 +195,7 @@ export default function TrialBalancePage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-1">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" />
+            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" /> */}
             <Input
               placeholder="Search by account name or code..."
               value={search}

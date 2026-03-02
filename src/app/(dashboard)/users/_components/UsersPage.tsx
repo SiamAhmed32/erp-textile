@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "use-debounce";
 
 const UsersPage = () => {
   const [search, setSearch] = useState("");
@@ -40,11 +41,11 @@ const UsersPage = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
-
+  const [searchValue] = useDebounce(search, 500);
   const { data, isLoading } = useGetUsersQuery({
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {

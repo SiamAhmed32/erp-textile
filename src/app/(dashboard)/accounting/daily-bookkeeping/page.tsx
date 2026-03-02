@@ -40,6 +40,7 @@ import {
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { notify } from "@/lib/notifications";
+import { useDebounce } from "use-debounce";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JournalLine {
@@ -361,9 +362,8 @@ function ReverseConfirmModal({
             </p>
             <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
               This will create a new journal entry that cancels the effect of{" "}
-              <span className=" font-bold">{entry?.voucherNo}</span>.
-              Both entries will remain in the ledger as a permanent audit
-              record.
+              <span className=" font-bold">{entry?.voucherNo}</span>. Both
+              entries will remain in the ledger as a permanent audit record.
             </p>
           </div>
         </div>
@@ -407,13 +407,13 @@ export default function DailyBookkeepingList() {
   const [postEntry, setPostEntry] = useState<JournalEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<JournalEntry | null>(null);
   const [reverseEntry, setReverseEntry] = useState<JournalEntry | null>(null);
-
+  const [searchValue] = useDebounce(search, 500);
   // API hooks — backend supports: category, status, dateFrom, dateTo, search
   const { data, isLoading, refetch } = useGetAllQuery({
     path: API_PATH,
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sort: null,
     sortBy: sort.field,
     sortOrder: sort.dir,

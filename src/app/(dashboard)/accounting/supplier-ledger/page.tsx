@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useDebounce } from "use-debounce";
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function SupplierLedgerPage() {
@@ -32,12 +33,12 @@ export default function SupplierLedgerPage() {
     field: "createdAt",
     dir: "desc",
   });
-
+  const [searchValue] = useDebounce(search, 500);
   const { data: supplierResponse, isLoading } = useGetAllQuery({
     path: "accounting/ledger/suppliers/balances",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchValue || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
   });
