@@ -54,12 +54,12 @@ interface JournalEntry {
   voucherNo: string;
   date: string;
   category:
-    | "BUYER_DUE"
-    | "RECEIPT"
-    | "SUPPLIER_DUE"
-    | "PAYMENT"
-    | "JOURNAL"
-    | "CONTRA";
+  | "BUYER_DUE"
+  | "RECEIPT"
+  | "SUPPLIER_DUE"
+  | "PAYMENT"
+  | "JOURNAL"
+  | "CONTRA";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -485,8 +485,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Could not post the entry. Please try again.",
+        err?.data?.message ||
+        "Could not post the entry. Please try again.",
       );
     }
   };
@@ -504,8 +504,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Could not delete the draft. Please try again.",
+        err?.data?.message ||
+        "Could not delete the draft. Please try again.",
       );
     }
   };
@@ -524,8 +524,8 @@ export default function DailyBookkeepingList() {
     } catch (err: any) {
       notify.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Could not reverse the entry. Please try again.",
+        err?.data?.message ||
+        "Could not reverse the entry. Please try again.",
       );
     }
   };
@@ -696,10 +696,9 @@ export default function DailyBookkeepingList() {
         {/* Search Group */}
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search voucher no. or narration..."
-              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

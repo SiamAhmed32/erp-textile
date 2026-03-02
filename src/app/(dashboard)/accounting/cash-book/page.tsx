@@ -137,10 +137,10 @@ export default function CashBookPage() {
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {row.lastTransaction
               ? new Date(row.lastTransaction).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
               : "No activity"}
           </span>
         ),
@@ -193,7 +193,6 @@ export default function CashBookPage() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-2">
           <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search staff members..."
                 value={search}
@@ -201,7 +200,7 @@ export default function CashBookPage() {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="h-11 bg-white border-slate-200 rounded-lg pl-10 shadow-sm"
+                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
               />
             </div>
             <Button

@@ -1,21 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useGetAllQuery } from "@/store/services/commonApi";
-import {
-  BookOpen,
-  ExternalLink,
-  MapPin,
-  Phone,
-  Search,
-  Users,
-} from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -23,7 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useGetAllQuery } from "@/store/services/commonApi";
+import {
+  ArrowUpDown,
+  BookOpen,
+  ExternalLink,
+  MapPin,
+  Phone,
+  Users
+} from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function SupplierLedgerPage() {
@@ -234,10 +233,10 @@ export default function SupplierLedgerPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" /> */}
             <Input
               placeholder="Search by name or location..."
-              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
