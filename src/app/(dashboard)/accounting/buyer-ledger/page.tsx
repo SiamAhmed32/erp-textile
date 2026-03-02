@@ -194,10 +194,9 @@ export default function BuyerLedgerPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search by name, merchandiser or location..."
-              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

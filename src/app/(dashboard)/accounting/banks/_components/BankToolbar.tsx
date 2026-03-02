@@ -61,13 +61,12 @@ export default function BankToolbar({
       {/* Left: Search Group */}
       <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <Input
             placeholder="Search..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            className="pl-9 h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
           />
         </div>
         <Button

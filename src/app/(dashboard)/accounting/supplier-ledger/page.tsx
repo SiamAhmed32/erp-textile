@@ -1,21 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useGetAllQuery } from "@/store/services/commonApi";
-import {
-  BookOpen,
-  ExternalLink,
-  MapPin,
-  Phone,
-  Search,
-  Users,
-} from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -23,7 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useGetAllQuery } from "@/store/services/commonApi";
+import {
+  ArrowUpDown,
+  BookOpen,
+  ExternalLink,
+  MapPin,
+  Phone,
+  Users
+} from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function SupplierLedgerPage() {
@@ -166,78 +165,14 @@ export default function SupplierLedgerPage() {
         }
       />
 
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-            Total Suppliers
-          </p>
-          <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold text-zinc-900">
-              {suppliers.length}
-            </p>
-            <div className="size-8 rounded-lg bg-zinc-50 flex items-center justify-center text-zinc-400 border border-zinc-100">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-[10px] text-zinc-400 mt-2">
-            Active business partners
-          </p>
-        </div>
-
-        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-1">
-            Total Payables
-          </p>
-          <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold text-rose-600  italic">
-              ৳{" "}
-              {totalLiability.toLocaleString("en-IN", {
-                minimumFractionDigits: 2,
-              })}
-            </p>
-            <div className="size-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-400 border border-rose-100">
-              <BookOpen className="w-4 h-4" />
-            </div>
-          </div>
-          <p className="text-[10px] text-zinc-400 mt-2">
-            Current aggregate obligations
-          </p>
-        </div>
-
-        <div className="bg-white border border-rose-100 rounded-xl p-5 shadow-sm">
-          <p className="text-xs font-semibold text-rose-500 uppercase tracking-widest mb-1">
-            Quick Actions
-          </p>
-          <div className="flex gap-2 mt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 text-xs h-8 font-bold"
-              asChild
-            >
-              <Link href="/accounting/overview">Overview</Link>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 bg-white border-zinc-200 text-zinc-900 hover:bg-zinc-50 text-xs h-8 font-bold"
-              onClick={() => window.print()}
-            >
-              Print List
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Toolbar - Standardized for Consistency */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 mb-4">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" /> */}
             <Input
               placeholder="Search by name or location..."
-              className="pl-9 h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
+              className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);

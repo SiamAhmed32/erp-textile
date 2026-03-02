@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
 import {
   Container,
   CustomModal,
   InputField,
-  SelectBox,
   PageHeader,
+  SelectBox,
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -18,29 +17,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Search,
-  Plus,
-  ChevronDown,
-  Landmark,
+  ArrowUpDown,
   Briefcase,
-  UserCircle2,
   CheckCircle2,
-  TrendingDown,
   Eye,
   History,
+  Landmark,
+  Plus,
+  TrendingDown,
+  UserCircle2
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
+import React, { useMemo, useState } from "react";
 
-import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { notify } from "@/lib/notifications";
+import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 
 /* ─── Types ──────────────────────────────────────────────── */
 interface Loan {
@@ -137,7 +130,7 @@ function StakeholderFormModal({
     } catch (err: any) {
       notify.error(
         err?.data?.message ||
-          "Could not register the stakeholder. Please try again.",
+        "Could not register the stakeholder. Please try again.",
       );
     }
   };
@@ -429,7 +422,6 @@ export default function LoanManagementPage() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
         <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
             <Input
               placeholder="Search lender entity or liability type..."
               className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
