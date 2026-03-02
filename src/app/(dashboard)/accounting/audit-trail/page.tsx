@@ -100,11 +100,20 @@ const AuditTrailPage = () => {
   const auditItems = useMemo(() => {
     const raw =
       (auditPayload as any)?.data?.data || (auditPayload as any)?.data;
-    if (Array.isArray(raw)) return raw as AuditEntry[];
-    return [] as AuditEntry[];
+    return Array.isArray(raw) ? (raw as AuditEntry[]) : [];
   }, [auditPayload]);
 
-  const totalPages = (auditPayload as any)?.meta?.pagination?.totalPages || 1;
+  const totalPages = useMemo(() => {
+    const meta =
+      (auditPayload as any)?.meta || (auditPayload as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [auditPayload]);
+
+  const totalRecords = useMemo(() => {
+    const meta =
+      (auditPayload as any)?.meta || (auditPayload as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
+  }, [auditPayload]);
 
   const columns = useMemo(
     () => [
@@ -223,7 +232,7 @@ const AuditTrailPage = () => {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
         <div className="flex items-center gap-2">
           <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
-            {(auditPayload as any)?.meta?.total || 0} Records
+            {totalRecords} Records Found
           </p>
         </div>
         <div className="flex items-center gap-2">
