@@ -12,6 +12,7 @@ type PageHeaderProps = {
   actions?: React.ReactNode;
   icon?: React.ElementType; // Match icon prop
   className?: string;
+  forceSingleRow?: boolean;
 };
 
 const PageHeader = ({
@@ -21,6 +22,7 @@ const PageHeader = ({
   actions,
   icon: Icon,
   className,
+  forceSingleRow = false,
 }: PageHeaderProps) => {
   return (
     <div
@@ -32,7 +34,14 @@ const PageHeader = ({
       <div className="space-y-4">
         <Breadcrumb items={breadcrumbItems} />
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div
+          className={cn(
+            "gap-4",
+            forceSingleRow
+              ? "flex items-center justify-between"
+              : "flex flex-col sm:flex-row sm:items-center sm:justify-between",
+          )}
+        >
           <div className="flex items-center gap-3">
             {backHref && (
               <Button

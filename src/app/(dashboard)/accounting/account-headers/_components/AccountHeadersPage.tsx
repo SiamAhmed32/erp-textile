@@ -16,7 +16,6 @@ import AccountHeaderDetailsModal from "./AccountHeaderDetailsModal";
 import { cn } from "@/lib/utils";
 
 const AccountHeadersPage = () => {
-  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -38,8 +37,6 @@ const AccountHeadersPage = () => {
 
   const { data: apiResponse, isLoading } = useGetAllQuery({
     path: "accounting/accountHeads",
-    page,
-    limit: 10,
     search: search !== "" ? search : undefined,
     sort: null,
     sortBy: sort.field,
@@ -57,24 +54,12 @@ const AccountHeadersPage = () => {
     [apiResponse],
   );
 
-  const totalPages = useMemo(() => {
-    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
-    return meta?.pagination?.totalPages || meta?.totalPages || 1;
-  }, [apiResponse]);
-
-  const totalRecords = useMemo(() => {
-    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
-    return meta?.pagination?.total || meta?.total || 0;
-  }, [apiResponse]);
-
   const handleSearchSubmit = () => {
     setSearch(searchInput);
-    setPage(1);
   };
 
   const handleTypeChange = (val: string) => {
     setTypeFilter(val);
-    setPage(1);
   };
 
   const handleSortChange = (newSort: {
@@ -82,7 +67,6 @@ const AccountHeadersPage = () => {
     dir: "asc" | "desc";
   }) => {
     setSort(newSort);
-    setPage(1);
   };
 
   return (
@@ -125,9 +109,6 @@ const AccountHeadersPage = () => {
       <AccountHeadersTable
         data={headers}
         loading={isLoading}
-        page={page}
-        totalPages={totalPages}
-        onPageChange={setPage}
         onEdit={setEditingHeader}
         onDelete={setDeletingHeader}
         onView={setViewingHeader}

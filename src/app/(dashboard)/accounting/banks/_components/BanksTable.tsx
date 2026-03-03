@@ -34,14 +34,14 @@ const BanksTable = ({
         header: "Bank Identity",
         accessor: (row: Bank) => (
           <div className="flex items-center gap-3 py-1">
-            <div className="size-9 rounded-lg bg-zinc-100 border border-zinc-200 flex items-center justify-center text-xs font-bold text-zinc-600 uppercase shrink-0">
+            <div className="size-9 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase shrink-0">
               {row.bankName.substring(0, 2).toUpperCase()}
             </div>
             <div className="flex flex-col">
-              <div className="font-semibold text-zinc-900 text-sm leading-none mb-1">
+              <div className="font-bold text-slate-900 text-[13px] leading-tight mb-0.5">
                 {row.bankName}
               </div>
-              <div className="text-zinc-500 text-[11px] font-medium">
+              <div className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
                 {row.branchName || "Main Branch"}
               </div>
             </div>
@@ -49,38 +49,38 @@ const BanksTable = ({
         ),
       },
       {
-        header: "Account Logic",
+        header: "Account Details",
         accessor: (row: Bank) => (
           <div className="flex flex-col">
-            <span className=" font-bold text-zinc-700 text-sm tracking-tight">
+            <span className="font-bold text-slate-700 text-xs tracking-tight">
               {row.accountNumber.replace(/(.{4})/g, "$1 ")}
             </span>
-            <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
               Primary Account
             </span>
           </div>
         ),
       },
       {
-        header: "Routing Data",
+        header: "Routing / SWIFT",
         accessor: (row: Bank) => (
           <div className="flex flex-col gap-0.5">
             {row.swiftCode && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-bold text-zinc-400 uppercase">
-                  Swift
+                <span className="text-[9px] font-black text-slate-300 uppercase">
+                  SWIFT
                 </span>
-                <span className=" text-[11px] font-semibold text-zinc-600">
+                <span className="text-[11px] font-bold text-slate-500">
                   {row.swiftCode}
                 </span>
               </div>
             )}
             {row.routingNumber && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-bold text-zinc-400 uppercase">
-                  Rtn
+                <span className="text-[9px] font-black text-slate-300 uppercase">
+                  RTN
                 </span>
-                <span className=" text-[11px] font-semibold text-zinc-600">
+                <span className="text-[11px] font-bold text-slate-500">
                   {row.routingNumber}
                 </span>
               </div>
@@ -89,13 +89,13 @@ const BanksTable = ({
         ),
       },
       {
-        header: "Current Balance",
+        header: "Balance",
         accessor: (row: Bank) => (
           <div className="flex flex-col">
             <span
               className={cn(
-                " font-bold text-[14px] tracking-tight",
-                row.balance < 0 ? "text-rose-600" : "text-emerald-600",
+                "font-bold text-[13px] tracking-tight",
+                row.balance < 0 ? "text-red-600" : "text-emerald-600",
               )}
             >
               ৳{" "}
@@ -103,8 +103,8 @@ const BanksTable = ({
                 minimumFractionDigits: 2,
               })}
             </span>
-            <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
-              Closing Balance
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">
+              Current Closing
             </span>
           </div>
         ),
@@ -114,34 +114,40 @@ const BanksTable = ({
         accessor: (row: Bank) => (
           <span
             className={cn(
-              "inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all",
+              "text-[8px] font-bold px-1.5 py-0.5 rounded uppercase tracking-tighter",
               row.isDeleted
-                ? "bg-zinc-100 text-zinc-500"
-                : "bg-emerald-50 text-emerald-700",
+                ? "bg-slate-100 text-slate-500"
+                : "bg-emerald-50 text-emerald-600",
             )}
           >
-            {row.isDeleted ? "Archived" : "Active"}
+            {row.isDeleted ? "Archived" : "Active ✓"}
           </span>
         ),
       },
       {
         header: "Actions",
-        className: "text-right pr-6",
+        className: "text-right pr-4",
         accessor: (row: Bank) => (
           <div className="flex justify-end gap-1">
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-zinc-400 hover:text-zinc-900"
-              onClick={() => onView(row)}
+              className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
             >
               <Eye className="h-4 w-4" />
             </Button>
             <Button
               size="icon"
               variant="ghost"
-              className="h-8 w-8 text-zinc-400 hover:text-zinc-900"
-              onClick={() => onEdit(row)}
+              className="h-8 w-8 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-md transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
             >
               <SquarePen className="h-4 w-4" />
             </Button>
@@ -149,12 +155,15 @@ const BanksTable = ({
               size="icon"
               variant="ghost"
               className={cn(
-                "h-8 w-8 transition-all",
+                "h-8 w-8 transition-colors rounded-md",
                 row.isDeleted
-                  ? "text-zinc-400 hover:text-emerald-600"
-                  : "text-zinc-400 hover:text-rose-600",
+                  ? "text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                  : "text-slate-400 hover:text-red-600 hover:bg-red-50",
               )}
-              onClick={() => onDelete(row)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -176,8 +185,8 @@ const BanksTable = ({
         totalPages,
         onPageChange,
       }}
-      scrollAreaHeight="h-[calc(100vh-480px)]"
-      rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-zinc-100"
+      scrollAreaHeight="h-[calc(100vh-320px)]"
+      rowClassName="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0"
     />
   );
 };

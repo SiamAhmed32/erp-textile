@@ -16,9 +16,6 @@ import { cn } from "@/lib/utils";
 type Props = {
   data: AccountHeader[];
   loading: boolean;
-  page: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
   onEdit: (header: AccountHeader) => void;
   onDelete: (header: AccountHeader) => void;
   onView: (header: AccountHeader) => void;
@@ -27,9 +24,6 @@ type Props = {
 const AccountHeadersTable = ({
   data,
   loading,
-  page,
-  totalPages,
-  onPageChange,
   onEdit,
   onDelete,
   onView,
@@ -158,11 +152,6 @@ const AccountHeadersTable = ({
       columns={columns}
       isLoading={loading}
       skeletonRows={10}
-      pagination={{
-        currentPage: page,
-        totalPages,
-        onPageChange,
-      }}
       scrollAreaHeight="h-[calc(100vh-320px)]"
       rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
     />

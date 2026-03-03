@@ -3,11 +3,9 @@
 import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Plus } from "lucide-react";
-import StatsCard from "@/components/dashboard/StatsCard";
 import { Button } from "@/components/ui/button";
 import {
   useGetAllQuery,
-  usePutMutation,
   usePatchMutation,
 } from "@/store/services/commonApi";
 import { Bank } from "./types";
@@ -41,7 +39,6 @@ const BanksPage = () => {
     sortOrder: sort.dir,
   });
 
-  const [putItem] = usePutMutation();
   const [patchItem] = usePatchMutation();
 
   const handleSearchSubmit = () => {
@@ -82,7 +79,7 @@ const BanksPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-0">
       {/* ── Page Header ───────────────────────────────────────────── */}
       <PageHeader
         title="Bank Management"
@@ -90,39 +87,40 @@ const BanksPage = () => {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Bank Management" },
         ]}
-        // actions={
-        //   <Button
-        //     onClick={() => setIsCreateModalOpen(true)}
-        //     className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
-        //   >
-        //     <Plus className="w-4 h-4" />
-        //     Connect New Bank
-        //   </Button>
-        // }
+        actions={
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="hidden sm:inline-flex h-10 sm:h-11 w-10 sm:w-auto sm:px-4 bg-black text-white hover:bg-black/90 font-bold rounded-lg shadow-sm shrink-0"
+            aria-label="Add Bank"
+          >
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="hidden sm:inline ml-2">Add Bank</span>
+          </Button>
+        }
       />
 
       {/* Toolbar - Redesigned for Consistency */}
-      <div className="py-2 mb-4">
-        <BankToolbar
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          onSearch={handleSearchSubmit}
-          sort={sort}
-          setSort={handleSortChange}
-          onAdd={() => setIsCreateModalOpen(true)}
+      <BankToolbar
+        searchInput={searchInput}
+        setSearchInput={setSearchInput}
+        onSearch={handleSearchSubmit}
+        sort={sort}
+        setSort={handleSortChange}
+        onAdd={() => setIsCreateModalOpen(true)}
+      />
+
+      <div className="mt-4">
+        <BanksTable
+          data={banks}
+          loading={isLoading}
+          page={page}
+          totalPages={banksPayload?.meta?.pagination?.totalPages || 1}
+          onPageChange={setPage}
+          onEdit={setEditingBank}
+          onView={setViewingBank}
+          onDelete={handleArchive}
         />
       </div>
-
-      <BanksTable
-        data={banks}
-        loading={isLoading}
-        page={page}
-        totalPages={banksPayload?.meta?.pagination?.totalPages || 1}
-        onPageChange={setPage}
-        onEdit={setEditingBank}
-        onView={setViewingBank}
-        onDelete={handleArchive}
-      />
 
       {/* ── Modals ────────────────────────────────────────────────── */}
       <BankCreateModal

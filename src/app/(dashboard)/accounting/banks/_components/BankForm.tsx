@@ -68,44 +68,44 @@ export default function BankForm({
   }, [companies, selectedCompanyId, setValue, initialData]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div className="space-y-5">
         {/* ── Bank Identity ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-              Bank Name <span className="text-destructive">*</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-1">
+              Bank Name <span className="text-red-500">*</span>
             </Label>
             <Input
               {...register("bankName")}
               placeholder="e.g. City Bank Limited"
               className={cn(
-                "h-11 border-zinc-200 font-semibold",
+                "h-11 border-slate-200 bg-slate-50/50 font-semibold focus-visible:ring-slate-400 transition-all",
                 errors.bankName && "border-red-500 focus-visible:ring-red-500",
               )}
             />
             {errors.bankName && (
-              <p className="text-[10px] text-destructive font-bold">
+              <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-tight">
                 {errors.bankName.message}
               </p>
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-              Account Number <span className="text-destructive">*</span>
+          <div className="space-y-2">
+            <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-1">
+              Account Number <span className="text-red-500">*</span>
             </Label>
             <Input
               {...register("accountNumber")}
               placeholder="e.g. 100-245-8890"
               className={cn(
-                "h-11 border-zinc-200  font-bold",
+                "h-11 border-slate-200 bg-slate-50/50 font-bold tracking-tight focus-visible:ring-slate-400 transition-all",
                 errors.accountNumber &&
                   "border-red-500 focus-visible:ring-red-500",
               )}
             />
             {errors.accountNumber && (
-              <p className="text-[10px] text-destructive font-bold">
+              <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-tight">
                 {errors.accountNumber.message}
               </p>
             )}
@@ -113,45 +113,45 @@ export default function BankForm({
         </div>
 
         {/* ── Branch Info ───────────────────────────────────────── */}
-        <div className="space-y-1.5">
-          <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+        <div className="space-y-2">
+          <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-1">
             Branch Name
           </Label>
           <Input
             {...register("branchName")}
             placeholder="e.g. Gulshan Branch"
             className={cn(
-              "h-11 border-zinc-200",
+              "h-11 border-slate-200 bg-slate-50/50 font-medium focus-visible:ring-slate-400 transition-all",
               errors.branchName && "border-red-500",
             )}
           />
         </div>
 
         {/* ── SWIFT & Routing ───────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-2">
+            <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-1">
               SWIFT Code
             </Label>
             <Input
               {...register("swiftCode")}
               placeholder="e.g. CIBLBDDH"
               className={cn(
-                "h-11 border-zinc-200  ",
+                "h-11 border-slate-200 bg-slate-50/50 font-bold focus-visible:ring-slate-400 transition-all",
                 errors.swiftCode && "border-red-500",
               )}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+          <div className="space-y-2">
+            <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest pl-1">
               Routing Number
             </Label>
             <Input
               {...register("routingNumber")}
               placeholder="e.g. 010260136"
               className={cn(
-                "h-11 border-zinc-200  ",
+                "h-11 border-slate-200 bg-slate-50/50 font-bold focus-visible:ring-slate-400 transition-all",
                 errors.routingNumber && "border-red-500",
               )}
             />
@@ -159,11 +159,10 @@ export default function BankForm({
         </div>
 
         {/* ── Business Context ───────────────────────────────────── */}
-        <div className="space-y-1.5">
-          <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5">
-            <Building2 className="w-3 h-3 text-zinc-400" />
-            Associated Business Profile{" "}
-            <span className="text-destructive">*</span>
+        <div className="space-y-2">
+          <Label className="text-slate-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 pl-1">
+            <Building2 className="w-3 h-3 text-slate-400" />
+            Associated Business Profile <span className="text-red-500">*</span>
           </Label>
           <Select
             value={selectedCompanyId}
@@ -173,23 +172,26 @@ export default function BankForm({
           >
             <SelectTrigger
               className={cn(
-                "h-11 border-zinc-200",
-                errors.companyProfileId &&
-                  "border-red-500 focus-visible:ring-red-500",
+                "h-11 border-slate-200 bg-slate-50/50 font-semibold focus:ring-slate-400 transition-all",
+                errors.companyProfileId && "border-red-500 focus:ring-red-500",
               )}
             >
               <SelectValue placeholder="Select business profile" />
             </SelectTrigger>
-            <SelectContent className="bg-white">
+            <SelectContent className="bg-white rounded-xl shadow-xl border-slate-200">
               {companies.map((company) => (
-                <SelectItem key={company.id} value={company.id}>
+                <SelectItem
+                  key={company.id}
+                  value={company.id}
+                  className="font-medium text-xs py-2.5"
+                >
                   {company.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           {errors.companyProfileId && (
-            <p className="text-[10px] text-destructive font-bold">
+            <p className="text-[10px] text-red-500 font-bold ml-1 uppercase tracking-tight">
               {errors.companyProfileId.message}
             </p>
           )}
@@ -197,27 +199,27 @@ export default function BankForm({
       </div>
 
       {/* ── Footer ───────────────────────────────────────────── */}
-      <div className="flex justify-end gap-3 pt-4 border-t border-zinc-100">
+      <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
         <Button
           type="button"
-          variant="ghost"
+          variant="outline"
           onClick={onCancel}
-          className="h-11 px-6 text-zinc-500 font-bold hover:bg-zinc-50"
+          className="h-11 px-8 text-slate-500 font-bold text-xs uppercase tracking-widest bg-white border-slate-200 hover:bg-slate-50 hover:text-slate-900 transition-all rounded-lg"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="h-11 px-10 bg-zinc-900 text-white font-bold hover:bg-black transition-all active:scale-95"
+          className="h-11 px-10 bg-black text-white font-bold text-xs uppercase tracking-widest hover:bg-black/90 transition-all active:scale-95 rounded-lg shadow-lg shadow-black/10"
         >
           {isSubmitting ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>Saving...</span>
+              <span>Syncing...</span>
             </div>
           ) : (
-            <span>{initialData ? "Update Bank" : "Register Bank"}</span>
+            <span>{initialData ? "Apply Changes" : "Register Account"}</span>
           )}
         </Button>
       </div>
