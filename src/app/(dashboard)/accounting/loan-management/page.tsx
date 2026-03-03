@@ -26,8 +26,9 @@ import {
   History,
   Landmark,
   Plus,
+  Search,
   TrendingDown,
-  UserCircle2
+  UserCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
@@ -130,7 +131,7 @@ function StakeholderFormModal({
     } catch (err: any) {
       notify.error(
         err?.data?.message ||
-        "Could not register the stakeholder. Please try again.",
+          "Could not register the stakeholder. Please try again.",
       );
     }
   };
@@ -245,10 +246,16 @@ export default function LoanManagementPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
     dir: "desc",
   });
+
+  const handleSearchSubmit = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
 
   const { data: loansResponse, isLoading: isLoadingLoans } = useGetAllQuery({
     path: "accounting/loans",
@@ -259,8 +266,24 @@ export default function LoanManagementPage() {
     sortOrder: sort.dir,
   });
 
-  const loans = useMemo(() => {
-    return ((loansResponse as any)?.data || []) as Loan[];
+  const loans = useMemo(
+    () =>
+      ((loansResponse as any)?.data ||
+        (loansResponse as any)?.data?.data ||
+        []) as Loan[],
+    [loansResponse],
+  );
+
+  const totalPages = useMemo(() => {
+    const meta =
+      (loansResponse as any)?.meta || (loansResponse as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [loansResponse]);
+
+  const totalRecords = useMemo(() => {
+    const meta =
+      (loansResponse as any)?.meta || (loansResponse as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
   }, [loansResponse]);
 
   const sortOptions = [
@@ -418,33 +441,33 @@ export default function LoanManagementPage() {
         }
       />
 
-      {/* Toolbar - Standardized for Consistency */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-2">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+      {/* Toolbar — Search + Sort (single filter → fits one row) */}
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
           <div className="relative flex-1">
             <Input
               placeholder="Search lender entity or liability type..."
-              className="h-11 bg-white border-zinc-200 rounded-lg shadow-sm"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
             />
           </div>
           <Button
-            className="bg-black text-white hover:bg-black/90 font-bold px-6 h-11 rounded-lg"
-            onClick={() => setPage(1)}
+            onClick={handleSearchSubmit}
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
           >
-            Search
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Sort Group */}
-          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
-            <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+        {/* Right: Sort Group */}
+        <div className="flex items-center gap-2 xl:justify-end">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
               Sort By
             </span>
             <Select
@@ -455,12 +478,12 @@ export default function LoanManagementPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Sort entries" />
               </SelectTrigger>
               <SelectContent
                 align="end"
-                className="rounded-xl shadow-xl border-zinc-200"
+                className="rounded-xl shadow-xl border-slate-200"
               >
                 {sortOptions.map((o) => (
                   <SelectItem
@@ -474,18 +497,6 @@ export default function LoanManagementPage() {
               </SelectContent>
             </Select>
           </div>
-
-          <Button
-            variant="outline"
-            className="h-11 px-4 rounded-lg border-zinc-200 bg-white text-zinc-600 font-semibold text-xs uppercase tracking-wider gap-2 flex items-center shadow-sm hover:bg-zinc-50"
-          >
-            <History className="w-4 h-4 text-zinc-400" />
-            <span>Audit Trail</span>
-          </Button>
-
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block whitespace-nowrap">
-            {(loansResponse as any)?.meta?.total || 0} Records
-          </p>
         </div>
       </div>
 
@@ -493,13 +504,14 @@ export default function LoanManagementPage() {
         data={loans}
         columns={listColumns}
         isLoading={isLoadingLoans}
+        skeletonRows={10}
         pagination={{
           currentPage: page,
-          totalPages: (loansResponse as any)?.meta?.pagination?.totalPages || 1,
+          totalPages,
           onPageChange: setPage,
         }}
-        scrollAreaHeight="h-[calc(100vh-350px)]"
-        rowClassName="group hover:bg-zinc-50/50 transition-colors cursor-default border-b border-zinc-100 last:border-0"
+        scrollAreaHeight="h-[calc(100vh-320px)]"
+        rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
       />
 
       <StakeholderFormModal

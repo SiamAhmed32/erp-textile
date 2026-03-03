@@ -91,13 +91,6 @@ const LCPage = () => {
     [router],
   );
 
-  const handleExport = useCallback(
-    (row: LCManagement) => {
-      router.push(`/lc-management/lc-managements/${row.id}?export=pdf`);
-    },
-    [router],
-  );
-
   const handleDelete = useCallback((row: LCManagement) => {
     setDeletingLC(row);
   }, []);
@@ -181,7 +174,6 @@ const LCPage = () => {
         onRowClick={handleRowClick}
         onView={handleView}
         onEdit={handleEdit}
-        onExport={handleExport}
         onDelete={handleDelete}
         sort={sort}
         onSortChange={setSort}

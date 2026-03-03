@@ -93,7 +93,7 @@ export function LoginForm({
                 />
               </Field>
               <Field>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                   <button
                     type="button"
@@ -102,7 +102,7 @@ export function LoginForm({
                   >
                     Forgot your password?
                   </button>
-                </div>
+                </div> */}
                 <div className="relative">
                   <Input
                     id="password"

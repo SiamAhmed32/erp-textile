@@ -3,8 +3,21 @@
 import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { FileDown, History as HistoryIcon } from "lucide-react";
+import {
+  ArrowUpDown,
+  FileDown,
+  History as HistoryIcon,
+  Search,
+} from "lucide-react";
 import { useGetAllQuery } from "@/store/services/commonApi";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
@@ -81,7 +94,6 @@ const getCategoryTags = (entry: AuditEntry) => {
 
 const getEntryAmount = (entry: AuditEntry): number => {
   if (!entry.lines || entry.lines.length === 0) return 0;
-  // Sum all debit amounts (which equals credit amounts for a balanced entry)
   return entry.lines
     .filter((l) => l.type === "DEBIT")
     .reduce((sum, l) => sum + Number(l.amount), 0);
@@ -90,21 +102,69 @@ const getEntryAmount = (entry: AuditEntry): number => {
 // ── Page ───────────────────────────────────────────────────────────────────────
 const AuditTrailPage = () => {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
+
+  const handleSearchSubmit = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
+
   const { data: auditPayload, isLoading } = useGetAllQuery({
     path: "accounting/ledger/audit-trail",
     page,
     limit: 10,
-    sort: null,
+    search: search || undefined,
+    sortBy: sort.field,
+    sortOrder: sort.dir,
   });
 
   const auditItems = useMemo(() => {
     const raw =
       (auditPayload as any)?.data?.data || (auditPayload as any)?.data;
-    if (Array.isArray(raw)) return raw as AuditEntry[];
-    return [] as AuditEntry[];
+    return Array.isArray(raw) ? (raw as AuditEntry[]) : [];
   }, [auditPayload]);
 
-  const totalPages = (auditPayload as any)?.meta?.pagination?.totalPages || 1;
+  const totalPages = useMemo(() => {
+    const meta =
+      (auditPayload as any)?.meta || (auditPayload as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [auditPayload]);
+
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "date_desc",
+      label: "Date (Newest)",
+      field: "date",
+      dir: "desc",
+    },
+    {
+      value: "date_asc",
+      label: "Date (Oldest)",
+      field: "date",
+      dir: "asc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
 
   const columns = useMemo(
     () => [
@@ -217,23 +277,79 @@ const AuditTrailPage = () => {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Audit Trail" },
         ]}
-        icon={HistoryIcon}
+        // icon={HistoryIcon}
+        // actions={
+        //   <Button
+        //     variant="outline"
+        //     className="flex items-center gap-2 h-11 px-4 rounded-lg border-slate-200 bg-white text-slate-600 font-semibold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50"
+        //   >
+        //     <FileDown className="size-3.5" />
+        //     <span>Export All</span>
+        //   </Button>
+        // }
       />
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 hidden sm:block">
-            {(auditPayload as any)?.meta?.total || 0} Records
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      {/* Toolbar — Search + Sort (single filter → fits one row) */}
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2 mb-4">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search voucher no. or narration..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
           <Button
-            variant="outline"
-            className="flex items-center gap-2 h-11 px-4 rounded-lg border-zinc-200 bg-white text-zinc-600 font-semibold text-xs uppercase tracking-wider shadow-sm hover:bg-zinc-50"
+            onClick={handleSearchSubmit}
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
           >
-            <FileDown className="size-3.5" />
-            <span>Export All</span>
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
+        </div>
+
+        {/* Right: Sort Group */}
+        <div className="flex items-center gap-2 xl:justify-end">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt) {
+                  setSort({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+                  setPage(1);
+                }
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

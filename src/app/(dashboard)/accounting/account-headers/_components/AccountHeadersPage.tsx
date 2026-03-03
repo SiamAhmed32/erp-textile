@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 const AccountHeadersPage = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
@@ -36,20 +36,11 @@ const AccountHeadersPage = () => {
     null,
   );
 
-  // Debounced search logic like order management
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  const { data, isLoading } = useGetAllQuery({
+  const { data: apiResponse, isLoading } = useGetAllQuery({
     path: "accounting/accountHeads",
-    page: 1,
-    limit: 500,
-    search: debouncedSearch || undefined,
+    page,
+    limit: 10,
+    search: search !== "" ? search : undefined,
     sort: null,
     sortBy: sort.field,
     sortOrder: sort.dir,
@@ -58,8 +49,26 @@ const AccountHeadersPage = () => {
     },
   });
 
+  const headers = useMemo(
+    () =>
+      ((apiResponse as any)?.data ||
+        (apiResponse as any)?.data?.data ||
+        []) as AccountHeader[],
+    [apiResponse],
+  );
+
+  const totalPages = useMemo(() => {
+    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
+    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  }, [apiResponse]);
+
+  const totalRecords = useMemo(() => {
+    const meta = (apiResponse as any)?.meta || (apiResponse as any)?.data?.meta;
+    return meta?.pagination?.total || meta?.total || 0;
+  }, [apiResponse]);
+
   const handleSearchSubmit = () => {
-    setDebouncedSearch(search);
+    setSearch(searchInput);
     setPage(1);
   };
 
@@ -75,74 +84,6 @@ const AccountHeadersPage = () => {
     setSort(newSort);
     setPage(1);
   };
-
-  const headers = useMemo(() => {
-    const rawData = (data?.data || []) as AccountHeader[];
-
-    // Custom sort order for financial types
-    const typeOrder: Record<string, number> = {
-      ASSET: 1,
-      LIABILITY: 2,
-      EQUITY: 3,
-      INCOME: 4,
-      REVENUE: 4,
-      EXPENSE: 5,
-    };
-
-    // Build hierarchy within a set of accounts
-    const buildTree = (accounts: AccountHeader[]) => {
-      const accountMap: Record<string, AccountHeader & { children: any[] }> = {};
-      const roots: any[] = [];
-
-      accounts.forEach((acc) => {
-        accountMap[acc.id] = { ...acc, children: [] };
-      });
-
-      accounts.forEach((acc) => {
-        if (acc.parentId && accountMap[acc.parentId]) {
-          accountMap[acc.parentId].children.push(accountMap[acc.id]);
-        } else {
-          roots.push(accountMap[acc.id]);
-        }
-      });
-
-      return roots;
-    };
-
-    // Flatten tree for table display with depth level
-    const flattenTree = (nodes: any[], level = 0): any[] => {
-      return nodes.reduce((acc, node) => {
-        const { children, ...rest } = node;
-        const sortedChildren = [...children].sort((a, b) => a.name.localeCompare(b.name));
-        return [
-          ...acc,
-          { ...rest, level },
-          ...flattenTree(sortedChildren, level + 1)
-        ];
-      }, []);
-    };
-
-    const categories: Record<string, AccountHeader[]> = {};
-    rawData.forEach((acc) => {
-      const type = acc.type || "OTHER";
-      if (!categories[type]) categories[type] = [];
-      categories[type].push(acc);
-    });
-
-    const sortedTypes = Object.keys(categories).sort(
-      (a, b) => (typeOrder[a] || 99) - (typeOrder[b] || 99),
-    );
-
-    let result: AccountHeader[] = [];
-    sortedTypes.forEach((type) => {
-      const categoryAccounts = categories[type];
-      const tree = buildTree(categoryAccounts);
-      tree.sort((a, b) => a.name.localeCompare(b.name));
-      result = [...result, ...flattenTree(tree)];
-    });
-
-    return result;
-  }, [data]);
 
   return (
     <div className="space-y-6">
@@ -164,19 +105,29 @@ const AccountHeadersPage = () => {
         }
       />
 
-      <AccountHeaderToolbar
-        searchInput={search}
-        setSearchInput={setSearch}
-        onSearch={handleSearchSubmit}
-        type={typeFilter}
-        setType={handleTypeChange}
-        sort={sort}
-        setSort={handleSortChange}
-      />
+      <div className="flex flex-col gap-4">
+        <AccountHeaderToolbar
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearchSubmit}
+          type={typeFilter}
+          setType={handleTypeChange}
+          sort={sort}
+          setSort={handleSortChange}
+        />
+        <div className="flex justify-end pr-2">
+          {/* <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest hidden sm:block">
+            {totalRecords} Records Found
+          </p> */}
+        </div>
+      </div>
 
       <AccountHeadersTable
         data={headers}
         loading={isLoading}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
         onEdit={setEditingHeader}
         onDelete={setDeletingHeader}
         onView={setViewingHeader}

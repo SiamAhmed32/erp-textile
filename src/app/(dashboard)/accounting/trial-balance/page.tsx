@@ -1,16 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Container, PageHeader, DateRangeFilter } from "@/components/reusables";
+import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetAllQuery, useLazyGetAllQuery } from "@/store/services/commonApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { exportTrialBalanceToPdf } from "./trailBalancePdf";
-import { useDebounce } from "use-debounce";
 
 const fmt = (n: number) =>
   n === 0 ? "0.00" : n.toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -23,10 +21,10 @@ export default function TrialBalancePage() {
     end: new Date().toISOString().split("T")[0],
   });
 
-  const [appliedDateRange, setAppliedDateRange] = useState(dateRange);
-  const [search, setSearch] = useState("");
+  const [appliedDateRange] = useState(dateRange);
+  const [search] = useState("");
   const [isExporting, setIsExporting] = useState(false);
-  const [searchValue] = useDebounce(search, 500);
+
   const {
     data: apiResponse,
     isLoading,
@@ -46,10 +44,6 @@ export default function TrialBalancePage() {
       filters: { startDate: start, endDate: end },
     });
   }
-
-  const handleGenerateReport = () => {
-    setAppliedDateRange(dateRange);
-  };
 
   const handleExportPdf = async () => {
     try {
@@ -72,15 +66,15 @@ export default function TrialBalancePage() {
   const reportData = useMemo(() => apiResponse?.data || [], [apiResponse]);
 
   const filteredData = useMemo(() => {
-    if (!searchValue) return reportData;
-    const lowerSearch = searchValue.toLowerCase();
+    if (!search) return reportData;
+    const lowerSearch = search.toLowerCase();
     return reportData.filter(
       (item: any) =>
         item.accountName.toLowerCase().includes(lowerSearch) ||
         (item.accountCode &&
           item.accountCode.toLowerCase().includes(lowerSearch)),
     );
-  }, [reportData, searchValue]);
+  }, [reportData, search]);
 
   const totals = useMemo(() => {
     return filteredData.reduce(
@@ -179,48 +173,17 @@ export default function TrialBalancePage() {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Trial Balance" },
         ]}
-        actions={
-          <Button
-            className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
-            onClick={handleExportPdf}
-            disabled={isExporting}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            {isExporting ? "Exporting..." : "Export Report"}
-          </Button>
-        }
+      // actions={
+      //   <Button
+      //     className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
+      //     onClick={handleExportPdf}
+      //     disabled={isExporting}
+      //   >
+      //     <Download className="mr-2 h-4 w-4" />
+      //     {isExporting ? "Exporting..." : "Export Report"}
+      //   </Button>
+      // }
       />
-
-      {/* Filter Toolbar Group */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between py-1">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10" /> */}
-            <Input
-              placeholder="Search by account name or code..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-11 bg-white border-slate-200 rounded-lg pl-10 shadow-sm focus-visible:ring-slate-200"
-            />
-          </div>
-          <Button
-            className="h-11 px-8 bg-black hover:bg-black/90 text-white font-bold text-xs uppercase tracking-widest rounded-lg transition-all"
-            disabled={isFetching || isLoading}
-            onClick={handleGenerateReport}
-          >
-            Search
-          </Button>
-        </div>
-
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <DateRangeFilter
-            start={dateRange.start}
-            end={dateRange.end}
-            onFilterChange={setDateRange}
-            placeholder="Report Dates"
-          />
-        </div>
-      </div>
 
       <div className="min-h-[400px]">
         {isLoading ? (

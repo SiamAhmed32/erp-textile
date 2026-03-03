@@ -16,6 +16,9 @@ import { cn } from "@/lib/utils";
 type Props = {
   data: AccountHeader[];
   loading: boolean;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
   onEdit: (header: AccountHeader) => void;
   onDelete: (header: AccountHeader) => void;
   onView: (header: AccountHeader) => void;
@@ -24,6 +27,9 @@ type Props = {
 const AccountHeadersTable = ({
   data,
   loading,
+  page,
+  totalPages,
+  onPageChange,
   onEdit,
   onDelete,
   onView,
@@ -33,18 +39,19 @@ const AccountHeadersTable = ({
       {
         header: "Ledger Hierarchy",
         accessor: (row: AccountHeader) => {
-          const level = row.level || 0;
-          const isChild = level > 0;
+          const isChild = !!row.parentId;
           return (
             <div
-              className="flex items-center py-2 gap-3 relative"
-              style={{ paddingLeft: `${level * 32}px` }}
+              className={cn(
+                "flex items-center py-2 gap-3 relative",
+                isChild ? "ml-8" : "ml-0",
+              )}
             >
               {/* Visual guide for children */}
               {isChild && (
                 <>
-                  <div className="absolute left-[calc(-1.5rem)] w-px h-[calc(100%+2rem)] bg-zinc-200 -top-4" style={{ left: `${(level - 1) * 32 + 16}px` }} />
-                  <div className="absolute left-[calc(-1.5rem)] w-4 h-px bg-zinc-200 top-1/2" style={{ left: `${(level - 1) * 32 + 16}px` }} />
+                  <div className="absolute left-[-1.5rem] w-px h-[calc(100%+2rem)] bg-zinc-200 -top-4" />
+                  <div className="absolute left-[-1.5rem] w-4 h-px bg-zinc-200 top-1/2" />
                 </>
               )}
 
@@ -150,9 +157,14 @@ const AccountHeadersTable = ({
       data={data}
       columns={columns}
       isLoading={loading}
-      skeletonRows={8}
+      skeletonRows={10}
+      pagination={{
+        currentPage: page,
+        totalPages,
+        onPageChange,
+      }}
       scrollAreaHeight="h-[calc(100vh-320px)]"
-      rowClassName="group hover:bg-zinc-50/50 transition-all cursor-default overflow-visible"
+      rowClassName="group hover:bg-zinc-50/50 transition-all border-b border-zinc-50 last:border-0"
     />
   );
 };

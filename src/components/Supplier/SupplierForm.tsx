@@ -126,7 +126,7 @@ export function SupplierForm({
                 label="Opening Liability (৳)"
                 name="openingLiability"
                 type="number"
-                value={data.openingLiability || ""}
+                value={String(data.openingLiability || "")}
                 onChange={(e) =>
                   onChange("openingLiability", parseFloat(e.target.value) || 0)
                 }

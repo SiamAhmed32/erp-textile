@@ -31,12 +31,18 @@ export default function CashBookPage() {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
     dir: "desc",
   });
-  const [searchValue] = useDebounce(search, 500);
+
+  const handleSearchSubmit = () => {
+    setSearch(searchInput);
+    setPage(1);
+  };
+
   const sortOptions = [
     {
       value: "createdAt_desc",
@@ -75,7 +81,7 @@ export default function CashBookPage() {
     path: "moi-cash-books/summaries",
     page,
     limit: 10,
-    search: searchValue || undefined,
+    search: search || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {
@@ -190,73 +196,145 @@ export default function CashBookPage() {
       />
 
       <div className="space-y-4">
-        {/* Filters Row */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-2">
-          <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Search staff members..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+        {/* Toolbar — Search + DateRange + Sort (2 filters → 2 rows on tablet/mobile) */}
+        <div className="flex flex-col gap-3 py-2 mb-2">
+          {/* DESKTOP VIEW (>1280px): Single row */}
+          <div className="hidden xl:flex items-center justify-between gap-3">
+            <div className="flex w-full gap-2 max-w-md flex-1">
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Search staff members..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+                  className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+                />
+              </div>
+              <Button
+                onClick={handleSearchSubmit}
+                className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+              >
+                Search
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-[200px]">
+                <DateRangeFilter
+                  start={dateRange.start}
+                  end={dateRange.end}
+                  onFilterChange={(range) => {
+                    setDateRange(range);
+                    setPage(1);
+                  }}
+                  className="h-11 text-xs"
+                />
+              </div>
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+                <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+                  Sort By
+                </span>
+                <Select
+                  value={currentSortValue}
+                  onValueChange={(val) => {
+                    const opt = sortOptions.find((o) => o.value === val);
+                    if (opt)
+                      handleSortChange({
+                        field: opt.field,
+                        dir: opt.dir as "asc" | "desc",
+                      });
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                    <SelectValue placeholder="Newest First" />
+                  </SelectTrigger>
+                  <SelectContent
+                    align="end"
+                    className="rounded-xl shadow-xl border-slate-200"
+                  >
+                    {sortOptions.map((opt) => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        className="text-xs font-semibold py-2.5"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* TABLET & MOBILE VIEW (<1280px) */}
+          <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
+            {/* Row 1: Search + Sort */}
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1">
+                <Input
+                  placeholder="Search staff members..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
+                  className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+                />
+                <Button
+                  onClick={handleSearchSubmit}
+                  className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+                >
+                  <Search className="h-4 w-4 sm:hidden" />
+                  <span className="hidden sm:inline text-xs">Search</span>
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
+                <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+                <span className="hidden sm:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+                  Sort By
+                </span>
+                <Select
+                  value={currentSortValue}
+                  onValueChange={(val) => {
+                    const opt = sortOptions.find((o) => o.value === val);
+                    if (opt)
+                      handleSortChange({
+                        field: opt.field,
+                        dir: opt.dir as "asc" | "desc",
+                      });
+                  }}
+                >
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-[80px] sm:w-[130px]">
+                    <SelectValue placeholder="Sort" />
+                  </SelectTrigger>
+                  <SelectContent
+                    align="end"
+                    className="rounded-xl shadow-xl border-slate-200"
+                  >
+                    {sortOptions.map((opt) => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        className="text-xs font-semibold py-2.5"
+                      >
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Row 2: Date Range */}
+            <div className="flex items-center gap-2">
+              <DateRangeFilter
+                start={dateRange.start}
+                end={dateRange.end}
+                onFilterChange={(range) => {
+                  setDateRange(range);
                   setPage(1);
                 }}
-                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+                className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
               />
-            </div>
-            <Button
-              variant="outline"
-              className="text-slate-500 h-11 border-slate-200 px-4"
-              title="Audit Trail"
-            >
-              <History className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-            <DateRangeFilter
-              start={dateRange.start}
-              end={dateRange.end}
-              onFilterChange={(range) => {
-                setDateRange(range);
-                setPage(1);
-              }}
-            />
-
-            {/* Sort Group */}
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-              <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
-                Sort By
-              </span>
-              <Select
-                value={currentSortValue}
-                onValueChange={(val) => {
-                  const opt = sortOptions.find((o) => o.value === val);
-                  if (opt)
-                    handleSortChange({
-                      field: opt.field,
-                      dir: opt.dir as "asc" | "desc",
-                    });
-                }}
-              >
-                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
-                  <SelectValue placeholder="Newest First" />
-                </SelectTrigger>
-                <SelectContent
-                  align="end"
-                  className="rounded-xl shadow-xl border-slate-200"
-                >
-                  {sortOptions.map((opt) => (
-                    <SelectItem
-                      key={opt.value}
-                      value={opt.value}
-                      className="text-xs font-semibold py-2.5"
-                    >
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
         </div>

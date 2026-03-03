@@ -2,7 +2,9 @@ import { z } from "zod";
 
 export const invoiceSchema = z
     .object({
-        piNumber: z.string().min(2, "PI number must be at least 2 characters"),
+        piNumber: z
+            .string()
+            .regex(/^\d+$/, "PI number must be an integer"),
         date: z
             .string()
             .refine((val) => !Number.isNaN(Date.parse(val)), {

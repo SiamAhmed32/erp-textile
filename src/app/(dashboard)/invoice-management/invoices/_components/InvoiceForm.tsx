@@ -42,8 +42,14 @@ const InvoiceForm = ({
             </Label>
             <Input
               id="piNumber"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
               value={data.piNumber}
-              onChange={(e) => onChange("piNumber", e.target.value)}
+              onChange={(e) =>
+                onChange("piNumber", e.target.value.replace(/\D/g, ""))
+              }
             />
             {errors?.piNumber && (
               <p className="text-xs text-destructive">{errors.piNumber}</p>
