@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface AccountHeaderToolbarProps {
   searchInput: string;
