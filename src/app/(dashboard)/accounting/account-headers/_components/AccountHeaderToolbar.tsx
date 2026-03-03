@@ -35,7 +35,7 @@ export default function AccountHeaderToolbar({
     { value: "all", label: "All Types" },
     { value: "ASSET", label: "Asset" },
     { value: "LIABILITY", label: "Liability" },
-    { value: "REVENUE", label: "Revenue" },
+    { value: "INCOME", label: "Income" },
     { value: "EXPENSE", label: "Expense" },
     { value: "EQUITY", label: "Equity" },
   ];

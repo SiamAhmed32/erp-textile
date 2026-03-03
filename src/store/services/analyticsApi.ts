@@ -48,7 +48,10 @@ export const analyticsApi = mainApi.injectEndpoints({
         }),
 
         getOrderStatusAnalytics: builder.query({
-            query: () => ({ url: "orders/analytics-orders-status" }),
+            query: () => ({
+                url: "orders/analytics-orders-status",
+                params: { isDeleted: false },
+            }),
             providesTags: ["orders"],
         }),
 

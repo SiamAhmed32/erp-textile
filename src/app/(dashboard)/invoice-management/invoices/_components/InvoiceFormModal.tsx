@@ -99,7 +99,13 @@ export function InvoiceFormModal({
     const formData = toInvoiceFormData(normalized);
 
     if (isCreate && isDuplicate) {
-      formData.piNumber = ""; // Clear PI Number for duplicate
+      const duplicatePi = Number.parseInt(
+        String(formData.piNumber || "").replace(/\D/g, ""),
+        10,
+      );
+      formData.piNumber = Number.isFinite(duplicatePi)
+        ? String(duplicatePi)
+        : "";
       formData.status = "DRAFT";
     }
 

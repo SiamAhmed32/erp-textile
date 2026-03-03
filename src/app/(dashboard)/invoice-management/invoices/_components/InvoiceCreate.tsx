@@ -83,7 +83,11 @@ const InvoiceCreate = ({ duplicateId }: Props) => {
     if (!item) return;
     const normalized = normalizeInvoice(item);
     const form = toInvoiceFormData(normalized);
-    form.piNumber = ""; // Clear PI Number for duplicate
+    const duplicatePi = Number.parseInt(
+      String(form.piNumber || "").replace(/\D/g, ""),
+      10,
+    );
+    form.piNumber = Number.isFinite(duplicatePi) ? String(duplicatePi) : "";
     form.status = "DRAFT";
     setDraft(form);
   }, [duplicatePayload, duplicateId]);

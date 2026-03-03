@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import {
   SquarePen,
   Eye,
-  FileDown,
   Trash2,
   RotateCcw,
   ArrowUpDown,
@@ -56,7 +55,6 @@ export type LCsTableProps = {
   onRowClick: (row: LCManagement) => void;
   onView: (row: LCManagement) => void;
   onEdit: (row: LCManagement) => void;
-  onExport: (row: LCManagement) => void;
   onDelete: (row: LCManagement) => void;
   showDeleted?: boolean;
   onToggleDeleted?: () => void;
@@ -90,7 +88,6 @@ const LCsTable: React.FC<LCsTableProps> = ({
   onRowClick,
   onView,
   onEdit,
-  onExport,
   onDelete,
   showDeleted = false,
   onToggleDeleted = () => {},
@@ -213,18 +210,6 @@ const LCsTable: React.FC<LCsTableProps> = ({
                 <Button
                   size="icon"
                   variant="ghost"
-                  title="Export PDF"
-                  className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExport(row);
-                  }}
-                >
-                  <FileDown className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="ghost"
                   title="Delete"
                   className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                   onClick={(e) => {
@@ -254,7 +239,7 @@ const LCsTable: React.FC<LCsTableProps> = ({
         ),
       },
     ],
-    [onDelete, onEdit, onExport, onView, onRestore, showDeleted],
+    [onDelete, onEdit, onView, onRestore, showDeleted],
   );
 
   return (

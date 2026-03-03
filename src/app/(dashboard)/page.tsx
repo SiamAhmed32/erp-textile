@@ -30,13 +30,12 @@ import {
   BookOpen,
   Shield,
   LayoutDashboard,
-  CheckCircle2,
   Inbox,
-  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import CustomTable from "@/components/reusables/CustomTable";
 import DateFilter, { DateRange } from "@/components/dashboard/DateFilter";
 import {
   useGetSummaryAnalyticsQuery,
@@ -83,7 +82,7 @@ const statusBadge = (s: string) => {
     DELIVERED: "bg-indigo-100 text-indigo-700",
     CANCELLED: "bg-rose-100 text-rose-700",
   };
-  return c[s] ?? "bg-slate-100 text-slate-600";
+  return c[s] ?? "bg-slate-100 text-slate-600 border border-slate-200";
 };
 
 // ─── Empty State Component ──────────────────────────────────
@@ -101,7 +100,6 @@ function DashboardCard({
   title,
   subtitle,
   action,
-  dark = false,
   noPad = false,
   children,
   className = "",
@@ -109,7 +107,6 @@ function DashboardCard({
   title: string;
   subtitle?: string;
   action?: React.ReactNode;
-  dark?: boolean;
   noPad?: boolean;
   children: React.ReactNode;
   className?: string;
@@ -117,39 +114,22 @@ function DashboardCard({
   return (
     <div
       className={cn(
-        "bg-white border border-slate-200 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md overflow-hidden",
+        "bg-white border border-slate-200 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md overflow-hidden flex flex-col",
         className,
       )}
     >
-      <div
-        className={cn(
-          "px-6 py-5 flex items-center justify-between border-b",
-          dark ? "bg-slate-900 border-slate-800" : "border-slate-50",
-        )}
-      >
+      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50">
         <div>
-          <h3
-            className={cn(
-              "text-base font-bold",
-              dark ? "text-white" : "text-slate-800",
-            )}
-          >
-            {title}
-          </h3>
+          <h3 className="text-base font-bold text-slate-900">{title}</h3>
           {subtitle && (
-            <p
-              className={cn(
-                "text-[11px] mt-0.5 font-bold uppercase tracking-widest leading-none",
-                dark ? "text-slate-500" : "text-slate-400",
-              )}
-            >
+            <p className="text-xs mt-0.5 font-bold uppercase tracking-widest leading-none text-slate-500">
               {subtitle}
             </p>
           )}
         </div>
         {action}
       </div>
-      <div className={noPad ? "" : "p-6"}>{children}</div>
+      <div className={cn("flex-1", noPad ? "" : "p-6")}>{children}</div>
     </div>
   );
 }
@@ -175,8 +155,8 @@ function KPICard({
   const up = (trend ?? 0) >= 0;
   return (
     <div
-      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex gap-5 items-start hover:shadow-md transition-all duration-300"
-      style={{ borderTop: `4px solid ${accent}` }}
+      className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex gap-5 items-start hover:shadow-md transition-all duration-300 border-t-4"
+      style={{ borderTopColor: accent }}
     >
       <div
         className="p-3 rounded-xl shrink-0"
@@ -559,6 +539,12 @@ function CashFlowChart() {
 function OrderStatusChart() {
   const { data, isLoading } = useGetOrderStatusAnalyticsQuery(undefined);
   const rawData: Record<string, number>[] = data?.data ?? [];
+  const statusTotals = rawData.reduce<Record<string, number>>((acc, entry) => {
+    const [name, value] = Object.entries(entry)[0] || [];
+    if (!name) return acc;
+    acc[name] = Number(value) || 0;
+    return acc;
+  }, {});
   const allStatuses = rawData.flatMap((entry) =>
     Object.entries(entry)
       .filter(([_, v]) => v > 0)
@@ -569,11 +555,13 @@ function OrderStatusChart() {
       })),
   );
   const total = allStatuses.reduce((s, e) => s + e.value, 0);
+  const pipelineTotal =
+    (statusTotals.DRAFT || 0) + (statusTotals.PENDING || 0);
 
   return (
     <DashboardCard
       title="Order Status"
-      subtitle={`${total} Total Orders in Pipeline`}
+      subtitle={`${pipelineTotal} Total Orders in Pipeline`}
     >
       {isLoading ? (
         <Skeleton className="h-56 w-full rounded-2xl" />
@@ -612,15 +600,15 @@ function OrderStatusChart() {
                     className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: s.color }}
                   />
-                  <span className="text-[11px] text-slate-500 font-bold uppercase tracking-widest">
+                  <span className="text-xs text-slate-600 font-bold uppercase tracking-widest">
                     {s.name.toLowerCase()}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black text-slate-800">
+                  <span className="text-sm font-black text-slate-900">
                     {s.value}
                   </span>
-                  <span className="text-[10px] text-slate-300 font-bold italic">
+                  <span className="text-xs text-slate-500 font-bold">
                     {((s.value / total) * 100).toFixed(0)}%
                   </span>
                 </div>
@@ -782,111 +770,107 @@ function TopBuyersChart() {
   );
 }
 
-// ─── Recent Orders ──────────────────────────────────────────
+// ─── Recent Orders (Refined CustomTable Implementation) ──────
 function RecentOrdersTable() {
-  const { data: ordersPayload, isLoading } = useGetAllQuery({
+  const { data: payload, isLoading: loading } = useGetAllQuery({
     path: "orders",
     page: 1,
-    limit: 6,
-    sort: "-createdAt",
+    limit: 10,
+    sortBy: "createdAt",
+    sortOrder: "desc",
+    isDeleted: false,
   });
-  const orders = (ordersPayload as any)?.data || [];
+  const orders = (payload as any)?.data || [];
+
+  const columns = [
+    {
+      header: "Date",
+      className: "px-6",
+      accessor: (o: any) => (
+        <div className="text-slate-600 font-bold text-xs">
+          {o.orderDate ? format(new Date(o.orderDate), "MMM dd, yyyy") : "—"}
+        </div>
+      ),
+    },
+    {
+      header: "Order",
+      accessor: (o: any) => (
+        <div className="font-black text-slate-900 underline decoration-indigo-200 underline-offset-4">
+          {o.orderNumber || "—"}
+        </div>
+      ),
+    },
+    {
+      header: "Buyer",
+      accessor: (o: any) => (
+        <div className="text-slate-900 font-black text-xs">
+          {o.buyer?.name || "—"}
+        </div>
+      ),
+    },
+    {
+      header: "Amount",
+      accessor: (o: any) => {
+        const item = Array.isArray(o.orderItems)
+          ? o.orderItems[0]
+          : o.orderItems;
+        const amount =
+          item?.fabricItem?.totalAmount ||
+          item?.labelItem?.totalAmount ||
+          item?.cartonItem?.totalAmount ||
+          0;
+        return (
+          <div className="font-black text-slate-900">
+            {takaSign}
+            {Number(amount).toLocaleString()}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Status",
+      className: "text-right",
+      accessor: (o: any) => (
+        <div className="flex justify-end pr-6">
+          <span
+            className={cn(
+              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest leading-none",
+              statusBadge(o.status),
+            )}
+          >
+            {o.status}
+          </span>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <DashboardCard
       title="Recent Orders"
-      subtitle="Latest Transactional Activity"
-      dark
+      subtitle="Latest Production Tracking"
       noPad
       action={
         <Link
           href="/order-management/orders"
-          className="text-[11px] font-black text-slate-400 hover:text-white transition-colors flex items-center gap-2 uppercase tracking-widest"
+          className="text-[11px] font-black text-slate-400 hover:text-indigo-600 transition-colors flex items-center gap-2 uppercase tracking-widest group"
         >
-          Comprehensive Ledger <ArrowUpRight size={14} className="opacity-40" />
+          View All Orders{" "}
+          <ArrowUpRight
+            size={14}
+            className="opacity-40 group-hover:opacity-100"
+          />
         </Link>
       }
     >
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-800">
-              {[
-                { label: "Order Header", align: "left" },
-                { label: "Partner Name", align: "left" },
-                { label: "Execution Date", align: "left" },
-                { label: "Final Amount", align: "left" },
-                { label: "Process Status", align: "right" },
-              ].map((h) => (
-                <th
-                  key={h.label}
-                  className={cn(
-                    "px-8 py-5 text-[10px] font-black uppercase tracking-widest text-slate-600",
-                    h.align === "right" ? "text-right" : "text-left",
-                  )}
-                >
-                  {h.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-b border-slate-800">
-                  {[...Array(5)].map((__, j) => (
-                    <td key={j} className="px-8 py-6">
-                      <Skeleton className="h-4 w-full bg-slate-800 rounded" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : orders.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="py-24 text-center text-slate-700 font-bold uppercase tracking-widest text-[11px]"
-                >
-                  System: No active orders in records
-                </td>
-              </tr>
-            ) : (
-              orders.map((o: any) => (
-                <tr
-                  key={o.id}
-                  className="border-b border-slate-800 last:border-0 hover:bg-white/5 transition-colors"
-                >
-                  <td className="px-8 py-6 font-mono text-[13px] font-black text-indigo-400 leading-none">
-                    #{o.orderId}
-                  </td>
-                  <td className="px-8 py-6 text-[13px] font-bold text-slate-200">
-                    {o.buyer?.name || "—"}
-                  </td>
-                  <td className="px-8 py-6 text-[12px] text-slate-500 font-bold">
-                    {o.orderDate
-                      ? format(new Date(o.orderDate), "MMM dd, yyyy")
-                      : "—"}
-                  </td>
-                  <td className="px-8 py-6 text-[13px] font-black text-slate-100">
-                    {takaSign}
-                    {Number(o.totalAmount || 0).toLocaleString()}
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <span
-                      className={cn(
-                        "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tighter leading-none shadow-sm",
-                        statusBadge(o.status),
-                      )}
-                    >
-                      {o.status}
-                    </span>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <CustomTable
+        data={orders}
+        columns={columns}
+        isLoading={loading}
+        scrollAreaHeight="h-auto max-h-[500px]"
+        skeletonRows={6}
+        className="border-none"
+      />
     </DashboardCard>
   );
 }
@@ -901,7 +885,6 @@ function CommandCenter() {
       label: "Create New Order",
       href: "/order-management/orders/add-new-order",
       icon: Plus,
-      primary: true,
     },
     {
       label: "Review Proforma Invoices",
@@ -946,30 +929,27 @@ function CommandCenter() {
         title="Quick Terminal"
         subtitle="Common Administrative Shortcuts"
       >
-        <div className="grid grid-cols-1 sm:grid-cols-2  gap-4 py-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
           {actions.map((a) => (
             <Button
               key={a.label}
               asChild
-              variant={a.primary ? "default" : "outline"}
+              variant="outline"
               className={cn(
-                "h-14 justify-between px-6 font-black text-[10px] uppercase tracking-widest rounded-2xl border-2 transition-all duration-300",
-                a.primary
-                  ? "bg-indigo-600 hover:bg-indigo-700 text-white border-transparent shadow-lg shadow-indigo-100 hover:-translate-y-0.5"
-                  : "border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-700 hover:-translate-y-0.5",
+                "h-auto min-h-[3.5rem] justify-start py-3 px-6 font-black text-[10px] uppercase tracking-widest rounded-2xl border-2 transition-all duration-300 shadow-sm",
+                "bg-white text-slate-700 border-slate-100 whitespace-normal text-left leading-tight",
+                "hover:bg-black hover:text-white hover:border-black hover:-translate-y-0.5",
               )}
             >
               <Link href={a.href} className="flex items-center gap-4 w-full">
-                <div className="flex items-center gap-3.5 flex-1">
+                <div className="flex items-center gap-3.5 flex-1 min-w-0">
                   <a.icon
                     size={18}
-                    className={cn(
-                      a.primary ? "text-indigo-100" : "text-slate-400",
-                    )}
+                    className="shrink-0 group-hover:text-white transition-colors"
                   />
-                  {a.label}
+                  <span className="flex-1">{a.label}</span>
                 </div>
-                <ArrowUpRight size={16} className="opacity-30" />
+                <ArrowUpRight size={16} className="opacity-30 shrink-0" />
               </Link>
             </Button>
           ))}
@@ -981,7 +961,7 @@ function CommandCenter() {
         title="Financial Snapshot"
         subtitle="Real-time Balance Sheet Health"
       >
-        <div className="grid grid-cols-2 lg:grid-cols-2 gap-y-10 gap-x-8 py-4">
+        <div className="grid grid-cols-2 gap-y-10 gap-x-8 py-4">
           {metrics.map((m) => (
             <div key={m.label} className="group">
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2 leading-none">
@@ -1027,7 +1007,7 @@ export default function Dashboard() {
   const financial = financialData?.data;
   const summary = summaryData?.data;
 
-  // Compute MoM trend relative to whole 12m set
+  // Compute MoM trend
   const revMonths: any[] = revTrendData?.data || [];
   const thisMonthRev = revMonths[revMonths.length - 1]?.revenue ?? 0;
   const lastMonthRev = revMonths[revMonths.length - 2]?.revenue ?? 0;
@@ -1074,7 +1054,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#fafbfc] pb-16">
-      <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10 space-y-10">
+      <div className="max-w-screen-2xl mx-auto px-6 lg:px-12 py-10 space-y-10 font-inter">
         {/* ── HEADER ────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
           <div className="space-y-2">
@@ -1094,13 +1074,12 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-4">
-            <DateFilter onFilterChange={setGlobalRange} />
             <Button
               asChild
-              className="h-12 px-8 bg-slate-900 hover:bg-black text-white font-black rounded-2xl gap-3 text-[11px] uppercase tracking-widest transition-all duration-300 shadow-xl shadow-slate-100 hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0"
+              className="h-12 px-8 bg-black text-white hover:bg-black/90 font-black rounded-lg gap-3 text-[11px] uppercase tracking-widest transition-all duration-300 shadow-sm hover:-translate-y-0.5 active:translate-y-0"
             >
               <Link href="/order-management/orders/add-new-order">
-                <Plus size={18} /> Add Enterprise Order
+                <Plus size={18} /> Create New Order
               </Link>
             </Button>
           </div>

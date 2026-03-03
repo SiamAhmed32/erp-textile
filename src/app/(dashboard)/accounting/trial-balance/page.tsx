@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Container, PageHeader, DateRangeFilter } from "@/components/reusables";
+import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGetAllQuery, useLazyGetAllQuery } from "@/store/services/commonApi";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,8 +21,8 @@ export default function TrialBalancePage() {
     end: new Date().toISOString().split("T")[0],
   });
 
-  const [appliedDateRange, setAppliedDateRange] = useState(dateRange);
-  const [search, setSearch] = useState("");
+  const [appliedDateRange] = useState(dateRange);
+  const [search] = useState("");
   const [isExporting, setIsExporting] = useState(false);
 
   const {
@@ -45,10 +44,6 @@ export default function TrialBalancePage() {
       filters: { startDate: start, endDate: end },
     });
   }
-
-  const handleGenerateReport = () => {
-    setAppliedDateRange(dateRange);
-  };
 
   const handleExportPdf = async () => {
     try {
@@ -189,72 +184,6 @@ export default function TrialBalancePage() {
         //   </Button>
         // }
       />
-
-      {/* Toolbar — Search + DateRange (single filter → fits one row on xl) */}
-      <div className="flex flex-col gap-3 py-2">
-        {/* DESKTOP VIEW (>1280px): Single row */}
-        <div className="hidden xl:flex items-center justify-between gap-3">
-          <div className="flex w-full gap-2 max-w-md flex-1">
-            <div className="relative flex-1">
-              <Input
-                placeholder="Search by account name or code..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-              />
-            </div>
-            <Button
-              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              disabled={isFetching || isLoading}
-              onClick={handleGenerateReport}
-            >
-              Search
-            </Button>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-[200px]">
-              <DateRangeFilter
-                start={dateRange.start}
-                end={dateRange.end}
-                onFilterChange={setDateRange}
-                placeholder="Report Dates"
-                className="h-11 text-xs"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* TABLET & MOBILE VIEW (<1280px) */}
-        <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
-          {/* Row 1: Search */}
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Search by account name or code..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
-            />
-            <Button
-              className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              disabled={isFetching || isLoading}
-              onClick={handleGenerateReport}
-            >
-              <Search className="h-4 w-4 sm:hidden" />
-              <span className="hidden sm:inline text-xs">Search</span>
-            </Button>
-          </div>
-          {/* Row 2: Date Range */}
-          <div className="flex items-center gap-2">
-            <DateRangeFilter
-              start={dateRange.start}
-              end={dateRange.end}
-              onFilterChange={setDateRange}
-              placeholder="Report Dates"
-              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
-            />
-          </div>
-        </div>
-      </div>
 
       <div className="min-h-[400px]">
         {isLoading ? (
