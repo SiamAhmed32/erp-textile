@@ -28,7 +28,6 @@ import { useMemo, useState } from "react";
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function SupplierLedgerPage() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
@@ -36,7 +35,7 @@ export default function SupplierLedgerPage() {
   });
 
   const handleSearchSubmit = () => {
-    setSearch(searchInput);
+    // Search is applied from current input value.
     setPage(1);
   };
 
@@ -44,7 +43,7 @@ export default function SupplierLedgerPage() {
     path: "accounting/ledger/suppliers/balances",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchInput.trim() || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
   });
@@ -62,6 +61,38 @@ export default function SupplierLedgerPage() {
       (supplierResponse as any)?.meta || (supplierResponse as any)?.data?.meta;
     return meta?.pagination?.totalPages || meta?.totalPages || 1;
   }, [supplierResponse]);
+
+  const visibleSuppliers = useMemo(() => {
+    let rows = [...suppliers];
+    const query = searchInput.trim().toLowerCase();
+
+    if (query) {
+      rows = rows.filter((row: any) =>
+        [row.name, row.email, row.location, row.phone]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query)),
+      );
+    }
+
+    rows.sort((a: any, b: any) => {
+      const dir = sort.dir === "asc" ? 1 : -1;
+
+      if (sort.field === "createdAt" || sort.field === "updatedAt") {
+        const aTime = new Date(a?.[sort.field] ?? 0).getTime();
+        const bTime = new Date(b?.[sort.field] ?? 0).getTime();
+        if (aTime !== bTime) return (aTime - bTime) * dir;
+        const byName = String(a?.name || "").localeCompare(
+          String(b?.name || ""),
+        );
+        if (byName !== 0) return byName * dir;
+        return String(a?.id || "").localeCompare(String(b?.id || "")) * dir;
+      }
+
+      return String(a?.name || "").localeCompare(String(b?.name || "")) * dir;
+    });
+
+    return rows;
+  }, [searchInput, sort, suppliers]);
 
   const columns = useMemo(
     () => [
@@ -242,7 +273,7 @@ export default function SupplierLedgerPage() {
       </div>
 
       <CustomTable
-        data={suppliers}
+        data={visibleSuppliers}
         columns={columns}
         isLoading={isLoading}
         skeletonRows={10}

@@ -34,7 +34,6 @@ import {
 // ── Main Page ──────────────────────────────────────────────────────────────────
 export default function BuyerLedgerPage() {
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
@@ -42,7 +41,7 @@ export default function BuyerLedgerPage() {
   });
 
   const handleSearchSubmit = () => {
-    setSearch(searchInput);
+    // Search is applied from current input value.
     setPage(1);
   };
 
@@ -50,7 +49,7 @@ export default function BuyerLedgerPage() {
     path: "accounting/ledger/buyers/balances",
     page,
     limit: 10,
-    search: search || undefined,
+    search: searchInput.trim() || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
   });
@@ -68,6 +67,38 @@ export default function BuyerLedgerPage() {
       (buyerResponse as any)?.meta || (buyerResponse as any)?.data?.meta;
     return meta?.pagination?.totalPages || meta?.totalPages || 1;
   }, [buyerResponse]);
+
+  const visibleBuyers = useMemo(() => {
+    let rows = [...buyers];
+    const query = searchInput.trim().toLowerCase();
+
+    if (query) {
+      rows = rows.filter((row: any) =>
+        [row.name, row.email, row.merchandiser, row.location, row.phone]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query)),
+      );
+    }
+
+    rows.sort((a: any, b: any) => {
+      const dir = sort.dir === "asc" ? 1 : -1;
+
+      if (sort.field === "createdAt" || sort.field === "updatedAt") {
+        const aTime = new Date(a?.[sort.field] ?? 0).getTime();
+        const bTime = new Date(b?.[sort.field] ?? 0).getTime();
+        if (aTime !== bTime) return (aTime - bTime) * dir;
+        const byName = String(a?.name || "").localeCompare(
+          String(b?.name || ""),
+        );
+        if (byName !== 0) return byName * dir;
+        return String(a?.id || "").localeCompare(String(b?.id || "")) * dir;
+      }
+
+      return String(a?.name || "").localeCompare(String(b?.name || "")) * dir;
+    });
+
+    return rows;
+  }, [buyers, searchInput, sort]);
 
   const columns = useMemo(
     () => [
@@ -270,7 +301,7 @@ export default function BuyerLedgerPage() {
       </div>
 
       <CustomTable
-        data={buyers}
+        data={visibleBuyers}
         columns={columns}
         isLoading={isLoading}
         skeletonRows={10}

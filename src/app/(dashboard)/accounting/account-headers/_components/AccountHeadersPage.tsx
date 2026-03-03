@@ -16,7 +16,6 @@ import AccountHeaderDetailsModal from "./AccountHeaderDetailsModal";
 import { cn } from "@/lib/utils";
 
 const AccountHeadersPage = () => {
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
@@ -37,7 +36,7 @@ const AccountHeadersPage = () => {
 
   const { data: apiResponse, isLoading } = useGetAllQuery({
     path: "accounting/accountHeads",
-    search: search !== "" ? search : undefined,
+    search: searchInput.trim() !== "" ? searchInput.trim() : undefined,
     sort: null,
     sortBy: sort.field,
     sortOrder: sort.dir,
@@ -54,8 +53,44 @@ const AccountHeadersPage = () => {
     [apiResponse],
   );
 
+  const visibleHeaders = useMemo(() => {
+    let rows = [...headers];
+
+    const query = searchInput.trim().toLowerCase();
+    if (query) {
+      rows = rows.filter((row) =>
+        [row.name, row.code, row.description]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query)),
+      );
+    }
+
+    if (typeFilter !== "all") {
+      rows = rows.filter((row) => row.type === typeFilter);
+    }
+
+    rows.sort((a, b) => {
+      const dir = sort.dir === "asc" ? 1 : -1;
+
+      if (sort.field === "createdAt" || sort.field === "updatedAt") {
+        const aTime = new Date((a as any)[sort.field] ?? 0).getTime();
+        const bTime = new Date((b as any)[sort.field] ?? 0).getTime();
+        if (aTime !== bTime) return (aTime - bTime) * dir;
+        const byName = a.name.localeCompare(b.name);
+        if (byName !== 0) return byName * dir;
+        return a.id.localeCompare(b.id) * dir;
+      }
+
+      const aVal = String((a as any)[sort.field] ?? "").toLowerCase();
+      const bVal = String((b as any)[sort.field] ?? "").toLowerCase();
+      return aVal.localeCompare(bVal) * dir;
+    });
+
+    return rows;
+  }, [headers, searchInput, sort, typeFilter]);
+
   const handleSearchSubmit = () => {
-    setSearch(searchInput);
+    // Search is applied live from searchInput; keep button for UX consistency.
   };
 
   const handleTypeChange = (val: string) => {
@@ -107,7 +142,7 @@ const AccountHeadersPage = () => {
       </div>
 
       <AccountHeadersTable
-        data={headers}
+        data={visibleHeaders}
         loading={isLoading}
         onEdit={setEditingHeader}
         onDelete={setDeletingHeader}

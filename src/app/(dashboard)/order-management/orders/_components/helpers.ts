@@ -17,27 +17,68 @@ const coerceStatus = (value?: string | null): OrderStatus =>
 const coerceProductType = (value?: string | null): ProductType =>
     PRODUCT_TYPES.includes(value as ProductType) ? (value as ProductType) : "FABRIC";
 
-export const normalizeOrder = (item: OrderApiItem): Order => ({
-    id: item.id ?? "",
-    orderNumber: item.orderNumber ?? "",
-    orderDate: item.orderDate ?? null,
-    remarks: item.remarks ?? "",
-    productType: coerceProductType(item.productType),
-    buyerId: item.buyerId ?? "",
-    userId: item.userId ?? null,
-    companyProfileId: item.companyProfileId ?? "",
-    status: coerceStatus(item.status),
-    deliveryDate: item.deliveryDate ?? null,
-    createdAt: item.createdAt ?? "",
-    updatedAt: item.updatedAt ?? "",
-    buyer: item.buyer ?? null,
-    user: item.user ?? null,
-    companyProfile: item.companyProfile ?? null,
-    orderItems: item.orderItems ?? [],
-    isInvoice: item.isInvoice ?? !!item.invoices,
-    isLc: item.isLc ?? !!item.invoices?.lcManagement,
-    invoices: item.invoices ?? null,
-});
+export const normalizeOrder = (item: OrderApiItem): Order => {
+
+    // Calculate missing totals for all item types immutably
+    const rawItems = Array.isArray(item.orderItems) ? item.orderItems : item.orderItems ? [item.orderItems] : [];
+    const normalizedOrderItems = rawItems.map((oi: any) => {
+        const newItem = { ...oi };
+        
+        if (newItem.fabricItem) {
+            newItem.fabricItem = {
+                ...newItem.fabricItem,
+                fabricItemData: newItem.fabricItem.fabricItemData?.map((d: any) => ({
+                    ...d,
+                    totalAmount: Number(d.totalAmount) || (Number(d.quantityYds || 0) * Number(d.unitPrice || 0))
+                }))
+            };
+        }
+        
+        if (newItem.labelItem) {
+            newItem.labelItem = {
+                ...newItem.labelItem,
+                labelItemData: newItem.labelItem.labelItemData?.map((d: any) => ({
+                    ...d,
+                    totalAmount: Number(d.totalAmount) || (Number(d.quantityDzn || d.quantityPcs || 0) * Number(d.unitPrice || 0))
+                }))
+            };
+        }
+        
+        if (newItem.cartonItem) {
+            newItem.cartonItem = {
+                ...newItem.cartonItem,
+                cartonItemData: newItem.cartonItem.cartonItemData?.map((d: any) => ({
+                    ...d,
+                    totalAmount: Number(d.totalAmount) || (Number(d.cartonQty || 0) * Number(d.unitPrice || 0))
+                }))
+            };
+        }
+        
+        return newItem;
+    });
+
+    return {
+        id: item.id ?? "",
+        orderNumber: item.orderNumber ?? "",
+        orderDate: item.orderDate ?? null,
+        remarks: item.remarks ?? "",
+        productType: coerceProductType(item.productType),
+        buyerId: item.buyerId ?? "",
+        userId: item.userId ?? null,
+        companyProfileId: item.companyProfileId ?? "",
+        status: coerceStatus(item.status),
+        deliveryDate: item.deliveryDate ?? null,
+        createdAt: item.createdAt ?? "",
+        updatedAt: item.updatedAt ?? "",
+        buyer: item.buyer ?? null,
+        user: item.user ?? null,
+        companyProfile: item.companyProfile ?? null,
+        orderItems: normalizedOrderItems,
+        isInvoice: item.isInvoice ?? !!item.invoices,
+        isLc: item.isLc ?? !!item.invoices?.lcManagement,
+        invoices: item.invoices ?? null,
+    };
+};
 
 export const formatDate = (value?: string | null) => {
     if (!value) return "-";

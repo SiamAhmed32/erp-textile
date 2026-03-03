@@ -11,13 +11,52 @@ const coerceType = (value?: string | null): ProductType =>
 
 export const normalizeInvoice = (item: InvoiceApiItem): Invoice => {
     let totalAmount = 0;
-    if (Array.isArray(item.order?.orderItems)) {
-        item.order.orderItems.forEach((oi: any) => {
-            totalAmount += Number(oi.fabricItem?.totalAmount || 0);
-            totalAmount += Number(oi.labelItem?.totalAmount || 0);
-            totalAmount += Number(oi.cartonItem?.totalAmount || 0);
-        });
-    }
+    const rawOrderItems = Array.isArray(item.order?.orderItems) ? item.order.orderItems : item.order?.orderItems ? [item.order.orderItems] : [];
+    
+    const normalizedOrderItems = rawOrderItems.map((oi: any) => {
+        const newItem = { ...oi };
+        
+        if (newItem.fabricItem) {
+            newItem.fabricItem = {
+                ...newItem.fabricItem,
+                fabricItemData: newItem.fabricItem.fabricItemData?.map((d: any) => {
+                    const qty = Number(d.quantityYds) || 0;
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.fabricItem.totalAmount) || newItem.fabricItem.fabricItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        if (newItem.labelItem) {
+            newItem.labelItem = {
+                ...newItem.labelItem,
+                labelItemData: newItem.labelItem.labelItemData?.map((d: any) => {
+                    const qty = Number(d.quantityDzn || d.quantityPcs || 0);
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.labelItem.totalAmount) || newItem.labelItem.labelItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        if (newItem.cartonItem) {
+            newItem.cartonItem = {
+                ...newItem.cartonItem,
+                cartonItemData: newItem.cartonItem.cartonItemData?.map((d: any) => {
+                    const qty = Number(d.cartonQty) || 0;
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.cartonItem.totalAmount) || newItem.cartonItem.cartonItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        return newItem;
+    });
 
     return {
         id: item.id ?? "",
@@ -33,7 +72,7 @@ export const normalizeInvoice = (item: InvoiceApiItem): Invoice => {
             ? {
                 ...item.order,
                 productType: coerceType(item.order.productType),
-                orderItems: item.order.orderItems ?? [],
+                orderItems: normalizedOrderItems,
                 buyer: item.order.buyer ?? null,
                 companyProfile: item.order.companyProfile ?? null,
             }
