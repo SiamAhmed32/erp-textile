@@ -20,7 +20,7 @@ export default function BankEditModal({
 }: BankEditModalProps) {
   const [patchItem, { isLoading }] = usePatchMutation();
 
-  const handleSubmit = async (values: BankFormValues) => {
+  const handleSubmit = async ({ companyProfileId, ...values }: BankFormValues) => {
     if (!bank) return;
     try {
       await patchItem({
@@ -34,7 +34,7 @@ export default function BankEditModal({
       console.error("Failed to update bank:", error);
       notify.error(
         error?.data?.message ||
-          "Could not update the bank account. Please try again.",
+        "Could not update the bank account. Please try again.",
       );
     }
   };
