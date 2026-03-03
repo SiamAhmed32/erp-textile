@@ -373,170 +373,152 @@ const OrdersTable = ({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3">
-        {/* DESKTOP VIEW (>1280px) */}
-        <div className="hidden xl:flex flex-col gap-3">
-          {/* Row 1: Search Group & Key Filters */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 lg:w-full lg:max-w-md xl:max-w-lg">
-              <Input
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 lg:max-w-xs xl:max-w-sm"
-              />
-              <Button
-                onClick={onSearchSubmit}
-                className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              >
-                Search
-              </Button>
-              <Button
-                variant={showDeleted ? "destructive" : "outline"}
-                className={cn(
-                  "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
-                  !showDeleted && "bg-white border-slate-200 text-slate-500",
-                )}
-                onClick={onToggleDeleted}
-                title={
-                  showDeleted ? "Show Active Orders" : "Show Deleted Orders"
-                }
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>{showDeleted ? "Exit" : "Trash"}</span>
-              </Button>
-            </div>
+        {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
+        <div className="hidden xl:flex items-center gap-2 2xl:gap-3 w-full">
+          <Input
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-[150px]"
+          />
+          <Button
+            onClick={onSearchSubmit}
+            className="h-11 px-4 2xl:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+          >
+            Search
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-3 2xl:px-4 gap-2 rounded-lg font-medium shrink-0",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Orders" : "Show Deleted Orders"}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden 2xl:inline">
+              {showDeleted ? "Exit" : "Trash"}
+            </span>
+          </Button>
 
-            <div className="flex items-center gap-3">
-              {/* Sort By */}
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
-                <Select
-                  value={currentSortValue}
-                  onValueChange={(val) => {
-                    const opt = sortOptions.find((o) => o.value === val);
-                    if (opt)
-                      onSortChange({
-                        field: opt.field,
-                        dir: opt.dir as "asc" | "desc",
-                      });
-                  }}
-                >
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
-                    <SelectValue placeholder="Sort" />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                    {sortOptions.map((opt) => (
-                      <SelectItem
-                        key={opt.value}
-                        value={opt.value}
-                        className="text-xs"
-                      >
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <DateRangeFilter
-                start={dateFrom}
-                end={dateTo}
-                onFilterChange={({ start, end }) => {
-                  onDateFromChange(start);
-                  onDateToChange(end);
-                }}
-                placeholder="Order Dates"
-                className="h-11 text-xs w-[180px]"
-              />
-              <DateRangeFilter
-                start={deliveryDateFrom}
-                end={deliveryDateTo}
-                onFilterChange={({ start, end }) => {
-                  onDeliveryDateFromChange(start);
-                  onDeliveryDateToChange(end);
-                }}
-                placeholder="Delivery Dates"
-                className="h-11 text-xs w-[180px]"
-              />
-            </div>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 2xl:px-3 h-11 shadow-sm shrink-0">
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[100px] 2xl:w-[120px]">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Row 2: Secondary Filters (Right Aligned) */}
-          <div className="flex items-center justify-end gap-3">
-            <div className="w-[130px]">
-              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-                <SelectTrigger className="h-11 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  {[
-                    "DRAFT",
-                    "PENDING",
-                    "PROCESSING",
-                    "APPROVED",
-                    "DELIVERED",
-                    "CANCELLED",
-                  ].map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="w-[130px]">
-              <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-                <SelectTrigger className="h-11 text-xs">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {["FABRIC", "LABEL_TAG", "CARTON"].map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+            <SelectTrigger className="h-11 text-xs w-[110px] 2xl:w-[130px] shrink-0 font-bold">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {["FABRIC", "LABEL_TAG", "CARTON"].map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="h-11 text-xs w-[110px] 2xl:w-[130px] shrink-0 font-bold">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {[
+                "DRAFT",
+                "PENDING",
+                "PROCESSING",
+                "APPROVED",
+                "DELIVERED",
+                "CANCELLED",
+              ].map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <DateRangeFilter
+            start={dateFrom}
+            end={dateTo}
+            onFilterChange={({ start, end }) => {
+              onDateFromChange(start);
+              onDateToChange(end);
+            }}
+            placeholder="Order Dates"
+            className="h-11 text-xs w-[180px] shrink-0"
+          />
+          <DateRangeFilter
+            start={deliveryDateFrom}
+            end={deliveryDateTo}
+            onFilterChange={({ start, end }) => {
+              onDeliveryDateFromChange(start);
+              onDeliveryDateToChange(end);
+            }}
+            placeholder="Delivery Dates"
+            className="h-11 text-xs w-[180px] shrink-0"
+          />
         </div>
 
-        {/* TABLET & MOBILE VIEW (<1280px) */}
-        <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
-          {/* Row 1: Search, Trash, Sort */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 flex-1">
-              <Input
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-                className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
-              />
-              <Button
-                onClick={onSearchSubmit}
-                className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              >
-                <Search className="h-4 w-4 sm:hidden" />
-                <span className="hidden sm:inline text-xs">Search</span>
-              </Button>
-              <Button
-                variant={showDeleted ? "destructive" : "outline"}
-                className={cn(
-                  "h-10 sm:h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
-                  !showDeleted && "bg-white border-slate-200 text-slate-500",
-                )}
-                onClick={onToggleDeleted}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span className="hidden md:inline text-xs">
-                  {showDeleted ? "Exit" : "Trash"}
-                </span>
-              </Button>
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
+        {/* SMALL DESKTOP / IPAD PRO (1024px - 1279px) */}
+        <div className="hidden lg:flex xl:hidden flex-col gap-3">
+          {/* Row 1: Search, SearchBtn, Trash, Sort */}
+          <div className="flex items-center gap-3">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+            />
+            <Button
+              onClick={onSearchSubmit}
+              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            >
+              Search
+            </Button>
+            <Button
+              variant={showDeleted ? "destructive" : "outline"}
+              className={cn(
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+                !showDeleted && "bg-white border-slate-200 text-slate-500",
+              )}
+              onClick={onToggleDeleted}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>{showDeleted ? "Exit" : "Trash"}</span>
+            </Button>
+
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
               <Select
                 value={currentSortValue}
                 onValueChange={(val) => {
@@ -548,7 +530,7 @@ const OrdersTable = ({
                     });
                 }}
               >
-                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-[80px] sm:w-[130px]">
+                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent align="end">
@@ -566,21 +548,25 @@ const OrdersTable = ({
             </div>
           </div>
 
-          {/* Row 2: Order Dates & Status */}
-          <div className="flex items-center gap-2">
-            <DateRangeFilter
-              start={dateFrom}
-              end={dateTo}
-              onFilterChange={({ start, end }) => {
-                onDateFromChange(start);
-                onDateToChange(end);
-              }}
-              placeholder="Order Dates"
-              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
-            />
+          {/* Row 2: Type, Status, Order Dates, Delivery Dates */}
+          <div className="flex items-center justify-end gap-3 w-full">
+            <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+              <SelectTrigger className="h-11 text-xs w-[130px] font-bold">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {["FABRIC", "LABEL_TAG", "CARTON"].map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs min-w-[120px] flex-1 font-bold">
-                <SelectValue placeholder="Status" />
+              <SelectTrigger className="h-11 text-xs w-[130px] font-bold">
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -598,10 +584,17 @@ const OrdersTable = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
 
-          {/* Row 3: Delivery Dates & Type */}
-          <div className="flex items-center gap-2">
+            <DateRangeFilter
+              start={dateFrom}
+              end={dateTo}
+              onFilterChange={({ start, end }) => {
+                onDateFromChange(start);
+                onDateToChange(end);
+              }}
+              placeholder="Order Dates"
+              className="h-11 text-xs w-[190px]"
+            />
             <DateRangeFilter
               start={deliveryDateFrom}
               end={deliveryDateTo}
@@ -610,11 +603,77 @@ const OrdersTable = ({
                 onDeliveryDateToChange(end);
               }}
               placeholder="Delivery Dates"
-              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
+              className="h-11 text-xs w-[190px]"
             />
+          </div>
+        </div>
+
+        {/* TABLET & MOBILE (<1024px) */}
+        <div className="flex lg:hidden flex-col gap-2 sm:gap-3">
+          {/* Row 1: Search, SearchBtn, Trash */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-0"
+            />
+            <Button
+              onClick={onSearchSubmit}
+              className="h-10 sm:h-11 px-3 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            >
+              <Search className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline text-xs">Search</span>
+            </Button>
+            <Button
+              variant={showDeleted ? "destructive" : "outline"}
+              className={cn(
+                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0",
+                !showDeleted && "bg-white border-slate-200 text-slate-500",
+              )}
+              onClick={onToggleDeleted}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">
+                {showDeleted ? "Exit" : "Trash"}
+              </span>
+            </Button>
+          </div>
+
+          {/* Row 2: Sort, Type */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm flex-1 min-w-0">
+              <Select
+                value={currentSortValue}
+                onValueChange={(val) => {
+                  const opt = sortOptions.find((o) => o.value === val);
+                  if (opt)
+                    onSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    });
+                }}
+              >
+                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {sortOptions.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs min-w-[100px] flex-1 font-bold">
-                <SelectValue placeholder="Type" />
+              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold flex-1 min-w-0">
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
@@ -625,6 +684,51 @@ const OrdersTable = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Row 3: Status, Dates */}
+          <div className="flex items-center gap-2">
+            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold flex-1 min-w-0">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                {[
+                  "DRAFT",
+                  "PENDING",
+                  "PROCESSING",
+                  "APPROVED",
+                  "DELIVERED",
+                  "CANCELLED",
+                ].map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <DateRangeFilter
+              start={dateFrom}
+              end={dateTo}
+              onFilterChange={({ start, end }) => {
+                onDateFromChange(start);
+                onDateToChange(end);
+              }}
+              placeholder="Order Dates"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1 min-w-0"
+            />
+            <DateRangeFilter
+              start={deliveryDateFrom}
+              end={deliveryDateTo}
+              onFilterChange={({ start, end }) => {
+                onDeliveryDateFromChange(start);
+                onDeliveryDateToChange(end);
+              }}
+              placeholder="Delivery Dates"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1 min-w-0"
+            />
           </div>
         </div>
       </div>

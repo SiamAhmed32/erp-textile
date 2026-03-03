@@ -1089,7 +1089,7 @@ export default function Dashboard() {
         <AlertBanner />
 
         {/* ── KEY PERFORMANCE INDICATORS ────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 [@media(width:1024px)]:grid-cols-2 gap-8">
           {kpis.map((k) => (
             <KPICard key={k.title} {...k} />
           ))}

@@ -89,15 +89,15 @@ const BanksPage = () => {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Bank Management" },
         ]}
-        actions={
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Connect New Bank
-          </Button>
-        }
+        // actions={
+        //   <Button
+        //     onClick={() => setIsCreateModalOpen(true)}
+        //     className="h-10 px-6 bg-zinc-900 text-white font-bold rounded-lg hover:bg-black transition-all active:scale-95 flex items-center gap-2"
+        //   >
+        //     <Plus className="w-4 h-4" />
+        //     Connect New Bank
+        //   </Button>
+        // }
       />
 
       {/* Toolbar - Redesigned for Consistency */}
