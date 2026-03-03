@@ -12,10 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter } from "@/components/reusables";
 import { Invoice } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import InvoiceActions from "./InvoiceActions";
+import { Trash2, ArrowUpDown, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   data: Invoice[];
@@ -25,22 +27,27 @@ type Props = {
   search: string;
   statusFilter: string;
   typeFilter: string;
-  dateFrom: string;
-  dateTo: string;
-  counts: { all: number; FABRIC: number; LABEL_TAG: number; CARTON: number };
+  startDate: string;
+  endDate: string;
+
   onSearchChange: (value: string) => void;
   onSearchSubmit: () => void;
   onStatusFilterChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
+  onStartDateChange: (value: string) => void;
+  onEndDateChange: (value: string) => void;
   onPageChange: (page: number) => void;
-  onAddInvoice: () => void;
   onRowClick: (row: Invoice) => void;
   onView: (row: Invoice) => void;
   onEdit: (row: Invoice) => void;
+  onDuplicate: (row: Invoice) => void;
   onExport: (row: Invoice) => void;
   onDelete: (row: Invoice) => void;
+  showDeleted: boolean;
+  onToggleDeleted: () => void;
+  onRestore: (row: Invoice) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
 };
 
 const InvoicesTable = ({
@@ -51,23 +58,52 @@ const InvoicesTable = ({
   search,
   statusFilter,
   typeFilter,
-  dateFrom,
-  dateTo,
-  counts,
+  startDate,
+  endDate,
+
   onSearchChange,
   onSearchSubmit,
   onStatusFilterChange,
   onTypeFilterChange,
-  onDateFromChange,
-  onDateToChange,
+  onStartDateChange,
+  onEndDateChange,
   onPageChange,
-  onAddInvoice,
   onRowClick,
   onView,
   onEdit,
+  onDuplicate,
   onExport,
   onDelete,
+  showDeleted = false,
+  onToggleDeleted = () => {},
+  onRestore = () => {},
+  sort,
+  onSortChange,
 }: Props) => {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
   const columns = useMemo(
     () => [
       {
@@ -100,6 +136,7 @@ const InvoicesTable = ({
           </span>
         ),
       },
+
       {
         header: "Terms",
         accessor: (row: Invoice) => row.invoiceTerms?.name || "-",
@@ -111,64 +148,295 @@ const InvoicesTable = ({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: Invoice) => (
-          <InvoiceActions
-            onView={() => onView(row)}
-            onEdit={() => onEdit(row)}
-            onExport={() => onExport(row)}
-            onDelete={() => onDelete(row)}
-          />
+          <div className="flex items-center justify-end">
+            <InvoiceActions
+              onView={() => onView(row)}
+              onEdit={() => onEdit(row)}
+              onDuplicate={() => onDuplicate(row)}
+              onExport={() => onExport(row)}
+              onDelete={() => onDelete(row)}
+              showDeleted={showDeleted}
+              onRestore={() => onRestore(row)}
+            />
+          </div>
         ),
-        className: "text-right",
       },
     ],
-    [onDelete, onEdit, onExport, onView],
+    [onDelete, onEdit, onDuplicate, onExport, onView, onRestore, showDeleted],
   );
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardContent className="space-y-1 p-4">
-            <p className="text-xs text-muted-foreground">All Invoices</p>
-            <p className="text-2xl font-semibold">{counts.all}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="space-y-1 p-4">
-            <p className="text-xs text-muted-foreground">Labels & Tags</p>
-            <p className="text-2xl font-semibold">{counts.LABEL_TAG}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="space-y-1 p-4">
-            <p className="text-xs text-muted-foreground">Fabric</p>
-            <p className="text-2xl font-semibold">{counts.FABRIC}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="space-y-1 p-4">
-            <p className="text-xs text-muted-foreground">Cartons</p>
-            <p className="text-2xl font-semibold">{counts.CARTON}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
+      <div className="flex flex-col gap-3">
+        {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
+        <div className="hidden xl:flex items-center gap-3">
           <Input
-            placeholder="Search PI number, order, terms"
+            placeholder="Search..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-[200px]"
           />
-          <Button variant="outline" onClick={onSearchSubmit}>
+          <Button
+            onClick={onSearchSubmit}
+            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+          >
             Search
           </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={
+              showDeleted ? "Show Active Invoices" : "Show Deleted Invoices"
+            }
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>{showDeleted ? "Exit" : "Trash"}</span>
+          </Button>
+
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
+                <SelectValue placeholder="Sort" />
+              </SelectTrigger>
+              <SelectContent align="end">
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+            <SelectTrigger className="h-11 text-xs w-[130px] shrink-0 font-bold">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {["LABEL_TAG", "FABRIC", "CARTON"].map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="h-11 text-xs w-[130px] shrink-0 font-bold">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {["DRAFT", "SENT", "APPROVED", "CANCELLED"].map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <DateRangeFilter
+            start={startDate}
+            end={endDate}
+            onFilterChange={({ start, end }) => {
+              onStartDateChange(start);
+              onEndDateChange(end);
+            }}
+            placeholder="Invoice Dates"
+            className="h-11 text-xs w-[200px] shrink-0"
+          />
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <div className="w-full sm:max-w-[160px]">
+
+        {/* SMALL DESKTOP / IPAD PRO (1024px - 1279px) */}
+        <div className="hidden lg:flex xl:hidden flex-col gap-3">
+          {/* Row 1: Search, Trash, Sort */}
+          <div className="flex items-center gap-3">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+            />
+            <Button
+              onClick={onSearchSubmit}
+              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            >
+              Search
+            </Button>
+            <Button
+              variant={showDeleted ? "destructive" : "outline"}
+              className={cn(
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+                !showDeleted && "bg-white border-slate-200 text-slate-500",
+              )}
+              onClick={onToggleDeleted}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>{showDeleted ? "Exit" : "Trash"}</span>
+            </Button>
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
+              <Select
+                value={currentSortValue}
+                onValueChange={(val) => {
+                  const opt = sortOptions.find((o) => o.value === val);
+                  if (opt)
+                    onSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    });
+                }}
+              >
+                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[120px]">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {sortOptions.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Row 2: Types, Status, Dates */}
+          <div className="flex items-center justify-end gap-3">
+            <div className="w-[150px]">
+              <Select value={typeFilter} onValueChange={onTypeFilterChange}>
+                <SelectTrigger className="h-11 text-xs font-bold">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {["LABEL_TAG", "FABRIC", "CARTON"].map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-[150px]">
+              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                <SelectTrigger className="h-11 text-xs font-bold">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  {["DRAFT", "SENT", "APPROVED", "CANCELLED"].map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DateRangeFilter
+              start={startDate}
+              end={endDate}
+              onFilterChange={({ start, end }) => {
+                onStartDateChange(start);
+                onEndDateChange(end);
+              }}
+              placeholder="Invoice Dates"
+              className="h-11 text-xs w-[220px]"
+            />
+          </div>
+        </div>
+
+        {/* TABLET & MOBILE (<1024px) */}
+        <div className="flex lg:hidden flex-col gap-2 sm:gap-3">
+          {/* Row 1: Search, Search Btn, Trash */}
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
+              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-0"
+            />
+            <Button
+              onClick={onSearchSubmit}
+              className="h-10 sm:h-11 px-3 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            >
+              <Search className="h-4 w-4 sm:hidden" />
+              <span className="hidden sm:inline text-xs">Search</span>
+            </Button>
+            <Button
+              variant={showDeleted ? "destructive" : "outline"}
+              className={cn(
+                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0",
+                !showDeleted && "bg-white border-slate-200 text-slate-500",
+              )}
+              onClick={onToggleDeleted}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span className="hidden sm:inline text-xs">
+                {showDeleted ? "Exit" : "Trash"}
+              </span>
+            </Button>
+          </div>
+
+          {/* Row 2: Sort and Types */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm flex-1 min-w-0">
+              <Select
+                value={currentSortValue}
+                onValueChange={(val) => {
+                  const opt = sortOptions.find((o) => o.value === val);
+                  if (opt)
+                    onSortChange({
+                      field: opt.field,
+                      dir: opt.dir as "asc" | "desc",
+                    });
+                }}
+              >
+                <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full">
+                  <SelectValue placeholder="Sort" />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {sortOptions.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold flex-1 min-w-0">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
@@ -181,9 +449,11 @@ const InvoicesTable = ({
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full sm:max-w-[160px]">
+
+          {/* Row 3: Status and Dates */}
+          <div className="flex items-center gap-2">
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger>
+              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold flex-1 min-w-0">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
@@ -195,25 +465,17 @@ const InvoicesTable = ({
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex w-full gap-2 sm:max-w-[260px]">
-            <Input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => onDateFromChange(e.target.value)}
-            />
-            <Input
-              type="date"
-              value={dateTo}
-              onChange={(e) => onDateToChange(e.target.value)}
+            <DateRangeFilter
+              start={startDate}
+              end={endDate}
+              onFilterChange={({ start, end }) => {
+                onStartDateChange(start);
+                onEndDateChange(end);
+              }}
+              placeholder="Invoice Dates"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1 min-w-0"
             />
           </div>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onAddInvoice}
-          >
-            Create PI
-          </Button>
         </div>
       </div>
 

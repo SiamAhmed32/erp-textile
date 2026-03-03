@@ -1,18 +1,30 @@
+"use client";
+
 import React, { useMemo } from "react";
-import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Eye, SquarePen, Trash2, ArrowUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import CustomTable from "@/components/reusables/CustomTable";
 import { InvoiceTerms } from "./types";
+import { cn } from "@/lib/utils";
 
 type Props = {
   terms: InvoiceTerms[];
   search: string;
   onSearchChange: (value: string) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onCreate: () => void;
   onEdit: (terms: InvoiceTerms) => void;
   onDelete: (terms: InvoiceTerms) => void;
+  onView: (terms: InvoiceTerms) => void;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -23,26 +35,48 @@ export function InvoiceTermsList({
   terms,
   search,
   onSearchChange,
+  sort,
+  onSortChange,
   onCreate,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
   loading = false,
 }: Props) {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
+
   const columns = useMemo(
     () => [
       {
         header: "Name",
         accessor: (row: InvoiceTerms) => (
-          <Link
-            href={`/invoice-terms/${row.id}`}
-            className="font-semibold text-foreground underline"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {row.name}
-          </Link>
+          <span className="font-semibold text-foreground">{row.name}</span>
         ),
       },
       {
@@ -63,50 +97,108 @@ export function InvoiceTermsList({
       },
       {
         header: "Actions",
-        className: "text-right",
+        className: "text-left w-40 pr-4",
         accessor: (row: InvoiceTerms) => (
-          <div
-            className="flex justify-end gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-              Edit
+          <div className="flex justify-end gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
             <Button
-              size="sm"
-              variant="destructive"
-              onClick={() => onDelete(row)}
+              size="icon"
+              variant="ghost"
+              title="Edit Terms"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
             >
-              Delete
+              <SquarePen className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              title="Delete"
+              className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(row);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         ),
       },
     ],
-    [onEdit, onDelete],
+    [onView, onEdit, onDelete],
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <Input
-            placeholder="Search by name, payment, or delivery terms"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          <Button variant="outline" className="shrink-0">
-            <Search className="mr-2 h-4 w-4" />
-            Search
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0">
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
           </Button>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onCreate}
-          >
-            Add Terms
-          </Button>
+
+        {/* Right: Sort Group */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

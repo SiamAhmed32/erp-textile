@@ -8,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Next.js Starter Template",
+  title: "Moon Textile",
   description:
     "A premium Next.js starter template with Tailwind CSS and Redux Toolkit.",
 };
@@ -19,11 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} bg-primaryBg text-primaryText antialiased`}>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.className} bg-primaryBg text-primaryText antialiased`}
+      >
         <ReduxProvider>
           {children}
-          <ToastContainer position="top-right" autoClose={3000} />
+          <ToastContainer position="top-right" autoClose={1000} />
         </ReduxProvider>
       </body>
     </html>

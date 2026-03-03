@@ -1,5 +1,8 @@
+"use client";
+import { encryptData } from "@/lib/encryption";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -15,11 +18,56 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useLoginMutation } from "@/store/services/authApi";
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
+import { notify } from "@/lib/notifications";
+import { useDispatch } from "react-redux";
+import { login as loginAction } from "@/store/slices/authSlice";
+import ForgotPasswordModal from "../auth/ForgotPasswordModal";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [login, { isLoading, error }] = useLoginMutation();
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    try {
+      const result = await login({ email, password }).unwrap();
+      const { token, user } = result?.data;
+
+      // Update Redux state immediately
+      dispatch(loginAction({ token, user }));
+
+      // Store token in cookie
+      Cookies.set("token", token, { expires: 1 }); // Expires in 1 day
+
+      // Store user data in localStorage
+      const encryptedUser = encryptData(user);
+      if (encryptedUser) {
+        localStorage.setItem("user", encryptedUser);
+      }
+
+      notify.success("Login successful");
+      router.push("/");
+    } catch (err: any) {
+      const errorMessage =
+        err?.data?.error?.message ||
+        "Login failed. Please check your credentials.";
+
+      notify.error(errorMessage);
+    }
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -30,7 +78,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -38,36 +86,65 @@ export function LoginForm({
                   id="email"
                   type="email"
                   placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
                 />
               </Field>
               <Field>
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
-                  <Link
-                    href="/reset-password"
+                  <button
+                    type="button"
+                    onClick={() => setIsForgotPasswordOpen(true)}
                     className="ml-auto cursor-pointer inline-block text-sm underline-offset-4 hover:underline"
                   >
                     Forgot your password?
-                  </Link>
+                  </button>
+                </div> */}
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                    disabled={isLoading}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
-                <Input id="password" type="password" required />
               </Field>
               <Field>
-                <Button type="submit" className="cursor-pointer">
+                <Button
+                  type="submit"
+                  className="w-full bg-black text-white hover:bg-black/90"
+                  isLoading={isLoading}
+                >
                   Login
                 </Button>
-                {/* <Button variant="outline" type="button">
-                  Login with Google
-                </Button> */}
-                {/* <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
-                </FieldDescription> */}
               </Field>
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
+      <ForgotPasswordModal
+        open={isForgotPasswordOpen}
+        onOpenChange={setIsForgotPasswordOpen}
+      />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +35,7 @@ const CompanyProfileForm = ({
   const [preview, setPreview] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!data.logoFile) {
+    if (!data.logoFile || !(data.logoFile instanceof Blob)) {
       setPreview(null);
       return;
     }
@@ -65,15 +66,16 @@ const CompanyProfileForm = ({
               {/* Image Preview Area */}
               <div className="shrink-0">
                 {displayUrl ? (
-                  <div className="relative group">
-                    <img
+                  <div className="relative group w-24 h-24">
+                    <Image
                       src={displayUrl}
                       alt="Logo preview"
-                      className="h-24 w-24 rounded-lg border-4 border-white shadow-sm object-cover bg-white"
+                      fill
+                      className="rounded-lg border-4 border-white shadow-sm object-cover bg-white"
                     />
                   </div>
                 ) : (
-                  <div className="h-24 w-24 rounded-lg border-2 border-dashed border-input/50 flex items-center justify-center bg-white/50 text-muted-foreground bg-muted/30">
+                  <div className="flex items-center justify-center h-24 w-24 rounded-lg border-2 border-dashed border-input/50 text-muted-foreground bg-muted/30">
                     <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
                       No Image
                     </span>
@@ -82,7 +84,7 @@ const CompanyProfileForm = ({
               </div>
 
               {/* Action Area */}
-              <div className="flex flex-col gap-3 flex-grow min-w-0">
+              <div className="flex flex-col gap-3 min-w-0 grow">
                 <div className="space-y-1">
                   <h4 className="text-sm font-semibold text-foreground truncate">
                     {displayUrl

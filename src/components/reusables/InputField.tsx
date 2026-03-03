@@ -1,64 +1,59 @@
-import React from 'react';
-import { IoSearchOutline } from 'react-icons/io5';
-import { Label } from './index';
+import React from "react";
+import { Label } from "./index";
 
 type InputFieldProps = {
-	label?: string;
-	name: string;
-	type?: string;
-	value: string;
-	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	placeholder?: string;
-	error?: string;
-	required?: boolean;
+  label?: string;
+  name: string;
+  type?: string;
+  value: string;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => void;
+  placeholder?: string;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  className?: string;
 };
 
 const InputField: React.FC<InputFieldProps> = ({
-	label,
-	name,
-	type = 'text',
-	value,
-	onChange,
-	placeholder,
-	error,
-	required = false,
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  placeholder,
+  error,
+  required = false,
+  disabled = false,
+  readOnly = false,
+  className,
 }) => {
-	/////////////////////////  this will be in parent component
-
-	// const [email, setEmail] = useState('');
-	// const [error, setError] = useState('');
-
-	// const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-	// 	setEmail(e.target.value);
-	// 	setError('');
-	// };
-
-	/////////////////////////////////////
-
-	return (
-		<div className='mb-4'>
-			{/* htmlFor={name} */}
-			{label && <Label htmlFor={name}>
-				{label} {required && <span className='text-red-400'>*</span>}
-			</Label>}
-			{/* <div className='relative'> */}
-			<input
-				id={name}
-				name={name}
-				type={type}
-				value={value}
-				onChange={onChange}
-				placeholder={placeholder}
-				required={required}
-				className={`font-primary input_field w-full px-4 py-2 border focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button transition ${
-					error ? 'border-red-400' : 'border-borderBg'
-				}`}
-			/>
-			{/* <IoSearchOutline className='absolute top-[50%] -translate-y-[50%] right-4 text-borderBg text-2xl' /> */}
-			{/* </div> */}
-			{error && <p className='text-sm text-red-400 mt-1'>{error}</p>}
-		</div>
-	);
+  return (
+    <div className="mb-4">
+      {label && (
+        <Label htmlFor={name}>
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+      )}
+      <input
+        id={name}
+        name={name}
+        type={type}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        disabled={disabled}
+        readOnly={readOnly}
+        className={`${className} w-full h-9 rounded-md border bg-transparent px-3 py-1 text-base md:text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 ${
+          error ? "border-destructive ring-destructive/20" : "border-input"
+        }`}
+      />
+      {error && <p className="text-sm text-destructive mt-1">{error}</p>}
+    </div>
+  );
 };
 
 export default InputField;

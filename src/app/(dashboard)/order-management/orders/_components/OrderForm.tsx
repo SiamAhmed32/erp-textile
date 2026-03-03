@@ -1,5 +1,7 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+import React, { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,18 +13,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FileText,
   Package,
   Truck,
   Plus,
   Trash2,
-  Info,
   Layers,
   Tag,
   Box,
-  ChevronRight,
+  Hash,
+  CalendarDays,
+  Building2,
+  Users,
+  MessageSquare,
   ChevronLeft,
+  ChevronRight,
+  Save,
+  type LucideIcon,
 } from "lucide-react";
 import {
   CompanyProfile,
@@ -33,1060 +42,1203 @@ import {
   LabelItemData,
   CartonItemData,
 } from "./types";
+import { Flex } from "@/components/reusables";
 import { cn } from "@/lib/utils";
 
-const steps = [
-  { label: "Basic Info", icon: FileText, color: "text-blue-500" },
-  { label: "Product Details", icon: Package, color: "text-amber-500" },
-  { label: "Delivery", icon: Truck, color: "text-emerald-500" },
-] as const;
+/* ─────────────── Reusable Sub-components ─────────────── */
+
+const SectionHeader = ({
+  icon: Icon,
+  title,
+  description,
+  rightLabel,
+  rightValue,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description?: string;
+  rightLabel?: string;
+  rightValue?: string;
+}) => (
+  <CardHeader className="bg-zinc-900 py-6 px-8 rounded-t-2xl">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+          <Icon size={20} />
+        </div>
+        <div>
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {description ? description.toUpperCase() : "MANAGEMENT MODULE"}
+          </p>
+          <h3 className="text-xl font-black text-white tracking-tight italic">
+            {title}
+          </h3>
+        </div>
+      </div>
+      {rightLabel && (
+        <div className="text-right">
+          <p className="text-zinc-400 text-[10px] font-bold uppercase tracking-[0.2em] mb-0.5">
+            {rightLabel}
+          </p>
+          <p className="text-white font-black tracking-tight italic">
+            {rightValue}
+          </p>
+        </div>
+      )}
+    </div>
+  </CardHeader>
+);
+
+const InputGroup = ({
+  id,
+  label,
+  placeholder,
+  value,
+  error,
+  onChange,
+  type = "text",
+  icon: Icon,
+  required,
+  disabled,
+}: {
+  id: string;
+  label: string;
+  placeholder?: string;
+  value: string;
+  error?: string;
+  onChange: (field: any, value: any) => void;
+  type?: string;
+  icon?: LucideIcon;
+  required?: boolean;
+  disabled?: boolean;
+}) => (
+  <div className="space-y-1.5">
+    <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+      {Icon && <Icon className="size-3.5 text-primary/60" />}
+      {label}
+      {required && <span className="text-destructive">*</span>}
+    </Label>
+    <Input
+      id={id}
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(id, e.target.value)}
+      disabled={disabled}
+      className={cn(
+        "h-11 transition-all border-slate-200 bg-white hover:border-primary/40 focus:ring-2 focus:ring-primary/20",
+        error && "border-destructive",
+      )}
+    />
+    {error && (
+      <p className="text-[10px] font-bold text-destructive animate-in slide-in-from-top-1">
+        {error}
+      </p>
+    )}
+  </div>
+);
+
+/* ─────────────── Props ─────────────── */
+
+const TAB_ORDER = ["basic", "details"] as const;
+type TabKey = (typeof TAB_ORDER)[number];
 
 type Props = {
   data: OrderFormData;
   buyers: Buyer[];
   companies: CompanyProfile[];
-  activeStep: number;
-  onStepChange: (index: number) => void;
   onChange: (field: keyof OrderFormData, value: any) => void;
   onNestedChange: (path: string, value: any) => void;
-  onValidateStep?: (stepIndex: number) => boolean;
   errors?: Record<string, string>;
   disableProductType?: boolean;
   disableStatus?: boolean;
+  isEdit?: boolean;
+  onSave?: () => void;
+  saving?: boolean;
+  activeTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
+  cancelHref?: string;
 };
+
+/* ─────────────── Main Component ─────────────── */
 
 const OrderForm = ({
   data,
   buyers,
   companies,
-  activeStep,
-  onStepChange,
   onChange,
   onNestedChange,
-  onValidateStep,
   errors,
   disableProductType,
   disableStatus,
+  isEdit,
+  onSave,
+  saving,
+  activeTab,
+  onTabChange,
+  cancelHref = "/order-management/orders",
 }: Props) => {
   const getError = (path: string) => errors?.[path];
 
-  const renderStepButtons = () => (
-    <div className="my-8 flex flex-col items-center justify-center space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0 text-foreground">
-      {steps.map((step, index) => {
-        const Icon = step.icon;
-        const isActive = index === activeStep;
-        const isCompleted = index < activeStep;
-
-        return (
-          <button
-            key={step.label}
-            type="button"
-            onClick={() => {
-              if (index > activeStep) {
-                const isValid = onValidateStep?.(activeStep);
-                if (isValid) onStepChange(index);
-              } else {
-                onStepChange(index);
-              }
-            }}
-            className={cn(
-              "flex w-full max-w-[240px] items-center justify-center space-x-3 rounded-full border px-6 py-2.5 transition-all duration-200",
-              isActive
-                ? "border-primary bg-primary/10 text-primary shadow-sm"
-                : "border-slate-200 bg-slate-100/80 text-muted-foreground hover:bg-slate-200",
-            )}
-          >
-            <div
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-white transition-colors duration-200",
-                isActive
-                  ? "bg-primary"
-                  : isCompleted
-                    ? "bg-emerald-500"
-                    : "bg-muted-foreground/30",
-              )}
-            >
-              {isCompleted ? "✓" : index + 1}
-            </div>
-            <span className="font-semibold">{step.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-
+  /* ─── Basic Info Tab ─── */
   const renderBasicInfo = () => (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="overflow-hidden border-none shadow-premium bg-slate-50 ">
-        <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="flex items-center space-x-2 text-xl">
-            <Info className="h-5 w-5 text-blue-500" />
-            <span>Primary Information</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-6 p-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="orderNumber" className="text-sm font-semibold">
-              Order Number *
-            </Label>
-            <Input
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={FileText}
+          title="Primary Information"
+          description="Basic Order Logistics"
+          rightLabel="CURRENT SESSION"
+          rightValue={new Date().getFullYear().toString()}
+        />
+        <CardContent className="p-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            <InputGroup
               id="orderNumber"
+              label="Order Number"
               placeholder="e.g. ORD-2024-001"
               value={data.orderNumber}
-              onChange={(e) => onChange("orderNumber", e.target.value)}
-              className={cn(
-                "h-11 border-slate-200",
-                getError("orderNumber") && "border-destructive",
-              )}
+              error={getError("orderNumber")}
+              onChange={onChange}
+              icon={Hash}
+              required
             />
-            {getError("orderNumber") && (
-              <p className="text-xs font-medium text-destructive">
-                {getError("orderNumber")}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="orderDate" className="text-sm font-semibold">
-              Order Date *
-            </Label>
-            <Input
+            <InputGroup
               id="orderDate"
+              label="Order Date"
               type="date"
               value={data.orderDate}
-              onChange={(e) => onChange("orderDate", e.target.value)}
-              className="h-11 border-slate-200"
+              error={getError("orderDate")}
+              onChange={onChange}
+              icon={CalendarDays}
+              required
+            />
+
+            {/* Status Select */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                Status <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={data.status}
+                onValueChange={(value) => onChange("status", value)}
+                disabled={disableStatus}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "h-11 transition-all border-slate-200 bg-white hover:border-primary/40",
+                    getError("status") && "border-destructive",
+                  )}
+                >
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl ">
+                  {[
+                    "DRAFT",
+                    "PENDING",
+                    "PROCESSING",
+                    "APPROVED",
+                    "DELIVERED",
+                    "CANCELLED",
+                  ].map((status) => (
+                    <SelectItem
+                      key={status}
+                      value={status}
+                      className="rounded-md my-1 focus:bg-primary/5"
+                    >
+                      {status}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getError("status") && (
+                <p className="text-[10px] font-bold text-destructive animate-in slide-in-from-top-1">
+                  {getError("status")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            {/* Category Select */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Package className="size-3.5 text-primary/60" />
+                Category <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={data.productType}
+                onValueChange={(value) =>
+                  onChange("productType", value as ProductType)
+                }
+                disabled={disableProductType}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "h-11 transition-all border-slate-200 bg-white hover:border-primary/40",
+                    getError("productType") && "border-destructive",
+                  )}
+                >
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl ">
+                  <SelectItem
+                    value="FABRIC"
+                    className="rounded-md my-1 focus:bg-amber-50"
+                  >
+                    Fabric
+                  </SelectItem>
+                  <SelectItem
+                    value="LABEL_TAG"
+                    className="rounded-md my-1 focus:bg-blue-50"
+                  >
+                    Label & Tag
+                  </SelectItem>
+                  <SelectItem
+                    value="CARTON"
+                    className="rounded-md my-1 focus:bg-emerald-50"
+                  >
+                    Carton
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              {getError("productType") && (
+                <p className="text-[10px] font-bold text-destructive animate-in slide-in-from-top-1">
+                  {getError("productType")}
+                </p>
+              )}
+            </div>
+
+            {/* Buyer Select */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Users className="size-3.5 text-primary/60" />
+                Select Buyer <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={data.buyerId}
+                onValueChange={(value) => onChange("buyerId", value)}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "h-11 transition-all border-slate-200 bg-white hover:border-primary/40",
+                    getError("buyerId") && "border-destructive",
+                  )}
+                >
+                  <SelectValue placeholder="Select buyer" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl ">
+                  {buyers.map((buyer) => (
+                    <SelectItem
+                      key={buyer.id}
+                      value={buyer.id}
+                      className="rounded-md my-1 focus:bg-primary/5"
+                    >
+                      {buyer.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getError("buyerId") && (
+                <p className="text-[10px] font-bold text-destructive animate-in slide-in-from-top-1">
+                  {getError("buyerId")}
+                </p>
+              )}
+            </div>
+
+            {/* Company Select */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                <Building2 className="size-3.5 text-primary/60" />
+                Manufacturing Company{" "}
+                <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={data.companyProfileId}
+                onValueChange={(value) => onChange("companyProfileId", value)}
+              >
+                <SelectTrigger
+                  className={cn(
+                    "h-11 transition-all border-slate-200 bg-white hover:border-primary/40",
+                    getError("companyProfileId") && "border-destructive",
+                  )}
+                >
+                  <SelectValue placeholder="Select company" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl ">
+                  {companies.map((company) => (
+                    <SelectItem
+                      key={company.id}
+                      value={company.id}
+                      className="rounded-md my-1 focus:bg-primary/5"
+                    >
+                      {company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {getError("companyProfileId") && (
+                <p className="text-[10px] font-bold text-destructive animate-in slide-in-from-top-1">
+                  {getError("companyProfileId")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Remarks */}
+          <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+              <MessageSquare className="size-3.5 text-primary/60" />
+              Remarks / Notes
+            </Label>
+            <Textarea
+              placeholder="Enter any special instructions or notes here..."
+              value={data.remarks}
+              onChange={(e) => onChange("remarks", e.target.value)}
+              rows={3}
+              className="border-slate-200 bg-white focus-visible:ring-primary"
             />
           </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="status"
-              className="text-sm font-semibold text-foreground"
-            >
-              Status *
-            </Label>
-            <Select
-              value={data.status}
-              onValueChange={(value) => onChange("status", value)}
-              disabled={disableStatus}
-            >
-              <SelectTrigger className="h-11 border-slate-200">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {[
-                  "DRAFT",
-                  "PENDING",
-                  "PROCESSING",
-                  "APPROVED",
-                  "DELIVERED",
-                  "CANCELLED",
-                ].map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {getError("status") && (
-              <p className="text-xs font-medium text-destructive">
-                {getError("status")}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="productType"
-              className="text-sm font-semibold text-foreground"
-            >
-              Category *
-            </Label>
-            <Select
-              value={data.productType}
-              onValueChange={(value) =>
-                onChange("productType", value as ProductType)
-              }
-              disabled={disableProductType}
-            >
-              <SelectTrigger className="h-11 border-slate-200 bg-amber-50/30">
-                <SelectValue placeholder="Select type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="FABRIC" className="focus:bg-amber-50">
-                  Fabric
-                </SelectItem>
-                <SelectItem value="LABEL_TAG" className="focus:bg-blue-50">
-                  Label & Tag
-                </SelectItem>
-                <SelectItem value="CARTON" className="focus:bg-emerald-50">
-                  Carton
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label
-              htmlFor="buyerId"
-              className="text-sm font-semibold text-foreground"
-            >
-              Select Buyer *
-            </Label>
-            <Select
-              value={data.buyerId}
-              onValueChange={(value) => onChange("buyerId", value)}
-            >
-              <SelectTrigger className="h-11 border-slate-200">
-                <SelectValue placeholder="Select buyer" />
-              </SelectTrigger>
-              <SelectContent>
-                {buyers.map((buyer) => (
-                  <SelectItem key={buyer.id} value={buyer.id}>
-                    {buyer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {getError("buyerId") && (
-              <p className="text-xs font-medium text-destructive">
-                {getError("buyerId")}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2 text-foreground">
-            <Label htmlFor="companyProfileId" className="text-sm font-semibold">
-              Manufacturing Company *
-            </Label>
-            <Select
-              value={data.companyProfileId}
-              onValueChange={(value) => onChange("companyProfileId", value)}
-            >
-              <SelectTrigger className="h-11 border-slate-200">
-                <SelectValue placeholder="Select company" />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {getError("companyProfileId") && (
-              <p className="text-xs font-medium text-destructive">
-                {getError("companyProfileId")}
-              </p>
-            )}
-          </div>
         </CardContent>
       </Card>
-
-      <Card className="overflow-hidden border-none shadow-premium bg-white">
-        <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="flex items-center space-x-2 text-xl">
-            <FileText className="h-5 w-5 text-slate-500" />
-            <span>Additional Remarks</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <Textarea
-            placeholder="Enter any special instructions or notes here..."
-            value={data.remarks}
-            onChange={(e) => onChange("remarks", e.target.value)}
-            rows={4}
-            className="border-slate-200 focus-visible:ring-primary"
-          />
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end pt-4">
-        <Button
-          size="lg"
-          onClick={() => {
-            const isValid = onValidateStep?.(0);
-            if (isValid) onStepChange(1);
-          }}
-          className="px-8 shadow-md"
-        >
-          Next: Product Details
-          <ChevronRight className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
     </div>
   );
 
-  const renderProductDetails = () => {
-    if (data.productType === "FABRIC") {
-      const rows = data.orderItems.fabricItem?.fabricItemData || [];
-      return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="overflow-hidden border-none shadow-premium bg-amber-100/40">
-            <CardHeader className=" border-b border-amber-200/50">
-              <CardTitle className="flex items-center space-x-2 text-xl text-amber-900">
-                <Layers className="h-5 w-5" />
-                <span>Fabric Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Style No *</Label>
-                  <Input
-                    value={data.orderItems.fabricItem?.styleNo || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.styleNo",
-                        e.target.value,
-                      )
-                    }
-                    className={cn(
-                      "bg-white border-amber-200",
-                      getError("orderItems.orderItems.fabricItem.styleNo") &&
-                        "border-destructive",
-                    )}
-                  />
-                  {getError("orderItems.orderItems.fabricItem.styleNo") && (
-                    <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.fabricItem.styleNo")}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Description</Label>
-                  <Input
-                    value={data.orderItems.fabricItem?.discription || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.discription",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Width *
-                  </Label>
-                  <Input
-                    value={data.orderItems.fabricItem?.width || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.width",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Net Weight
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalNetWeight || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalNetWeight",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2 text-foreground">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Gross Weight
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalGrossWeight || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalGrossWeight",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Quantity (Yds)
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalQuantityYds || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalQuantityYds",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Unit Price
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalUnitPrice || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalUnitPrice",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.fabricItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.fabricItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-amber-200 font-bold text-amber-700"
-                  />
-                </div>
-              </div>
+  /* ─── Fabric Details ─── */
+  const renderFabricDetails = () => {
+    const rows = data.orderItems.fabricItem?.fabricItemData || [];
+    return (
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Layers}
+          title="Fabric Details"
+          description="Production Specifications"
+          rightLabel="FABRIC CLASS"
+          rightValue="PREMIUM"
+        />
+        <CardContent className="p-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Style No <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={data.orderItems.fabricItem?.styleNo || ""}
+                onChange={(e) =>
+                  onNestedChange(
+                    "orderItems.fabricItem.styleNo",
+                    e.target.value,
+                  )
+                }
+                placeholder="e.g. ST-001"
+                className={cn(
+                  "h-11 border-slate-200 bg-white hover:border-primary/40",
+                  getError("orderItems.fabricItem.styleNo") &&
+                    "border-destructive",
+                )}
+              />
+              {getError("orderItems.fabricItem.styleNo") && (
+                <p className="text-[10px] font-bold text-destructive">
+                  {getError("orderItems.fabricItem.styleNo")}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Description
+              </Label>
+              <Input
+                value={data.orderItems.fabricItem?.discription || ""}
+                onChange={(e) =>
+                  onNestedChange(
+                    "orderItems.fabricItem.discription",
+                    e.target.value,
+                  )
+                }
+                placeholder="Fabric description"
+                className="h-11 border-slate-200 bg-white hover:border-primary/40"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Width <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={data.orderItems.fabricItem?.width || ""}
+                onChange={(e) =>
+                  onNestedChange("orderItems.fabricItem.width", e.target.value)
+                }
+                placeholder="e.g. 60 inches"
+                className={cn(
+                  "h-11 border-slate-200 bg-white hover:border-primary/40",
+                  getError("orderItems.fabricItem.width") &&
+                    "border-destructive",
+                )}
+              />
+              {getError("orderItems.fabricItem.width") && (
+                <p className="text-[10px] font-bold text-destructive">
+                  {getError("orderItems.fabricItem.width")}
+                </p>
+              )}
+            </div>
+          </div>
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
-                  <div className="flex items-center space-x-2">
-                    <Tag className="h-4 w-4 text-amber-600" />
-                    <h3 className="font-bold text-amber-900">
-                      Color Variants & Quantities
-                    </h3>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-amber-500 text-amber-700 hover:bg-amber-100"
-                    onClick={() => {
-                      const next: FabricItemData[] = [
-                        ...rows,
-                        {
-                          color: "",
-                          netWeight: "",
-                          grossWeight: "",
-                          quantityYds: "",
-                          unitPrice: "",
-                          totalAmount: "",
-                        },
-                      ];
-                      onNestedChange(
-                        "orderItems.fabricItem.fabricItemData",
-                        next,
-                      );
-                    }}
+          {/* Color Variants */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                  <Tag className="size-3.5" />
+                </div>
+                <h4 className="font-bold text-slate-700">
+                  Color Variants & Quantities
+                </h4>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-200 hover:bg-primary/5 hover:border-primary/30"
+                onClick={() => {
+                  const next: FabricItemData[] = [
+                    ...rows,
+                    {
+                      color: "",
+                      netWeight: "",
+                      grossWeight: "",
+                      quantityYds: "",
+                      unitPrice: "",
+                    },
+                  ];
+                  onNestedChange("orderItems.fabricItem.fabricItemData", next);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Variant
+              </Button>
+            </div>
+            <div className="grid gap-4">
+              {rows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <Layers className="h-8 w-8 text-slate-300 mb-3" />
+                  <p className="text-sm text-slate-400 font-medium">
+                    No variants added yet. Click &quot;Add Variant&quot; to
+                    start.
+                  </p>
+                </div>
+              ) : (
+                rows.map((row, index) => (
+                  <div
+                    key={index}
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-6 items-end"
                   >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Variant
-                  </Button>
-                </div>
-                <div className="grid gap-4">
-                  {rows.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-amber-200 rounded-lg bg-amber-50/50">
-                      <p className="text-sm text-amber-600 font-medium">
-                        No variants added yet. Click "Add Variant" to start.
-                      </p>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Color
+                      </Label>
+                      <Input
+                        placeholder="Color"
+                        value={row.color || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.fabricItem.fabricItemData.${index}.color`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
                     </div>
-                  ) : (
-                    rows.map((row, index) => (
-                      <div
-                        key={index}
-                        className="group relative grid gap-4 rounded-xl border border-amber-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-6 items-end"
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Net Wt
+                      </Label>
+                      <Input
+                        placeholder="Net"
+                        type="number"
+                        value={row.netWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.fabricItem.fabricItemData.${index}.netWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Gross Wt
+                      </Label>
+                      <Input
+                        placeholder="Gross"
+                        type="number"
+                        value={row.grossWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.fabricItem.fabricItemData.${index}.grossWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Qty (Yds)
+                      </Label>
+                      <Input
+                        placeholder="Yards"
+                        type="number"
+                        value={row.quantityYds || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.fabricItem.fabricItemData.${index}.quantityYds`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Unit Price
+                      </Label>
+                      <Input
+                        placeholder="Price"
+                        type="number"
+                        value={row.unitPrice || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.fabricItem.fabricItemData.${index}.unitPrice`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Action
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="w-full h-10 flex items-center justify-center gap-2 rounded-xl"
+                        onClick={() => {
+                          const next = rows.filter((_, i) => i !== index);
+                          onNestedChange(
+                            "orderItems.fabricItem.fabricItemData",
+                            next,
+                          );
+                        }}
                       >
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Color
-                          </Label>
-                          <Input
-                            placeholder="Color"
-                            value={row.color || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.fabricItem.fabricItemData.${index}.color`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Net Wt
-                          </Label>
-                          <Input
-                            placeholder="Net"
-                            type="number"
-                            value={row.netWeight || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.fabricItem.fabricItemData.${index}.netWeight`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Gross Wt
-                          </Label>
-                          <Input
-                            placeholder="Gross"
-                            type="number"
-                            value={row.grossWeight || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.fabricItem.fabricItemData.${index}.grossWeight`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Qty (Yds)
-                          </Label>
-                          <Input
-                            placeholder="Qty"
-                            type="number"
-                            value={row.quantityYds || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.fabricItem.fabricItemData.${index}.quantityYds`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Unit Price
-                          </Label>
-                          <Input
-                            placeholder="Price"
-                            type="number"
-                            value={row.unitPrice || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.fabricItem.fabricItemData.${index}.unitPrice`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Total
-                          </Label>
-                          <div className="flex space-x-2">
-                            <Input
-                              placeholder="Total"
-                              type="number"
-                              value={row.totalAmount || ""}
-                              onChange={(e) =>
-                                onNestedChange(
-                                  `orderItems.fabricItem.fabricItemData.${index}.totalAmount`,
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-50 font-semibold"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-red-50"
-                              onClick={() => {
-                                const next = rows.filter((_, i) => i !== index);
-                                onNestedChange(
-                                  "orderItems.fabricItem.fabricItemData",
-                                  next,
-                                );
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
-    if (data.productType === "LABEL_TAG") {
-      const rows = data.orderItems.labelItem?.labelItemData || [];
-      return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="overflow-hidden border-none shadow-premium bg-blue-50/30">
-            <CardHeader className="bg-blue-100/50 border-b border-blue-200/50">
-              <CardTitle className="flex items-center space-x-2 text-xl text-blue-900">
-                <Tag className="h-5 w-5" />
-                <span>Label & Tag Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Style No *</Label>
-                  <Input
-                    value={data.orderItems.labelItem?.styleNo || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.labelItem.styleNo",
-                        e.target.value,
-                      )
-                    }
-                    className={cn(
-                      "bg-white border-blue-200",
-                      getError("orderItems.orderItems.labelItem.styleNo") &&
-                        "border-destructive",
-                    )}
-                  />
-                  {getError("orderItems.orderItems.labelItem.styleNo") && (
-                    <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.labelItem.styleNo")}
-                    </p>
-                  )}
-                </div>
-                {/* Add other summary fields here... abbreviated for length but following same pattern */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.labelItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.labelItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-blue-200 font-bold text-blue-700"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-blue-200/50 pb-2">
-                  <div className="flex items-center space-x-2">
-                    <Box className="h-4 w-4 text-blue-600" />
-                    <h3 className="font-bold text-blue-900">
-                      Item Specifications
-                    </h3>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="text-xs font-semibold">Delete</span>
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-blue-500 text-blue-700 hover:bg-blue-100"
-                    onClick={() => {
-                      const next: LabelItemData[] = [
-                        ...rows,
-                        {
-                          desscription: "",
-                          color: "",
-                          netWeight: "",
-                          grossWeight: "",
-                          quantityDzn: "",
-                          quantityPcs: "",
-                          unitPrice: "",
-                          totalAmount: "",
-                        },
-                      ];
-                      onNestedChange(
-                        "orderItems.labelItem.labelItemData",
-                        next,
-                      );
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
-                <div className="grid gap-4">
-                  {rows.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/50">
-                      <p className="text-sm text-blue-600 font-medium">
-                        No items added yet.
-                      </p>
-                    </div>
-                  ) : (
-                    rows.map((row, index) => (
-                      <div
-                        key={index}
-                        className="group relative grid gap-4 rounded-xl border border-blue-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-8 items-end"
-                      >
-                        <div className="lg:col-span-2 space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Desscription
-                          </Label>
-                          <Input
-                            placeholder="Desscription"
-                            value={row.desscription || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.labelItem.labelItemData.${index}.desscription`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Color
-                          </Label>
-                          <Input
-                            placeholder="Color"
-                            value={row.color || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.labelItem.labelItemData.${index}.color`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        {/* ... other fields ... */}
-                        <div className="space-y-2 lg:col-start-8">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Action
-                          </Label>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="w-full text-destructive hover:bg-red-50"
-                            onClick={() => {
-                              const next = rows.filter((_, i) => i !== index);
-                              onNestedChange(
-                                "orderItems.labelItem.labelItemData",
-                                next,
-                              );
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
-
-    if (data.productType === "CARTON") {
-      const rows = data.orderItems.cartonItem?.cartonItemData || [];
-      return (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Card className="overflow-hidden border-none shadow-premium bg-emerald-50/30">
-            <CardHeader className="border-b border-emerald-200/50">
-              <CardTitle className="flex items-center space-x-2 text-xl text-emerald-900">
-                <Box className="h-5 w-5" />
-                <span>Carton Packaging Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-8">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Order No *</Label>
-                  <Input
-                    value={data.orderItems.cartonItem?.orderNo || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.cartonItem.orderNo",
-                        e.target.value,
-                      )
-                    }
-                    className={cn(
-                      "bg-white border-emerald-200",
-                      getError("orderItems.orderItems.cartonItem.orderNo") &&
-                        "border-destructive",
-                    )}
-                  />
-                  {getError("orderItems.orderItems.cartonItem.orderNo") && (
-                    <p className="text-xs text-destructive">
-                      {getError("orderItems.orderItems.cartonItem.orderNo")}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">
-                    Total Carton Qty
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.cartonItem?.totalcartonQty || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.cartonItem.totalcartonQty",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-emerald-200"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-foreground">
-                    Total Amount
-                  </Label>
-                  <Input
-                    type="number"
-                    value={data.orderItems.cartonItem?.totalAmount || ""}
-                    onChange={(e) =>
-                      onNestedChange(
-                        "orderItems.cartonItem.totalAmount",
-                        e.target.value,
-                      )
-                    }
-                    className="bg-white border-emerald-200 font-bold text-emerald-700"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-emerald-200/50 pb-2">
-                  <div className="flex items-center space-x-2">
-                    <Layers className="h-4 w-4 text-emerald-600" />
-                    <h3 className="font-bold text-emerald-900">
-                      Carton Item Breakdown
-                    </h3>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-emerald-500 text-emerald-700 hover:bg-emerald-100"
-                    onClick={() => {
-                      const next: CartonItemData[] = [
-                        ...rows,
-                        {
-                          cartonMeasurement: "",
-                          cartonPly: "",
-                          cartonQty: "",
-                          netWeight: "",
-                          grossWeight: "",
-                          unit: "",
-                          unitPrice: "",
-                          totalAmount: "",
-                        },
-                      ];
-                      onNestedChange(
-                        "orderItems.cartonItem.cartonItemData",
-                        next,
-                      );
-                    }}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Size
-                  </Button>
-                </div>
-                <div className="grid gap-4">
-                  {rows.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-emerald-200 rounded-lg bg-emerald-50/50">
-                      <p className="text-sm text-emerald-600 font-medium">
-                        Add carton sizes to continue.
-                      </p>
-                    </div>
-                  ) : (
-                    rows.map((row, index) => (
-                      <div
-                        key={index}
-                        className="group relative grid gap-4 rounded-xl border border-emerald-200 bg-white p-5 shadow-sm transition-all hover:shadow-md md:grid-cols-2 lg:grid-cols-8 items-end"
-                      >
-                        <div className="lg:col-span-2 space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Measurement
-                          </Label>
-                          <Input
-                            placeholder="e.g. 24x18x12"
-                            value={row.cartonMeasurement || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.cartonItem.cartonItemData.${index}.cartonMeasurement`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Ply
-                          </Label>
-                          <Input
-                            placeholder="e.g. 5 Ply"
-                            value={row.cartonPly || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.cartonItem.cartonItemData.${index}.cartonPly`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2 text-foreground">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Qty
-                          </Label>
-                          <Input
-                            placeholder="Qty"
-                            type="number"
-                            value={row.cartonQty || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.cartonItem.cartonItemData.${index}.cartonQty`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Unit
-                          </Label>
-                          <Input
-                            placeholder="PCS"
-                            value={row.unit || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.cartonItem.cartonItemData.${index}.unit`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs font-bold text-slate-500 uppercase">
-                            Price
-                          </Label>
-                          <Input
-                            placeholder="Price"
-                            type="number"
-                            value={row.unitPrice || ""}
-                            onChange={(e) =>
-                              onNestedChange(
-                                `orderItems.cartonItem.cartonItemData.${index}.unitPrice`,
-                                e.target.value,
-                              )
-                            }
-                          />
-                        </div>
-                        <div className="lg:col-span-2 flex space-x-2 items-end">
-                          <div className="flex-1 space-y-2">
-                            <Label className="text-xs font-bold text-slate-500 uppercase">
-                              Total Amount
-                            </Label>
-                            <Input
-                              placeholder="Total"
-                              type="number"
-                              value={row.totalAmount || ""}
-                              onChange={(e) =>
-                                onNestedChange(
-                                  `orderItems.cartonItem.cartonItemData.${index}.totalAmount`,
-                                  e.target.value,
-                                )
-                              }
-                              className="bg-slate-50"
-                            />
-                          </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-red-50 mb-0.5"
-                            onClick={() => {
-                              const next = rows.filter((_, i) => i !== index);
-                              onNestedChange(
-                                "orderItems.cartonItem.cartonItemData",
-                                next,
-                              );
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      );
-    }
+                ))
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
-  const renderDelivery = () => (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <Card className="overflow-hidden border-none shadow-premium bg-white">
-        <CardHeader className="bg-slate-50 border-b">
-          <CardTitle className="flex items-center space-x-2 text-xl">
-            <Truck className="h-5 w-5 text-emerald-500" />
-            <span>Delivery Timeline</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 md:w-1/2">
-          <div className="space-y-2">
-            <Label htmlFor="deliveryDate" className="text-sm font-semibold">
-              Expected Delivery Date *
-            </Label>
-            <Input
-              id="deliveryDate"
-              type="date"
-              value={data.deliveryDate}
-              onChange={(e) => onChange("deliveryDate", e.target.value)}
-              className="h-11 border-slate-200"
-            />
-            {getError("deliveryDate") && (
-              <p className="text-xs font-medium text-destructive">
-                {getError("deliveryDate")}
-              </p>
-            )}
+  /* ─── Label & Tag Details ─── */
+  const renderLabelDetails = () => {
+    const rows = data.orderItems.labelItem?.labelItemData || [];
+    return (
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Tag}
+          title="Label & Tag Details"
+          description="Branding & Trims"
+          rightLabel="ITEM TYPE"
+          rightValue="ACCESSORIES"
+        />
+        <CardContent className="p-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Style No <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={data.orderItems.labelItem?.styleNo || ""}
+                onChange={(e) =>
+                  onNestedChange("orderItems.labelItem.styleNo", e.target.value)
+                }
+                placeholder="e.g. LBL-001"
+                className={cn(
+                  "h-11 border-slate-200 bg-white hover:border-primary/40",
+                  getError("orderItems.labelItem.styleNo") &&
+                    "border-destructive",
+                )}
+              />
+              {getError("orderItems.labelItem.styleNo") && (
+                <p className="text-[10px] font-bold text-destructive">
+                  {getError("orderItems.labelItem.styleNo")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Label Items */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <Tag className="size-3.5" />
+                </div>
+                <h4 className="font-bold text-slate-700">
+                  Label Item Breakdown
+                </h4>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-200 hover:bg-primary/5 hover:border-primary/30"
+                onClick={() => {
+                  const next: LabelItemData[] = [
+                    ...rows,
+                    {
+                      desscription: "",
+                      color: "",
+                      netWeight: "",
+                      grossWeight: "",
+                      quantityDzn: "",
+                      quantityPcs: "",
+                      unitPrice: "",
+                    },
+                  ];
+                  onNestedChange("orderItems.labelItem.labelItemData", next);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
+            <div className="grid gap-4">
+              {rows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <Tag className="h-8 w-8 text-slate-300 mb-3" />
+                  <p className="text-sm text-slate-400 font-medium">
+                    No label items added yet. Click &quot;Add Item&quot; to
+                    start.
+                  </p>
+                </div>
+              ) : (
+                rows.map((row, index) => (
+                  <div
+                    key={index}
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
+                  >
+                    <div className="lg:col-span-2 space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Description
+                      </Label>
+                      <Input
+                        placeholder="Description"
+                        value={row.desscription || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.desscription`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Color
+                      </Label>
+                      <Input
+                        placeholder="Color"
+                        value={row.color || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.color`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Net Wt
+                      </Label>
+                      <Input
+                        placeholder="Net"
+                        type="number"
+                        value={row.netWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.netWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Gross Wt
+                      </Label>
+                      <Input
+                        placeholder="Gross"
+                        type="number"
+                        value={row.grossWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.grossWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Qty (Dzn)
+                      </Label>
+                      <Input
+                        placeholder="Dozen"
+                        type="number"
+                        value={row.quantityDzn || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.quantityDzn`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Price
+                      </Label>
+                      <Input
+                        placeholder="Price"
+                        type="number"
+                        value={row.unitPrice || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.unitPrice`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Action
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="w-full h-10 flex items-center justify-center gap-2 rounded-xl"
+                        onClick={() => {
+                          const next = rows.filter((_, i) => i !== index);
+                          onNestedChange(
+                            "orderItems.labelItem.labelItemData",
+                            next,
+                          );
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="text-xs font-semibold">Delete</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
-      <div className="flex justify-start pt-4">
+    );
+  };
+
+  /* ─── Carton Details ─── */
+  const renderCartonDetails = () => {
+    const rows = data.orderItems.cartonItem?.cartonItemData || [];
+    return (
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Box}
+          title="Carton Packaging Details"
+          description="Shipment Packaging"
+          rightLabel="PACKING"
+          rightValue="STANDARD"
+        />
+        <CardContent className="p-8 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Order No <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                value={data.orderItems.cartonItem?.orderNo || ""}
+                onChange={(e) =>
+                  onNestedChange(
+                    "orderItems.cartonItem.orderNo",
+                    e.target.value,
+                  )
+                }
+                placeholder="e.g. CRT-001"
+                className={cn(
+                  "h-11 border-slate-200 bg-white hover:border-primary/40",
+                  getError("orderItems.cartonItem.orderNo") &&
+                    "border-destructive",
+                )}
+              />
+              {getError("orderItems.cartonItem.orderNo") && (
+                <p className="text-[10px] font-bold text-destructive">
+                  {getError("orderItems.cartonItem.orderNo")}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Carton Items */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600">
+                  <Box className="size-3.5" />
+                </div>
+                <h4 className="font-bold text-slate-700">
+                  Carton Item Breakdown
+                </h4>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2 border-slate-200 hover:bg-primary/5 hover:border-primary/30"
+                onClick={() => {
+                  const next: CartonItemData[] = [
+                    ...rows,
+                    {
+                      cartonMeasurement: "",
+                      cartonPly: "",
+                      cartonQty: "",
+                      netWeight: "",
+                      grossWeight: "",
+                      unit: "",
+                      unitPrice: "",
+                    },
+                  ];
+                  onNestedChange("orderItems.cartonItem.cartonItemData", next);
+                }}
+              >
+                <Plus className="h-4 w-4" />
+                Add Size
+              </Button>
+            </div>
+            <div className="grid gap-4">
+              {rows.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                  <Box className="h-8 w-8 text-slate-300 mb-3" />
+                  <p className="text-sm text-slate-400 font-medium">
+                    No carton sizes added yet. Click &quot;Add Size&quot; to
+                    start.
+                  </p>
+                </div>
+              ) : (
+                rows.map((row, index) => (
+                  <div
+                    key={index}
+                    className="group relative grid gap-4 rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-slate-300 md:grid-cols-2 lg:grid-cols-8 items-end"
+                  >
+                    <div className="lg:col-span-2 space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Measurement
+                      </Label>
+                      <Input
+                        placeholder="e.g. 24x18x12"
+                        value={row.cartonMeasurement || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.cartonMeasurement`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Ply
+                      </Label>
+                      <Input
+                        placeholder="e.g. 5 Ply"
+                        value={row.cartonPly || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.cartonPly`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Qty
+                      </Label>
+                      <Input
+                        placeholder="Qty"
+                        type="number"
+                        value={row.cartonQty || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.cartonQty`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Unit
+                      </Label>
+                      <Input
+                        placeholder="PCS"
+                        value={row.unit || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.unit`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Price
+                      </Label>
+                      <Input
+                        placeholder="Price"
+                        type="number"
+                        value={row.unitPrice || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.unitPrice`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Net Wt
+                      </Label>
+                      <Input
+                        placeholder="Net"
+                        type="number"
+                        value={row.netWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.netWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Gross Wt
+                      </Label>
+                      <Input
+                        placeholder="Gross"
+                        type="number"
+                        value={row.grossWeight || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.cartonItem.cartonItemData.${index}.grossWeight`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Action
+                      </Label>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="w-full h-10 flex items-center justify-center gap-2 rounded-xl"
+                        onClick={() => {
+                          const next = rows.filter((_, i) => i !== index);
+                          onNestedChange(
+                            "orderItems.cartonItem.cartonItemData",
+                            next,
+                          );
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="text-xs font-semibold">Delete</span>
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  /* ─── Product & Delivery Details Tab ─── */
+  const renderDetails = () => (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      {data.productType === "FABRIC" && renderFabricDetails()}
+      {data.productType === "LABEL_TAG" && renderLabelDetails()}
+      {data.productType === "CARTON" && renderCartonDetails()}
+
+      <Card className="border-none rounded-2xl overflow-hidden bg-white shadow-xl shadow-zinc-200/50">
+        <SectionHeader
+          icon={Truck}
+          title="Delivery Timeline"
+          description="Logistics Scheduling"
+          rightLabel="STATUS"
+          rightValue="PENDING"
+        />
+        <CardContent className="p-8 space-y-8">
+          <div className="max-w-md">
+            <InputGroup
+              id="deliveryDate"
+              label="Expected Delivery Date"
+              type="date"
+              value={data.deliveryDate}
+              error={getError("deliveryDate")}
+              onChange={onChange}
+              icon={CalendarDays}
+              required
+            />
+          </div>
+        </CardContent>
+      </Card>
+      <TabNav />
+    </div>
+  );
+
+  const currentIndex = TAB_ORDER.indexOf(activeTab);
+  const isFirst = currentIndex === 0;
+  const isLast = currentIndex === TAB_ORDER.length - 1;
+
+  const goNext = () => {
+    if (!isLast) onTabChange(TAB_ORDER[currentIndex + 1]);
+  };
+
+  const goBack = () => {
+    if (!isFirst) onTabChange(TAB_ORDER[currentIndex - 1]);
+  };
+
+  const TabNav = () => (
+    <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-100">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={goBack}
+        disabled={isFirst}
+        className="gap-2"
+      >
+        <ChevronLeft className="size-4" />
+        Back
+      </Button>
+
+      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest hidden sm:block">
+        Step {currentIndex + 1} of {TAB_ORDER.length}
+      </p>
+
+      <div className="flex items-center gap-3">
         <Button
-          variant="outline"
-          size="lg"
-          onClick={() => onStepChange(1)}
-          className="px-8"
+          type="button"
+          variant="ghost"
+          className="text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+          asChild
         >
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back to Details
+          <Link href={cancelHref}>Cancel</Link>
         </Button>
+
+        {isLast ? (
+          <Button
+            type="button"
+            onClick={onSave}
+            disabled={saving}
+            className="gap-2 bg-black text-white hover:bg-black/90  px-6"
+          >
+            <Save className="size-4" />
+            {saving ? "Saving..." : isEdit ? "Update Order" : "Save Order"}
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            onClick={goNext}
+            className="gap-2 bg-primary text-white hover:bg-primary/90"
+          >
+            Next
+            <ChevronRight className="size-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
 
+  /* ─────────────── Main Render ─────────────── */
   return (
-    <div className="max-w-6xl mx-auto space-y-6 lg:pb-20">
-      {renderStepButtons()}
-      <div className="min-h-[400px]">
-        {activeStep === 0 && renderBasicInfo()}
-        {activeStep === 1 && renderProductDetails()}
-        {activeStep === 2 && renderDelivery()}
-      </div>
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => onTabChange(v as TabKey)}
+        className="w-full"
+      >
+        <TabsList className="tab-premium-list">
+          <TabsTrigger value="basic" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <FileText className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Basic Info
+              </span>
+            </Flex>
+          </TabsTrigger>
+          <TabsTrigger value="details" className="tab-premium-trigger">
+            <Flex className="items-center gap-2">
+              <Package className="size-4" />
+              <span className="font-bold text-[10px] uppercase tracking-[0.2em]">
+                Order Details
+              </span>
+            </Flex>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic" className="mt-6">
+          {renderBasicInfo()}
+          <TabNav />
+        </TabsContent>
+
+        <TabsContent value="details" className="mt-6">
+          {renderDetails()}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -16,9 +16,33 @@ export type InvoiceTerms = {
 };
 
 export type OrderItem = {
+    id: string;
     fabricItem?: any | null;
     labelItem?: any | null;
     cartonItem?: any | null;
+};
+
+export type BuyerSummary = {
+    id: string;
+    name: string;
+    email?: string | null;
+    address?: string | null;
+    location?: string | null;
+    phone?: string | null;
+    merchandiser?: string | null;
+};
+
+export type CompanyProfileSummary = {
+    id: string;
+    name: string;
+    address?: string | null;
+    city?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    bankName?: string | null;
+    branchName?: string | null;
+    bankAccountNumber?: string | null;
+    swiftCode?: string | null;
 };
 
 export type OrderSummary = {
@@ -28,7 +52,10 @@ export type OrderSummary = {
     deliveryDate?: string | null;
     orderDate?: string | null;
     companyProfileId?: string | null;
+    buyerId?: string | null;
     orderItems?: OrderItem[];
+    buyer?: BuyerSummary | null;
+    companyProfile?: CompanyProfileSummary | null;
 };
 
 export type UserSummary = {
@@ -46,6 +73,7 @@ export type Invoice = {
     invoiceTermsId: string;
     createdAt: string;
     updatedAt: string;
+    totalAmount?: number;
     order?: OrderSummary | null;
     invoiceTerms?: InvoiceTerms | null;
     user?: UserSummary | null;

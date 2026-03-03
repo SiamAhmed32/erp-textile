@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 type FormInputProps = {
   name?: string;
@@ -12,12 +12,12 @@ type FormInputProps = {
 
 const FormInput = ({
   name,
-  type = 'text',
+  type = "text",
   value,
   onChange,
   placeholder,
   required = false,
-  className = '',
+  className = "",
 }: FormInputProps) => {
   return (
     <input
@@ -27,7 +27,7 @@ const FormInput = ({
       onChange={onChange}
       placeholder={placeholder}
       required={required}
-      className={`border border-borderBg rounded-none focus:outline-none focus:border-transparent focus:ring-2 focus:ring-button px-4 py-3 w-full text-foreground ${className}`}
+      className={`w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-base md:text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 ${className}`}
     />
   );
 };

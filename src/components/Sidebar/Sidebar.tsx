@@ -3,7 +3,6 @@ import * as React from "react";
 import {
   ChevronRight,
   Home,
-  Settings2,
   Building2,
   Users,
   Tag,
@@ -13,6 +12,7 @@ import {
   FileText,
   Truck,
   ClipboardList,
+  LogOut,
 } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -38,70 +38,39 @@ import {
 } from "@/components/ui/collapsible";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
-// Navigation data
-const data = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/",
-      icon: Home,
-    },
-    {
-      title: "Company Profile",
-      url: "/company-profile",
-      icon: Building2,
-    },
-    {
-      title: "Buyers",
-      url: "/buyers",
-      icon: Users,
-    },
-    {
-      title: "Invoice Terms",
-      url: "/invoice-terms",
-      icon: FileText,
-    },
-    {
-      title: "Order Management",
-      icon: ShoppingCart,
-      items: [
-        {
-          title: "Order List",
-          url: "/order-management/orders",
-          icon: ClipboardList,
-        },
-        {
-          title: "Order Delivered",
-          url: "/order-management/delivered",
-          icon: Truck,
-        },
-      ],
-    },
-    {
-      title: "Proforma Invoice",
-      icon: FileText,
-      items: [
-        {
-          title: "All Invoices",
-          url: "/invoice-management/invoices",
-          icon: FileText,
-        },
-        {
-          title: "Create Invoice",
-          url: "/invoice-management/invoices/add-new-invoice",
-          icon: FileText,
-        },
-      ],
-    },
-  ],
-};
+import { navMain } from "@/lib/navigation";
+
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "@/store/slices/authSlice";
 
 const Sidebar = ({
   ...props
 }: React.ComponentProps<typeof SidebarComponent>) => {
   const pathname = usePathname();
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+  // @ts-ignore
+  const user = useSelector((state: any) => state.auth.user); // Get user from Redux store
+
+  // const user = {
+  //   role: "user",
+  //   modules: ["dashboard", "company-profile", "users", "buyers"],
+  // };
+
+  const filteredNavMain = navMain.filter((item) => {
+    if (user?.role === "admin") return true;
+
+    // Check if item has a module and if it's in user's modules
+    if (item.module && user?.modules?.includes(item.module)) {
+      return true;
+    }
+
+    // logic for submenu items if needed, currently assuming top-level module control
+    return false;
+  });
 
   const isLinkActive = (url?: string) => {
     if (!url) return false;
@@ -109,12 +78,16 @@ const Sidebar = ({
     if (url !== "/" && pathname.startsWith(url)) return true;
     return false;
   };
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push("/login");
+  };
   return (
     <SidebarComponent collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton className="hover:bg-transparent hover:text-white" size="lg" asChild>
               <Link href="/">
                 <Image src={logo} alt="Logo" width={50} height={50} />
 
@@ -131,7 +104,7 @@ const Sidebar = ({
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarMenu>
-            {data.navMain.map((item) => {
+            {filteredNavMain.map((item) => {
               const isGroupActive = item.items?.some((subItem) =>
                 isLinkActive(subItem.url),
               );
@@ -202,10 +175,10 @@ const Sidebar = ({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/settings"}>
-              <Link href="/settings">
-                <Settings2 />
-                <span>Settings</span>
+            <SidebarMenuButton asChild isActive={pathname === "/login"}>
+              <Link className="text-red-500 hover:text-red-600 cursor-pointer hover:bg-red-500/10" onClick={handleLogout} href="/login">
+                <LogOut />
+                <span>Logout</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

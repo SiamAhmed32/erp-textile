@@ -138,8 +138,20 @@
 
   --animate-collapsible-down: collapsible-down 0.2s ease-out;
   --animate-collapsible-up: collapsible-up 0.2s ease-out;
+  --animate-loading-bar: loading-bar 1.5s infinite ease-in-out;
 
-  --shadow-premium: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  @keyframes loading-bar {
+    0% {
+      transform: translateX(-120%);
+    }
+
+    100% {
+      transform: translateX(300%);
+    }
+  }
+
+  --shadow-premium:
+    0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
 }
 
 body {
@@ -196,5 +208,89 @@ body {
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  button {
+    @apply cursor-pointer;
+  }
+
+  /* Hide scrollbar for sidebar components */
+  [data-sidebar="content"]::-webkit-scrollbar,
+  [data-sidebar="sidebar"]::-webkit-scrollbar,
+  [data-sidebar="menu-sub"]::-webkit-scrollbar,
+  [data-slot="sidebar-inner"]::-webkit-scrollbar,
+  [data-slot="sidebar-container"]::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-sidebar="content"],
+  [data-sidebar="sidebar"],
+  [data-sidebar="menu-sub"],
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-container"] {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  /* Ensure content is visible but scrollbars are hidden */
+  [data-sidebar="content"] {
+    overflow-y: auto;
+  }
+
+  /* Prevent horizontal overflow during transitions if needed, but not on inner */
+  [data-slot="sidebar-container"] {
+    overflow-x: hidden;
+  }
+
+  /* --- Fillet (Inverted Rounded Corner) Effect --- */
+  .tab-fillet-container {
+    @apply relative overflow-visible flex items-end;
+  }
+
+  .tab-fillet-active {
+    @apply relative rounded-t-xl bg-white shadow-md z-10;
+  }
+
+  /* The "fillet" pseudo-elements */
+  .tab-fillet-active::before,
+  .tab-fillet-active::after {
+    content: "";
+    @apply absolute bottom-0 w-4 h-4 pointer-events-none;
+  }
+
+  .tab-fillet-active::before {
+    @apply -left-4 rounded-br-xl shadow-[4px_4px_0_4px_white];
+  }
+
+  .tab-fillet-active::after {
+    @apply -right-4 rounded-bl-xl shadow-[-4px_4px_0_4px_white];
+  }
+
+  /* ─── Premium Modern Tabs ─── */
+  .tab-premium-list {
+    @apply mx-auto flex w-fit items-center justify-center h-14 bg-slate-200/40 backdrop-blur-md rounded-2xl border border-slate-200/60 shadow-inner mb-6;
+  }
+
+  .tab-premium-trigger {
+    @apply relative h-full px-8 rounded-xl text-slate-500 font-bold text-xs uppercase tracking-wider transition-all duration-500 hover:text-slate-800 hover:bg-white/30;
+  }
+
+  .tab-premium-trigger[data-state="active"] {
+    @apply bg-zinc-900 text-white shadow-xl shadow-zinc-200/50 rounded-2xl ring-1 ring-zinc-800;
+  }
+
+  /* Version for LC with more tabs - scrollable and slightly more compact if needed */
+  .tab-modern-pills {
+    @apply flex w-fit mx-auto items-center p-1.5 bg-slate-100/80 rounded-2xl border border-slate-200 mb-8;
+  }
+
+  .tab-modern-pill {
+    @apply px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300;
+  }
+
+  .tab-modern-pill[data-state="active"] {
+    @apply bg-white text-primary shadow-sm ring-1 ring-slate-950/5;
   }
 }

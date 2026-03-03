@@ -17,8 +17,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   accessor: keyof T | ((row: T) => React.ReactNode);
   className?: string;
 }
@@ -51,7 +52,7 @@ function CustomTable<T extends Record<string, any>>({
   description,
   onRowClick,
   pagination,
-  scrollAreaHeight = "h-[calc(100vh-250px)]",
+  scrollAreaHeight = "h-[calc(100vh-350px)]",
   isLoading = false,
   skeletonRows = 5,
   rowClassName = "",
@@ -148,14 +149,17 @@ function CustomTable<T extends Record<string, any>>({
       <div className={`overflow-auto border rounded-md ${scrollAreaHeight}`}>
         <Table
           overflowWrapper={false}
-          className="border-separate border-spacing-0"
+          className={`border-separate border-spacing-0 ${data.length > 9 ? "h-full" : ""}`}
         >
-          <TableHeader className="sticky top-0 z-10">
+          <TableHeader className="sticky top-0 z-10 border-none">
             <TableRow className="hover:bg-transparent border-none">
               {columns.map((column, index) => (
                 <TableHead
                   key={index}
-                  className={`sticky top-0 z-20 bg-secondary text-white font-semibold h-12 border-b-2 border-secondary ${column.className || ""}`}
+                  className={cn(
+                    "sticky top-0 z-20 bg-zinc-900 text-white/90 font-bold text-xs uppercase tracking-widest h-12 border-none",
+                    column.className,
+                  )}
                 >
                   {column.header}
                 </TableHead>
@@ -180,7 +184,7 @@ function CustomTable<T extends Record<string, any>>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-[60vh] text-center bg-white"
+                  className="h-[40vh] text-center bg-white"
                 >
                   <div className="flex flex-col items-center justify-center space-y-3 opacity-60">
                     <div className="p-4 bg-muted rounded-full">
@@ -234,9 +238,9 @@ function CustomTable<T extends Record<string, any>>({
         </Table>
       </div>
       {pagination && (
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
+        <div className="mt-8 flex justify-center pb-4">
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent className="gap-2">
               <PaginationItem>
                 <PaginationPrevious
                   href="#"
@@ -246,11 +250,11 @@ function CustomTable<T extends Record<string, any>>({
                       pagination.onPageChange(pagination.currentPage - 1);
                     }
                   }}
-                  className={
-                    pagination.currentPage <= 1
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
+                  className={cn(
+                    "text-slate-500 hover:text-zinc-900 transition-colors border-none bg-transparent hover:bg-zinc-50 font-bold text-xs uppercase tracking-wider",
+                    pagination.currentPage <= 1 &&
+                      "pointer-events-none opacity-40",
+                  )}
                 />
               </PaginationItem>
               {renderPaginationItems()}
@@ -263,11 +267,11 @@ function CustomTable<T extends Record<string, any>>({
                       pagination.onPageChange(pagination.currentPage + 1);
                     }
                   }}
-                  className={
-                    pagination.currentPage >= pagination.totalPages
-                      ? "pointer-events-none opacity-50"
-                      : ""
-                  }
+                  className={cn(
+                    "text-slate-500 hover:text-zinc-900 transition-colors border-none bg-transparent hover:bg-zinc-50 font-bold text-xs uppercase tracking-wider",
+                    pagination.currentPage >= pagination.totalPages &&
+                      "pointer-events-none opacity-40",
+                  )}
                 />
               </PaginationItem>
             </PaginationContent>

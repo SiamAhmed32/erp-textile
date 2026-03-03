@@ -5,11 +5,21 @@ export type Buyer = {
     id: string;
     name: string;
     email: string;
+    phone?: string;
+    address?: string;
+    location?: string;
+    merchandiser?: string;
 };
 
 export type CompanyProfile = {
     id: string;
     name: string;
+    address?: string;
+    phone?: string;
+    email?: string | null;
+    bankName?: string | null;
+    branchName?: string | null;
+    bankAccountNumber?: string | null;
 };
 
 export type User = {
@@ -108,6 +118,14 @@ export type Order = {
     orderItems?: OrderItem | OrderItem[];
     isInvoice?: boolean;
     isLc?: boolean;
+    invoices?: {
+        id: string;
+        piNumber: string;
+        lcManagement?: {
+            id: string;
+            bblcNumber: string;
+        } | null;
+    } | null;
 };
 
 export type OrderApiItem = Partial<Order>;

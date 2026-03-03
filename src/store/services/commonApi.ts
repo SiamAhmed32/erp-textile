@@ -4,6 +4,14 @@
 import { BASE_LIMIT } from "@/lib/constants";
 import mainApi from "./mainApi";
 
+// Helper to strip UUIDs from paths to use as safe Redux tags
+const sanitizeTag = (path: string) => {
+  return path
+    .split("/")
+    .filter((segment) => !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment))
+    .join("/");
+};
+
 export const userApi = mainApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
@@ -12,12 +20,14 @@ export const userApi = mainApi.injectEndpoints({
         url: `${path}/get/count`,
         params: { ...filters },
       }),
-      providesTags: (_result, _error, { path }) => [path],
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
     }),
 
     getAll: builder.query({
       query: ({
         sort,
+        sortBy,
+        sortOrder,
         page = 1,
         limit = BASE_LIMIT,
         search = "",
@@ -32,10 +42,13 @@ export const userApi = mainApi.injectEndpoints({
           ...filters,
         };
 
-        // If sort is explicitly null, don't include it.
-        // If sort is undefined, use the default '-createdAt'.
-        // If sort has a value, use that value.
-        if (sort === null) {
+        // Support two sorting approaches:
+        // 1. sortBy + sortOrder (separate params) — takes priority
+        // 2. sort (combined param, e.g. "-createdAt") — legacy fallback
+        if (sortBy) {
+          params.sortBy = sortBy;
+          params.sortOrder = sortOrder || "desc";
+        } else if (sort === null) {
           // Do nothing, don't include sort
         } else if (sort === undefined) {
           params.sort = "-createdAt";
@@ -50,73 +63,68 @@ export const userApi = mainApi.injectEndpoints({
           params,
         };
       },
-      providesTags: (_result, _error, { path }) => [path],
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
     }),
 
-		getById: builder.query({
-			query: ({ path, id }) => `${path}/${id}`,
-			providesTags: (_result, _error, { path, invalidate = [] }) => [
-				path,
-				...invalidate,
-			],
-		}),
+    getById: builder.query({
+      query: ({ path, id }) => `${path}/${id}`,
+      providesTags: (_result, _error, { path, invalidate = [] }) => {
+        return [sanitizeTag(path), ...invalidate];
+      },
+    }),
 
-		getByParentCategory: builder.query({
-			query: ({ path, parentCategoryId }) =>
-				`${path}?parentCategory=${parentCategoryId}`,
-			providesTags: (_result, _error, { path }) => [path],
-		}),
-   
+    getByParentCategory: builder.query({
+      query: ({ path, parentCategoryId }) =>
+        `${path}?parentCategory=${parentCategoryId}`,
+      providesTags: (_result, _error, { path }) => [sanitizeTag(path)],
+    }),
+
     post: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "POST",
         body: body,
+        formData,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        return ["filters", sanitizeTag(path), ...invalidate];
+      },
     }),
 
     patch: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "PATCH",
         body,
+        formData,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        return ["filters", sanitizeTag(path), ...invalidate];
+      },
     }),
 
     put: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "PUT",
         body,
+        formData,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        return ["filters", sanitizeTag(path), ...invalidate];
+      },
     }),
 
     deleteOne: builder.mutation({
-      query: ({ path, body }) => ({
+      query: ({ path, body, formData }) => ({
         url: path,
         method: "DELETE",
         body,
+        formData,
       }),
-      invalidatesTags: (_result, _error, { path, invalidate = [] }) => [
-        "filters",
-        path,
-        ...invalidate,
-      ],
+      invalidatesTags: (_result, _error, { path, invalidate = [] }) => {
+        return ["filters", sanitizeTag(path), ...invalidate];
+      },
     }),
   }),
 });

@@ -3,12 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Pencil } from "lucide-react";
-import {
-  Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
-} from "@/components/reusables";
+import { Container, PageHeader, PrimaryText } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,11 +12,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useGetByIdQuery } from "@/store/services/commonApi";
+import { notify } from "@/lib/notifications";
 import { CompanyProfile, CompanyProfileApiItem } from "./types";
 import { isValidId, normalizeProfile } from "./helpers";
 import CompanyProfileReadOnly from "./CompanyProfileReadOnly";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { drawHeader } from "@/utils/pdfHeader";
 
 type Props = {
   id: string;
@@ -60,26 +57,29 @@ const CompanyProfileDetails = ({ id }: Props) => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load company profile";
-    console.error("Load Company Profile Error:", message);
+      "Could not load the company profile. Please try again.";
+    notify.error(message);
+    console.error("Load Company Profile Error:", parsed);
   }, [apiError]);
 
-  const handleExportPdf = () => {
+  const handleExportPdf = async () => {
     if (!profile) return;
     const doc = new jsPDF();
-    const title = profile.name || "Company Profile";
-    doc.setFontSize(16);
-    doc.text(title, 14, 18);
-    doc.setFontSize(10);
-    doc.text("Company Profile Details", 14, 24);
+
+    // ── Company Header ──
+    const startY = await drawHeader(
+      doc,
+      profile,
+      "Company Profile Details",
+      new Date(),
+    );
+    let y = startY;
 
     const makeRows = (rows: Array<[string, string]>) =>
       rows.map(([label, value]) => [label, value || "-"]);
 
-    let startY = 30;
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Company Information", ""]],
       body: makeRows([
         ["Company Name", profile.name],
@@ -96,11 +96,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : 30;
+      : y + 30;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Contact Details", ""]],
       body: makeRows([
         ["Email", profile.email],
@@ -111,11 +112,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : startY;
+      : y;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Banking Details", ""]],
       body: makeRows([
         ["Bank Name", profile.bankName],
@@ -129,11 +131,12 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    startY = (doc as any).lastAutoTable?.finalY
+    y = (doc as any).lastAutoTable?.finalY
       ? (doc as any).lastAutoTable.finalY + 8
-      : startY;
+      : y;
+
     autoTable(doc, {
-      startY,
+      startY: y,
       head: [["Tax & Legal", ""]],
       body: makeRows([
         ["Tax ID", profile.taxId],
@@ -146,45 +149,51 @@ const CompanyProfileDetails = ({ id }: Props) => {
       headStyles: { fillColor: [31, 41, 55] },
     });
 
-    const filename = `${title.replace(/\s+/g, "-").toLowerCase()}-profile.pdf`;
+    const safeName = (profile.name || "Company")
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    const filename = `${safeName}-profile.pdf`;
     doc.save(filename);
   };
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Link
-            href="/company-profile"
-            className="inline-flex items-center text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Profiles
-          </Link>
-          <PrimaryHeading>{profile?.name || "Company Details"}</PrimaryHeading>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={!profile}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleExportPdf}>
-                Export PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="outline" asChild disabled={!profile}>
-            <Link href={`/company-profile/${id}/edit`}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </Link>
-          </Button>
-        </div>
-      </Flex>
+      <PageHeader
+        title={profile?.name || "Company Details"}
+        backHref="/company-profile"
+        breadcrumbItems={[
+          //{ label: "Dashboard", href: "/" },
+          { label: "Company Profiles", href: "/company-profile" },
+          { label: profile?.name || "Details" },
+        ]}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={!profile}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportPdf}>
+                  Export PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              className="bg-black text-white hover:bg-black/90 shadow-sm"
+              asChild
+              disabled={!profile}
+            >
+              <Link href={`/company-profile/${id}/edit`}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Profile
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       <div className="mt-4" />
 

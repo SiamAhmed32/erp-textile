@@ -1,14 +1,14 @@
 "use client";
+import { notify } from "@/lib/notifications";
 
-import React from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
+  FormHeader,
+  RecoveryModal,
+  NavigationGuard,
 } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,16 +16,11 @@ import {
   useGetByIdQuery,
   usePostMutation,
 } from "@/store/services/commonApi";
-import {
-  Order,
-  OrderApiItem,
-  OrderFormData,
-  Buyer,
-  CompanyProfile,
-} from "./types";
-import { normalizeOrder, toOrderFormData, toOrderPayload } from "./helpers";
-import OrderForm from "./OrderForm";
 import { OrderValidation, toFieldErrors } from "./validation";
+import { OrderFormData, Buyer, CompanyProfile, Order } from "./types";
+import { toOrderPayload, toOrderFormData, normalizeOrder } from "./helpers";
+import OrderForm from "./OrderForm";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 const emptyOrder: OrderFormData = {
   orderNumber: "",
@@ -39,166 +34,111 @@ const emptyOrder: OrderFormData = {
   orderItems: {},
 };
 
-const setNestedValue = (obj: any, path: string, value: any) => {
-  const keys = path.split(".");
-  const last = keys.pop();
-  let current = obj;
-  keys.forEach((key) => {
-    if (!current[key]) current[key] = {};
-    current = current[key];
-  });
-  if (last) current[last] = value;
-};
-
 type Props = {
   duplicateId?: string;
 };
 
 const OrderCreate = ({ duplicateId }: Props) => {
   const router = useRouter();
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<OrderFormData>({
+    key: "order_create",
+    defaultValue: emptyOrder,
+  });
 
-  const [draft, setDraft] = React.useState<OrderFormData>(emptyOrder);
-  const [activeStep, setActiveStep] = React.useState(0);
-  const [saving, setSaving] = React.useState(false);
-  const [errors, setErrors] = React.useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<"basic" | "details">("basic");
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [postItem] = usePostMutation();
 
-  // --- Persistence Logic: Restore from LocalStorage ---
-  React.useEffect(() => {
-    if (duplicateId) return; // Don't restore if we are duplicating
-    const saved = localStorage.getItem("erp_order_draft");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setDraft(parsed.data || emptyOrder);
-        setActiveStep(parsed.step || 0);
-      } catch (err) {
-        console.error("Failed to restore draft:", err);
-      }
-    }
-  }, [duplicateId]);
+  const isDirty = React.useMemo(() => {
+    return JSON.stringify(draft) !== JSON.stringify(emptyOrder);
+  }, [draft]);
 
-  // --- Persistence Logic: Save to LocalStorage ---
-  React.useEffect(() => {
-    if (duplicateId) return;
-    const timeout = setTimeout(() => {
-      localStorage.setItem(
-        "erp_order_draft",
-        JSON.stringify({ data: draft, step: activeStep }),
-      );
-    }, 1000); // 1s debounce to keep it efficient
-    return () => clearTimeout(timeout);
-  }, [draft, activeStep, duplicateId]);
-
-  const { data: buyersPayload, error: buyersError } = useGetAllQuery({
+  // Fetch buyers and companies
+  const { data: buyersPayload } = useGetAllQuery({
     path: "buyers",
     page: 1,
     limit: 100,
   });
-  const { data: companiesPayload, error: companiesError } = useGetAllQuery({
+  const { data: companiesPayload } = useGetAllQuery({
     path: "company-profiles",
     page: 1,
     limit: 100,
   });
-  const { data: duplicatePayload, error: duplicateError } = useGetByIdQuery(
-    {
-      path: "orders",
-      id: duplicateId || "",
-    },
-    { skip: !duplicateId },
-  );
 
   const buyers = ((buyersPayload as any)?.data || []) as Buyer[];
   const companies = ((companiesPayload as any)?.data || []) as CompanyProfile[];
 
-  React.useEffect(() => {
-    if (!duplicateId) return;
-    const item = (duplicatePayload as any)?.data as OrderApiItem | undefined;
-    if (!item) return;
-    const normalized = normalizeOrder(item);
-    const form = toOrderFormData(normalized);
-    form.orderNumber = "";
-    form.status = "DRAFT";
-    setDraft(form);
-  }, [duplicatePayload, duplicateId]);
+  // Duplicate order support
+  const { data: duplicatePayload } = useGetByIdQuery(
+    { path: "orders", id: duplicateId! },
+    { skip: !duplicateId },
+  );
 
-  React.useEffect(() => {
-    const parsed = (buyersError || companiesError || duplicateError) as any;
-    if (!parsed) return;
-    const message =
-      parsed?.data?.error?.message ||
-      parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load options";
-    console.error("Load Options Error:", message);
-  }, [buyersError, companiesError, duplicateError]);
-
-  const handleChange = (field: keyof OrderFormData, value: any) => {
-    setDraft((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[field];
-      return next;
-    });
-  };
-
-  const handleNestedChange = (path: string, value: any) => {
-    setDraft((prev) => {
-      const next = { ...prev, orderItems: { ...prev.orderItems } };
-      setNestedValue(next, path, value);
-      return next;
-    });
-    setErrors((prev) => {
-      const next = { ...prev };
-      delete next[path];
-      return next;
-    });
-  };
-
-  const handleValidateStep = (stepIndex: number) => {
-    const schemaResult = OrderValidation.create.safeParse(draft);
-    if (schemaResult.success) {
-      setErrors({});
-      return true;
+  useEffect(() => {
+    if (duplicateId && duplicatePayload) {
+      const order = (duplicatePayload as any)?.data as Order;
+      if (order) {
+        const normalized = normalizeOrder(order as any);
+        const formData = toOrderFormData(normalized);
+        formData.orderNumber = ""; // Clear order number for duplicate
+        formData.status = "DRAFT";
+        setDraft(formData);
+        setHasInteracted(true);
+      }
     }
+  }, [duplicateId, duplicatePayload, setDraft, setHasInteracted]);
 
-    const allErrors = toFieldErrors(schemaResult.error.issues);
-    const stepErrors: Record<string, string> = {};
-
-    if (stepIndex === 0) {
-      const fields = [
-        "orderNumber",
-        "orderDate",
-        "buyerId",
-        "companyProfileId",
-        "productType",
-      ];
-      fields.forEach((f) => {
-        if (allErrors[f]) stepErrors[f] = allErrors[f];
+  const handleChange = useCallback(
+    (field: keyof OrderFormData, value: any) => {
+      setDraft((prev) => ({ ...prev, [field]: value }));
+      setHasInteracted(true);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
       });
-    } else if (stepIndex === 1) {
-      Object.keys(allErrors).forEach((key) => {
-        if (key.startsWith("orderItems")) stepErrors[key] = allErrors[key];
-      });
-    } else if (stepIndex === 2) {
-      if (allErrors["deliveryDate"])
-        stepErrors["deliveryDate"] = allErrors["deliveryDate"];
-    }
+    },
+    [setDraft, setHasInteracted],
+  );
 
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors((prev) => ({ ...prev, ...stepErrors }));
-      return false;
-    }
-    return true;
-  };
+  const handleNestedChange = useCallback(
+    (path: string, value: any) => {
+      setDraft((prev) => {
+        const next = JSON.parse(JSON.stringify(prev));
+        const keys = path.split(".");
+        let obj = next;
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!obj[keys[i]]) obj[keys[i]] = {};
+          obj = obj[keys[i]];
+        }
+        obj[keys[keys.length - 1]] = value;
+        return next;
+      });
+      setHasInteracted(true);
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[path];
+        return next;
+      });
+    },
+    [setDraft, setHasInteracted],
+  );
 
   const handleSave = async () => {
-    const isUpdate = !!draft.id;
-    const schema = isUpdate ? OrderValidation.update : OrderValidation.create;
-    const schemaResult = schema.safeParse(draft);
+    const payload = toOrderPayload(draft);
+    const result = OrderValidation.create.safeParse(payload);
 
-    if (!schemaResult.success) {
-      const nextErrors = toFieldErrors(schemaResult.error.issues);
+    if (!result.success) {
+      const nextErrors = toFieldErrors(result.error.issues);
       setErrors(nextErrors);
 
       // --- Teleport to Error Logic ---
@@ -212,83 +152,110 @@ const OrderCreate = ({ duplicateId }: Props) => {
       ];
 
       if (basicFields.some((f) => firstErrorKey.startsWith(f))) {
-        setActiveStep(0);
-      } else if (firstErrorKey.startsWith("orderItems")) {
-        setActiveStep(1);
-      } else if (firstErrorKey.startsWith("deliveryDate")) {
-        setActiveStep(2);
+        setActiveTab("basic");
+      } else if (
+        firstErrorKey.startsWith("orderItems") ||
+        firstErrorKey.startsWith("deliveryDate")
+      ) {
+        setActiveTab("details");
       }
 
-      console.log("Validation errors:", nextErrors);
+      notify.error(
+        "Some required fields are missing. Please review the highlighted fields.",
+      );
       return;
     }
     setErrors({});
 
     setSaving(true);
     try {
-      const payload = (await postItem({
+      const res = await postItem({
         path: "orders",
-        body: toOrderPayload(draft),
+        body: toOrderPayload(result.data as any),
         invalidate: ["orders"],
-      }).unwrap()) as any;
-      const item = (payload?.data || payload) as OrderApiItem;
-      const normalized = item ? normalizeOrder(item) : null;
-      if (normalized?.id) {
-        localStorage.removeItem("erp_order_draft");
-        router.push(`/order-management/orders/${normalized.id}`);
-      } else {
-        localStorage.removeItem("erp_order_draft");
-        router.push(`/order-management/orders`);
-      }
+      }).unwrap();
+
+      clearDraft();
+
+      notify.success("Order Created Successfully");
+      const id = (res as any)?.data?.id || (res as any)?.id;
+      router.push(
+        id ? `/order-management/orders/${id}` : "/order-management/orders",
+      );
     } catch (err: any) {
-      const message =
-        err?.data?.error?.message ||
-        err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to create order";
-      console.error("Create Order Error:", message);
+      const msg =
+        err?.data?.message || "Could not create the order. Please try again.";
+      console.error("Create Order Error:", err);
+      notify.error(msg);
     } finally {
       setSaving(false);
     }
   };
 
+  // Dynamic Progress Calculation for Order
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack: (keyof OrderFormData)[] = [
+      "orderNumber",
+      "orderDate",
+      "buyerId",
+      "companyProfileId",
+      "productType",
+      "deliveryDate",
+      "status",
+    ];
+
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key];
+      if (typeof val === "string") return val.trim().length > 0;
+      if (typeof val === "number") return true; // Any number since they default to something or are explicit
+      return !!val;
+    }).length;
+
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
+
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <Button variant="outline" asChild>
-            <Link href="/order-management/orders">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Orders
-            </Link>
-          </Button>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/order-management/orders">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Order"}
-          </Button>
-        </div>
-      </Flex>
+      <NavigationGuard isDirty={isDirty} />
 
-      <OrderForm
-        data={draft}
-        buyers={buyers}
-        companies={companies}
-        activeStep={activeStep}
-        onStepChange={setActiveStep}
-        onChange={handleChange}
-        onNestedChange={handleNestedChange}
-        onValidateStep={handleValidateStep}
-        errors={errors}
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
       />
+
+      <FormHeader
+        title="Create New Order"
+        backHref="/order-management/orders"
+        breadcrumbItems={[
+          { label: "Order Management", href: "/order-management/orders" },
+          { label: "Orders", href: "/order-management/orders" },
+          { label: "Create" },
+        ]}
+        progress={progressData}
+      />
+
+      <div className="mt-8">
+        <OrderForm
+          data={draft}
+          buyers={buyers}
+          companies={companies}
+          onChange={handleChange}
+          onNestedChange={handleNestedChange}
+          errors={errors}
+          onSave={handleSave}
+          saving={saving}
+          activeTab={activeTab}
+          onTabChange={setActiveTab as any}
+          disableStatus
+          cancelHref="/order-management/orders"
+        />
+      </div>
     </Container>
   );
 };

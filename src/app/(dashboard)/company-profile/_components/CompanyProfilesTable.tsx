@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { ChevronDown, ArrowUpDown, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,6 +19,7 @@ import { companyTypeOptions, statusOptions } from "./constants";
 import { formatDate } from "./helpers";
 import CompanyAvatar from "./CompanyAvatar";
 import CompanyActions from "./CompanyActions";
+import { cn } from "@/lib/utils";
 
 type Props = {
   data: CompanyProfile[];
@@ -31,10 +32,14 @@ type Props = {
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
   onStatusFilterChange: (value: string) => void;
-  onAddCompany: () => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onPageChange: (page: number) => void;
   onRowClick: (row: CompanyProfile) => void;
   onDelete: (row: CompanyProfile) => void;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
+  onRestore?: (row: CompanyProfile) => void;
 };
 
 const CompanyProfilesTable = ({
@@ -48,11 +53,41 @@ const CompanyProfilesTable = ({
   onSearchChange,
   onTypeFilterChange,
   onStatusFilterChange,
-  onAddCompany,
+  sort,
+  onSortChange,
   onPageChange,
   onRowClick,
   onDelete,
+  showDeleted = false,
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }: Props) => {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+    { value: "name_asc", label: "Title (A-Z)", field: "name", dir: "asc" },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
+
   const columns = useMemo(
     () => [
       {
@@ -68,9 +103,6 @@ const CompanyProfilesTable = ({
               >
                 {row.name || "Unnamed Company"}
               </Link>
-              <p className="text-xs text-muted-foreground">
-                {row.city || "-"} {row.country ? `, ${row.country}` : ""}
-              </p>
             </div>
           </div>
         ),
@@ -90,7 +122,6 @@ const CompanyProfilesTable = ({
             ?.label ||
           row.companyType ||
           "-",
-        className: "text-sm text-muted-foreground",
       },
       {
         header: "Created Date",
@@ -112,72 +143,157 @@ const CompanyProfilesTable = ({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: CompanyProfile) => (
-          <CompanyActions id={row.id} onDelete={() => onDelete(row)} />
+          <CompanyActions
+            id={row.id}
+            onDelete={() => onDelete(row)}
+            showDeleted={showDeleted}
+            onRestore={() => onRestore(row)}
+          />
         ),
-        className: "text-right",
       },
     ],
-    [onDelete],
+    [onDelete, onRestore, showDeleted],
   );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <Input
-            placeholder="Search by company name, email, or website"
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-          <Button variant="outline" className="shrink-0">
-            <Search className="mr-2 h-4 w-4" />
-            Search
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0">
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={
+              showDeleted ? "Show Active Companies" : "Show Deleted Companies"
+            }
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end lg:w-auto lg:shrink-0">
-          <div className="w-full sm:max-w-[180px]">
+
+        {/* Right: Filters Group */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+          {/* Type Filter */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Type
+            </span>
             <Select value={typeFilter} onValueChange={onTypeFilterChange}>
-              <SelectTrigger className="whitespace-nowrap">
-                <SelectValue
-                  placeholder="Filter by type"
-                  className="whitespace-nowrap"
-                />
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[120px]">
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {companyTypeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold py-2.5"
+                >
+                  All Types
+                </SelectItem>
+                {companyTypeOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="w-full sm:max-w-[180px]">
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Status
+            </span>
             <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="whitespace-nowrap">
-                <SelectValue
-                  placeholder="Filter by status"
-                  className="whitespace-nowrap"
-                />
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[110px]">
+                <SelectValue placeholder="All Status" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
+                <SelectItem
+                  value="all"
+                  className="text-xs font-semibold py-2.5"
+                >
+                  All Status
+                </SelectItem>
+                {statusOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={onAddCompany}
-          >
-            Add Company
-          </Button>
+
+          {/* Sort Filter */}
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-zinc-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-zinc-400 shrink-0" />
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
+                <SelectValue placeholder="Sort By" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-zinc-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

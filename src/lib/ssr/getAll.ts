@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 'use server';
 type GetAllProps = {
 	limit?: number;
@@ -17,7 +18,8 @@ async function getAll({
 	page = 1,
 	filters = {},
 }: GetAllProps) {
-	const token = process.env.NEXT_PUBLIC_TOKEN;
+	const cookieStore = await cookies();
+	const token = cookieStore.get('token')?.value;
 
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',

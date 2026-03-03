@@ -3,14 +3,13 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import {
   Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
 } from "@/components/reusables";
-import { Button } from "@/components/ui/button";
 import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
 import {
   CompanyProfile,
@@ -26,6 +25,7 @@ import {
 } from "./helpers";
 import { companyProfileSchema, toFieldErrors } from "./validation";
 import { notify } from "@/lib/notifications";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 type Props = {
   id: string;
@@ -59,7 +59,22 @@ const emptyForm: CompanyProfileFormData = {
 const CompanyProfileEdit = ({ id }: Props) => {
   const router = useRouter();
   const [profile, setProfile] = React.useState<CompanyProfile | null>(null);
-  const [draft, setDraft] = React.useState<CompanyProfileFormData>(emptyForm);
+  const [baseFormData, setBaseFormData] =
+    React.useState<CompanyProfileFormData>(emptyForm);
+
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<CompanyProfileFormData>({
+    key: `company_edit_${id}`,
+    defaultValue: emptyForm, // We set this to empty initially
+  });
+
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof CompanyProfileFormData, string>>
@@ -73,6 +88,15 @@ const CompanyProfileEdit = ({ id }: Props) => {
     error: apiError,
   } = useGetByIdQuery({ path: "company-profiles", id }, { skip: isInvalidId });
 
+  const isDirty = React.useMemo(() => {
+    // If draft is still empty and we have a loaded profile, we compare it to baseFormData
+    // But we should really compare draft with the data that came from server
+    return (
+      JSON.stringify(draft) !== JSON.stringify(baseFormData) &&
+      JSON.stringify(draft) !== JSON.stringify(emptyForm)
+    );
+  }, [draft, baseFormData]);
+
   React.useEffect(() => {
     if (isInvalidId) {
       notify.error("Invalid company ID.");
@@ -83,17 +107,41 @@ const CompanyProfileEdit = ({ id }: Props) => {
       | undefined;
     if (!item) return;
     const normalized = normalizeProfile(item);
+    const formData = toFormData(normalized);
     setProfile(normalized);
-    setDraft(toFormData(normalized));
+    setBaseFormData(formData);
+
+    // Only set draft if it's currently at emptyForm (meaning user hasn't started editing or restored a draft yet)
+    if (JSON.stringify(draft) === JSON.stringify(emptyForm)) {
+      setDraft(formData);
+    }
     setErrors({});
-  }, [profilePayload, isInvalidId]);
+  }, [profilePayload, isInvalidId, draft, setDraft]);
 
   React.useEffect(() => {
     const parsed = apiError as any;
     if (!parsed) return;
-    const message = parsed?.error || "Failed to load company profile";
+    const message =
+      parsed?.error || "Could not load the company profile. Please try again.";
     notify.error(message);
   }, [apiError]);
+
+  // Progress Calculation
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = Object.keys(emptyForm).filter(
+      (key) => !["id", "logoUrl", "logoFile", "status"].includes(key),
+    );
+    const total = fieldsToTrack.length;
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key as keyof CompanyProfileFormData];
+      return val !== "" && val !== null && val !== undefined;
+    }).length;
+    return {
+      percentage: Math.round((filled / total) * 100),
+      count: filled,
+      total,
+    };
+  }, [draft]);
 
   const handleChange = (
     field: keyof CompanyProfileFormData,
@@ -113,8 +161,25 @@ const CompanyProfileEdit = ({ id }: Props) => {
         }));
         return;
       }
+
+      if (value.size < 1024 * 1024) {
+        // Under 1MB
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setDraft((prev) => ({
+            ...prev,
+            logoFile: value,
+            logoUrl: reader.result as string,
+          }));
+        };
+        reader.readAsDataURL(value);
+      } else {
+        setDraft((prev) => ({ ...prev, logoFile: value, logoUrl: "" }));
+      }
+    } else {
+      setDraft((prev) => ({ ...prev, [field]: value as any }));
     }
-    setDraft((prev) => ({ ...prev, [field]: value as any }));
+    setHasInteracted(true);
     setErrors((prev) => ({ ...prev, [field]: undefined, logoUrl: undefined }));
   };
 
@@ -127,17 +192,6 @@ const CompanyProfileEdit = ({ id }: Props) => {
             Record<keyof CompanyProfileFormData, string>
           >);
 
-    if (draft.logoFile) {
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(draft.logoFile.type)) {
-        nextErrors.logoUrl = "Only PNG, JPG, JPEG, or WEBP images are allowed.";
-      }
-    }
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
     if (!isValidId(draft.id)) {
@@ -150,17 +204,19 @@ const CompanyProfileEdit = ({ id }: Props) => {
       await patchItem({
         path: `company-profiles/${draft.id}`,
         body: toApiFormData(draft),
+        formData: true,
         invalidate: ["company-profiles"],
       }).unwrap();
+
+      clearDraft();
+
       notify.success("Company profile updated successfully");
       router.push(`/company-profile/${draft.id}`);
     } catch (err: any) {
       const message =
         err?.data?.error?.message ||
         err?.data?.message ||
-        err?.error ||
-        err?.message ||
-        "Failed to save company profile";
+        "Could not save the company profile. Please try again.";
       notify.error(message);
     } finally {
       setSaving(false);
@@ -169,34 +225,35 @@ const CompanyProfileEdit = ({ id }: Props) => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Link
-            href={`/company-profile/${id}`}
-            className="inline-flex items-center text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Details
-          </Link>
-          <PrimaryHeading>
-            {profile?.name ? `Edit ${profile.name}` : "Edit Company"}
-          </PrimaryHeading>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/company-profile/${id}`}>Cancel</Link>
-          </Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </Flex>
+      <NavigationGuard isDirty={isDirty} />
 
-      <div className="mt-4" />
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+        title="Unsaved Changes Found"
+        description="You have unsaved edits for this record from a previous session. Would you like to restore them or view the current official data?"
+      />
+
+      <FormHeader
+        title={profile?.name ? `Edit ${profile.name}` : "Edit Company"}
+        backHref={`/company-profile/${id}`}
+        breadcrumbItems={[
+          { label: "Company Profiles", href: "/company-profile" },
+          {
+            label: profile?.name || "Loading...",
+            href: `/company-profile/${id}`,
+          },
+          { label: "Edit" },
+        ]}
+        progress={progressData}
+      />
+
       {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
+        <div className="mb-6 animate-pulse flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg border border-border/50">
+          <div className="h-4 w-4 rounded-full bg-muted border-2 border-muted-foreground/20 animate-spin" />
           Loading company details...
-        </PrimaryText>
+        </div>
       )}
 
       <CompanyProfileForm
@@ -204,6 +261,14 @@ const CompanyProfileEdit = ({ id }: Props) => {
         onChange={handleChange}
         isEditing
         errors={errors}
+      />
+
+      <FormFooter
+        cancelHref={`/company-profile/${id}`}
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Save Changes"
+        trustText="Updates are audited and saved securely. All sensitive data is encrypted."
       />
     </Container>
   );

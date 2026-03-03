@@ -1,40 +1,95 @@
-import React, { useMemo } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import CustomTable from "@/components/reusables/CustomTable"
-import { Buyer } from "./types"
+"use client";
+
+import React, { useMemo } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Search,
+  Eye,
+  SquarePen,
+  Trash2,
+  ArrowUpDown,
+  RotateCcw,
+} from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import CustomTable from "@/components/reusables/CustomTable";
+import { Buyer } from "./types";
+import { cn } from "@/lib/utils";
 
 type Props = {
-  buyers: Buyer[]
-  search: string
-  onSearchChange: (value: string) => void
-  onCreate: () => void
-  onEdit: (buyer: Buyer) => void
-  onDelete: (buyer: Buyer) => void
-  page: number
-  totalPages: number
-  onPageChange: (page: number) => void
-}
+  buyers: Buyer[];
+  search: string;
+  onSearchChange: (value: string) => void;
+  sort: { field: string; dir: "asc" | "desc" };
+  onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
+  onEdit: (buyer: Buyer) => void;
+  onDelete: (buyer: Buyer) => void;
+  onView: (buyer: Buyer) => void;
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
+  onRestore?: (buyer: Buyer) => void;
+};
 
 export function BuyerList({
   buyers,
   search,
   onSearchChange,
-  onCreate,
+  sort,
+  onSortChange,
   onEdit,
   onDelete,
+  onView,
   page,
   totalPages,
   onPageChange,
+  showDeleted = false,
+  onToggleDeleted = () => {},
+  onRestore = () => {},
 }: Props) {
+  const sortOptions = [
+    {
+      value: "createdAt_desc",
+      label: "Newest First",
+      field: "createdAt",
+      dir: "desc",
+    },
+    {
+      value: "createdAt_asc",
+      label: "Oldest First",
+      field: "createdAt",
+      dir: "asc",
+    },
+    {
+      value: "updatedAt_desc",
+      label: "Recently Updated",
+      field: "updatedAt",
+      dir: "desc",
+    },
+  ];
+
+  const currentSortValue =
+    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+      ?.value || "createdAt_desc";
+
   const columns = useMemo(
     () => [
       {
         header: "Name",
         accessor: (row: Buyer) => (
-          <Link href={`/buyers/${row.id}`} className="font-medium hover:underline">
+          <Link
+            href={`/buyers/${row.id}`}
+            className="font-semibold text-foreground hover:underline"
+          >
             {row.name}
           </Link>
         ),
@@ -57,40 +112,148 @@ export function BuyerList({
       },
       {
         header: "Actions",
+        className: "text-left w-40 pr-4",
         accessor: (row: Buyer) => (
-          <div className="flex flex-wrap justify-end gap-2">
-            <Button size="sm" variant="outline" onClick={() => onEdit(row)}>
-              Edit
+          <div className="flex justify-end gap-1">
+            <Button
+              size="icon"
+              variant="ghost"
+              title="View Detail"
+              className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                onView(row);
+              }}
+            >
+              <Eye className="h-4 w-4" />
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDelete(row)}>
-              Delete
-            </Button>
+            {!showDeleted && (
+              <>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Edit Buyer"
+                  className="h-7 w-7 text-slate-500 hover:text-secondary hover:bg-secondary/10 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit(row);
+                  }}
+                >
+                  <SquarePen className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  title="Delete"
+                  className="h-7 w-7 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(row);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+            {showDeleted && (
+              <Button
+                size="icon"
+                variant="ghost"
+                title="Restore"
+                className="h-7 w-7 text-slate-500 hover:text-green-600 hover:bg-green-50 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(row);
+                }}
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         ),
-        className: "text-right",
       },
     ],
-    [onEdit, onDelete]
-  )
+    [onView, onEdit, onDelete, onRestore, showDeleted],
+  );
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex w-full max-w-sm items-center gap-2">
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search buyer"
-            className="w-full"
-          />
-          <Button variant="outline" className="shrink-0">
-            <Search className="mr-2 h-4 w-4" />
-            Search
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        {/* Left: Search Group */}
+        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                onPageChange(1);
+              }}
+              onKeyDown={(e) => e.key === "Enter" && onPageChange(1)}
+              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+            />
+          </div>
+          <Button
+            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
+            onClick={() => onPageChange(1)}
+          >
+            <Search className="h-5 w-5 sm:hidden" />
+            <span className="hidden sm:inline">Search</span>
+          </Button>
+          <Button
+            variant={showDeleted ? "destructive" : "outline"}
+            className={cn(
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+              !showDeleted && "bg-white border-slate-200 text-slate-500",
+            )}
+            onClick={onToggleDeleted}
+            title={showDeleted ? "Show Active Buyers" : "Show Deleted Buyers"}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
-        <Button onClick={onCreate} className="bg-black text-white hover:bg-black/90">
-          Add Buyer
-        </Button>
+
+        {/* Right: Filters Group */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
+          <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+            <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+              Sort By
+            </span>
+            <Select
+              value={currentSortValue}
+              onValueChange={(val) => {
+                const opt = sortOptions.find((o) => o.value === val);
+                if (opt)
+                  onSortChange({
+                    field: opt.field,
+                    dir: opt.dir as "asc" | "desc",
+                  });
+              }}
+            >
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
+                <SelectValue placeholder="Newest First" />
+              </SelectTrigger>
+              <SelectContent
+                align="end"
+                className="rounded-xl shadow-xl border-slate-200"
+              >
+                {sortOptions.map((opt) => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-xs font-semibold py-2.5"
+                  >
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       <CustomTable
@@ -104,5 +267,5 @@ export function BuyerList({
         scrollAreaHeight="h-[calc(100vh-350px)]"
       />
     </div>
-  )
+  );
 }

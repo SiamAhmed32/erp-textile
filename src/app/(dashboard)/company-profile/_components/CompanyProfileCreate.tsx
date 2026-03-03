@@ -3,20 +3,20 @@
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import {
   Container,
-  Flex,
-  PrimaryHeading,
-  PrimaryText,
+  FormHeader,
+  FormFooter,
+  RecoveryModal,
+  NavigationGuard,
 } from "@/components/reusables";
-import { Button } from "@/components/ui/button";
 import { usePostMutation } from "@/store/services/commonApi";
 import { CompanyProfileApiItem, CompanyProfileFormData } from "./types";
 import CompanyProfileForm from "./CompanyProfileForm";
 import { normalizeProfile, toApiFormData } from "./helpers";
 import { companyProfileSchema, toFieldErrors } from "./validation";
 import { notify } from "@/lib/notifications";
+import { useFormPersistence } from "@/hooks/useFormPersistence";
 
 const emptyForm: CompanyProfileFormData = {
   id: "",
@@ -45,12 +45,56 @@ const emptyForm: CompanyProfileFormData = {
 
 const CompanyProfileCreate = () => {
   const router = useRouter();
-  const [draft, setDraft] = React.useState<CompanyProfileFormData>(emptyForm);
+  const {
+    draft,
+    setDraft,
+    hasStoredDraft,
+    restoreDraft,
+    discardDraft,
+    clearDraft,
+    setHasInteracted,
+  } = useFormPersistence<CompanyProfileFormData>({
+    key: "company_create",
+    defaultValue: emptyForm,
+    onRestore: (data) => {
+      // If there's a stored logoUrl (Base64), we might need to handle it
+      // But for now, we'll just restore the text data.
+      notify.success("Draft restored successfully");
+    },
+  });
+
   const [saving, setSaving] = React.useState(false);
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof CompanyProfileFormData, string>>
   >({});
   const [postItem] = usePostMutation();
+
+  const isDirty = React.useMemo(() => {
+    return JSON.stringify(draft) !== JSON.stringify(emptyForm);
+  }, [draft]);
+
+  // Progress Calculation
+  const progressData = React.useMemo(() => {
+    const fieldsToTrack = Object.keys(emptyForm).filter(
+      (key) => !["id", "logoUrl", "logoFile"].includes(key),
+    );
+
+    const filled = fieldsToTrack.filter((key) => {
+      const val = draft[key as keyof CompanyProfileFormData];
+      if (key === "companyType" && val === "PARENT") return false;
+      if (key === "status" && val === "active") return false;
+
+      return val !== "" && val !== null && val !== undefined;
+    }).length;
+
+    const interactiveTotal = fieldsToTrack.length - 2;
+
+    return {
+      percentage: Math.min(100, Math.round((filled / interactiveTotal) * 100)),
+      count: filled,
+      total: interactiveTotal,
+    };
+  }, [draft]);
 
   const handleChange = (
     field: keyof CompanyProfileFormData,
@@ -70,8 +114,26 @@ const CompanyProfileCreate = () => {
         }));
         return;
       }
+
+      // Convert small images to Base64 for draft persistence
+      if (value.size < 1024 * 1024) {
+        // Under 1MB
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setDraft((prev) => ({
+            ...prev,
+            logoFile: value,
+            logoUrl: reader.result as string,
+          }));
+        };
+        reader.readAsDataURL(value);
+      } else {
+        setDraft((prev) => ({ ...prev, logoFile: value, logoUrl: "" }));
+      }
+    } else {
+      setDraft((prev) => ({ ...prev, [field]: value as any }));
     }
-    setDraft((prev) => ({ ...prev, [field]: value as any }));
+    setHasInteracted(true);
     setErrors((prev) => ({ ...prev, [field]: undefined, logoUrl: undefined }));
   };
 
@@ -84,18 +146,6 @@ const CompanyProfileCreate = () => {
             Record<keyof CompanyProfileFormData, string>
           >);
 
-    if (draft.logoFile) {
-      const allowedTypes = [
-        "image/png",
-        "image/jpeg",
-        "image/jpg",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(draft.logoFile.type)) {
-        nextErrors.logoUrl = "Only PNG, JPG, JPEG, or WEBP images are allowed.";
-      }
-    }
-
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -104,8 +154,12 @@ const CompanyProfileCreate = () => {
       const payload = (await postItem({
         path: "company-profiles",
         body: toApiFormData(draft),
+        formData: true,
         invalidate: ["company-profiles"],
       }).unwrap()) as any;
+
+      clearDraft();
+
       const item = (payload?.data || payload) as CompanyProfileApiItem;
       const normalized = item ? normalizeProfile(item) : null;
       if (normalized?.id) {
@@ -116,7 +170,10 @@ const CompanyProfileCreate = () => {
         router.push(`/company-profile`);
       }
     } catch (err: any) {
-      const message = err?.message || "Failed to create company profile";
+      const message =
+        err?.data?.message ||
+        err?.data?.error?.message ||
+        "Could not create the company profile. Please try again.";
       notify.error(message);
     } finally {
       setSaving(false);
@@ -125,38 +182,37 @@ const CompanyProfileCreate = () => {
 
   return (
     <Container className="pb-10 pt-6">
-      <Flex className="flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-2">
-          <Link
-            href="/company-profile"
-            className="inline-flex items-center text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Company Profiles
-          </Link>
-          <PrimaryHeading className="!text-black">Add Company</PrimaryHeading>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" asChild>
-            <Link href="/company-profile">Cancel</Link>
-          </Button>
-          <Button
-            className="bg-black text-white hover:bg-black/90"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? "Saving..." : "Save Company"}
-          </Button>
-        </div>
-      </Flex>
+      <NavigationGuard isDirty={isDirty} />
 
-      <div className="mt-4" />
+      <RecoveryModal
+        isOpen={hasStoredDraft}
+        onRestore={restoreDraft}
+        onDiscard={discardDraft}
+      />
+
+      <FormHeader
+        title="Create New Company"
+        backHref="/company-profile"
+        breadcrumbItems={[
+          { label: "Company Profiles", href: "/company-profile" },
+          { label: "Add New" },
+        ]}
+        progress={progressData}
+      />
 
       <CompanyProfileForm
         data={draft}
         onChange={handleChange}
         isEditing
         errors={errors}
+      />
+
+      <FormFooter
+        cancelHref="/company-profile"
+        onSave={handleSave}
+        saving={saving}
+        saveLabel="Create New Company Profile"
+        trustText="Draft data is stored securely. All inputs are encrypted."
       />
     </Container>
   );

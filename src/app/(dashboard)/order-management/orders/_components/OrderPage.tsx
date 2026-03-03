@@ -6,6 +6,9 @@ import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
+import { PrimaryHeading, CustomModal } from "@/components/reusables";
+import { Button } from "@/components/ui/button";
+import { notify } from "@/lib/notifications";
 
 const OrderPage = () => {
   const router = useRouter();
@@ -14,12 +17,23 @@ const OrderPage = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [showDeleted, setShowDeleted] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [deliveryDateFrom, setDeliveryDateFrom] = useState("");
+  const [deliveryDateTo, setDeliveryDateTo] = useState("");
+  const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
+    field: "createdAt",
+    dir: "desc",
+  });
+  const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [patchItem] = usePatchMutation();
 
   useEffect(() => {
-    const handle = setTimeout(() => setDebouncedSearch(search), 300);
+    const handle = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
     return () => clearTimeout(handle);
   }, [search]);
 
@@ -33,11 +47,16 @@ const OrderPage = () => {
     page,
     limit: 10,
     search: debouncedSearch || "",
+    sortBy: sort.field,
+    sortOrder: sort.dir,
     filters: {
       ...(statusFilter !== "all" ? { status: statusFilter } : {}),
       ...(typeFilter !== "all" ? { productType: typeFilter } : {}),
-      ...(dateFrom ? { dateFrom } : {}),
-      ...(dateTo ? { dateTo } : {}),
+      ...(dateFrom ? { startDate: dateFrom } : {}),
+      ...(dateTo ? { endDate: dateTo } : {}),
+      ...(deliveryDateFrom ? { deliveryDateFrom } : {}),
+      ...(deliveryDateTo ? { deliveryDateTo } : {}),
+      ...(showDeleted ? { isDeleted: true } : {}),
     },
   });
 
@@ -56,9 +75,9 @@ const OrderPage = () => {
     const message =
       parsed?.data?.error?.message ||
       parsed?.data?.message ||
-      parsed?.error ||
-      "Failed to load orders";
-    console.error("Load Orders Error:", message);
+      "Could not load the order list. Please try again.";
+    notify.error(message);
+    console.error("Load Orders Error:", parsed);
   }, [ordersError]);
 
   const handleRowClick = useCallback(
@@ -98,56 +117,167 @@ const OrderPage = () => {
     [router],
   );
 
-  const handleDelete = useCallback(
+  const handleDelete = useCallback((row: Order) => {
+    setDeletingOrder(row);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!deletingOrder) return;
+    try {
+      await patchItem({
+        path: `orders/${deletingOrder.id}`,
+        body: { isDeleted: true },
+        invalidate: ["orders"],
+      }).unwrap();
+      refetch();
+      notify.success("Order deleted successfully.");
+    } catch (err: any) {
+      notify.error("Could not delete the order. Please try again.");
+      console.error("Delete Order Error:", err);
+    } finally {
+      setDeletingOrder(null);
+    }
+  }, [patchItem, refetch, deletingOrder]);
+
+  const handleRestore = useCallback(
     async (row: Order) => {
       try {
         await patchItem({
           path: `orders/${row.id}`,
-          body: { isDeleted: true },
+          body: { isDeleted: false },
           invalidate: ["orders"],
         }).unwrap();
         refetch();
+        notify.success("Order restored successfully.");
       } catch (err: any) {
-        console.error(
-          "Delete Order Error:",
-          err.message || "Failed to delete order",
-        );
+        notify.error("Could not restore the order. Please try again.");
+        console.error("Restore Order Error:", err);
       }
     },
     [patchItem, refetch],
   );
+
+  const handleToggleDeleted = useCallback(() => {
+    setShowDeleted((prev) => !prev);
+    setPage(1);
+  }, []);
 
   const handleSearchSubmit = useCallback(() => {
     setDebouncedSearch(search);
     setPage(1);
   }, [search]);
 
+  const handleStatusChange = useCallback((val: string) => {
+    setStatusFilter(val);
+    setPage(1);
+  }, []);
+
+  const handleTypeChange = useCallback((val: string) => {
+    setTypeFilter(val);
+    setPage(1);
+  }, []);
+
+  const handleDateRangeChange = useCallback((from: string, to: string) => {
+    setDateFrom(from);
+    setDateTo(to);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateRangeChange = useCallback(
+    (from: string, to: string) => {
+      setDeliveryDateFrom(from);
+      setDeliveryDateTo(to);
+      setPage(1);
+    },
+    [],
+  );
+
+  const handleDateFromChange = useCallback((val: string) => {
+    setDateFrom(val);
+    setPage(1);
+  }, []);
+
+  const handleDateToChange = useCallback((val: string) => {
+    setDateTo(val);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateFromChange = useCallback((val: string) => {
+    setDeliveryDateFrom(val);
+    setPage(1);
+  }, []);
+
+  const handleDeliveryDateToChange = useCallback((val: string) => {
+    setDeliveryDateTo(val);
+    setPage(1);
+  }, []);
+
   return (
-    <OrdersTable
-      data={orders}
-      loading={loading}
-      page={page}
-      totalPages={totalPages}
-      search={search}
-      statusFilter={statusFilter}
-      typeFilter={typeFilter}
-      dateFrom={dateFrom}
-      dateTo={dateTo}
-      onSearchChange={setSearch}
-      onSearchSubmit={handleSearchSubmit}
-      onStatusFilterChange={setStatusFilter}
-      onTypeFilterChange={setTypeFilter}
-      onDateFromChange={setDateFrom}
-      onDateToChange={setDateTo}
-      onPageChange={setPage}
-      onAddOrder={() => router.push("/order-management/orders/add-new-order")}
-      onRowClick={handleRowClick}
-      onView={handleView}
-      onEdit={handleEdit}
-      onDuplicate={handleDuplicate}
-      onExport={handleExport}
-      onDelete={handleDelete}
-    />
+    <>
+      <OrdersTable
+        data={orders}
+        loading={loading}
+        error={
+          (ordersError as any)?.data?.message ||
+          (ordersError as any)?.error ||
+          ""
+        }
+        page={page}
+        totalPages={totalPages}
+        search={search}
+        statusFilter={statusFilter}
+        typeFilter={typeFilter}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        deliveryDateFrom={deliveryDateFrom}
+        deliveryDateTo={deliveryDateTo}
+        onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
+        onStatusFilterChange={handleStatusChange}
+        onTypeFilterChange={handleTypeChange}
+        onDateFromChange={handleDateFromChange}
+        onDateToChange={handleDateToChange}
+        onDeliveryDateFromChange={handleDeliveryDateFromChange}
+        onDeliveryDateToChange={handleDeliveryDateToChange}
+        sort={sort}
+        onSortChange={setSort}
+        onPageChange={setPage}
+        onRowClick={handleRowClick}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDuplicate={handleDuplicate}
+        onExport={handleExport}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+        showDeleted={showDeleted}
+        onToggleDeleted={handleToggleDeleted}
+      />
+
+      <CustomModal
+        open={!!deletingOrder}
+        onOpenChange={(open) => !open && setDeletingOrder(null)}
+        title="Confirm Delete"
+        maxWidth="400px"
+      >
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            Are you sure you want to delete order{" "}
+            <span className="font-semibold text-foreground">
+              {deletingOrder?.orderNumber}
+            </span>
+            ? This is a soft delete operation.
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={() => setDeletingOrder(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              Delete
+            </Button>
+          </div>
+        </div>
+      </CustomModal>
+    </>
   );
 };
 

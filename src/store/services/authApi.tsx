@@ -1,8 +1,10 @@
 import { TOKEN_NAME } from "@/lib/constants";
 import { LoginBodyType, LoginPayloadType, RootState } from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import Cookies from "js-cookie";
+
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND;
-const tags = ["self"];
+const tags = ["self", "users"];
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -12,35 +14,96 @@ export const authApi = createApi({
       const state = getState() as RootState;
       const token =
         state?.auth?.token ||
+        Cookies.get("token") ||
         (typeof window !== "undefined"
           ? localStorage.getItem(TOKEN_NAME)
           : null);
-
       if (token) {
-        headers.set("Authorization", `${token}`);
+        headers.set(
+          "Authorization",
+          token.startsWith("Bearer") ? token : `Bearer ${token}`,
+        );
       }
     },
   }),
   tagTypes: tags,
   endpoints: (builder) => ({
-    // ✅ login matches old file (auth/login)
     login: builder.mutation<LoginPayloadType, LoginBodyType>({
       query: ({ email, password }) => ({
-        url: `user-api/auth/login`,
+        url: `auth/login`,
         method: "POST",
         body: { email, password },
       }),
       invalidatesTags: ["self"],
     }),
 
-    // ✅ register matches old file (auth/register)
     register: builder.mutation<any, any>({
       query: (body) => ({
-        url: `user-api/auth/register`,
+        url: `/auth/register`,
         method: "POST",
         body,
+        formData: true,
       }),
-      invalidatesTags: ["self"],
+      invalidatesTags: ["self", "users"],
+    }),
+
+    getUsers: builder.query<
+      any,
+      {
+        search?: string;
+        filters?: any;
+        sort?: string;
+        sortBy?: string;
+        sortOrder?: string;
+        page?: number;
+        limit?: number;
+      }
+    >({
+      query: ({
+        search,
+        filters,
+        sort,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      } = {}) => ({
+        url: `/users`,
+        params: {
+          ...(search ? { search } : {}),
+          ...(filters ? { filters: JSON.stringify(filters) } : {}),
+          ...(sortBy
+            ? { sortBy, sortOrder: sortOrder || "desc" }
+            : sort
+              ? { sort }
+              : {}),
+          ...(page ? { page } : {}),
+          ...(limit ? { limit } : {}),
+        },
+      }),
+      providesTags: ["users"],
+    }),
+
+    updateUser: builder.mutation<any, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
+        method: "PATCH",
+        body,
+        formData: true,
+      }),
+      invalidatesTags: ["users"],
+    }),
+
+    deleteUser: builder.mutation<
+      any,
+      { id: string; body: { isDeleted: boolean } }
+    >({
+      query: ({ id, body }) => ({
+        url: `/users/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: ["users"],
     }),
 
     updatePassword: builder.mutation<any, any>({
@@ -91,27 +154,38 @@ export const authApi = createApi({
         method: "PUT",
         body: { field, preferences },
       }),
-      invalidatesTags: (result, error, { field }) => [field, "self"],
+      invalidatesTags: (_result, _error, { field }) => [field as any, "self"],
     }),
 
-    requestPasswordChange: builder.mutation({
-      query: ({ email }) => ({
-        url: `auth/request-password-change`, // ✅ unchanged
+    patchUpdateSelf: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `/users/update-profile`,
+        method: "PATCH",
+        body,
+        formData: true,
+      }),
+      invalidatesTags: ["self"],
+    }),
+
+    forgotPassword: builder.mutation<any, { email: string }>({
+      query: (body) => ({
+        url: `auth/forgot-password`,
         method: "POST",
-        body: { email },
+        body,
       }),
     }),
-    verifyToken: builder.query({
-      query: ({ token }) => ({
-        url: `auth/verify-reset-token/${token}`, // ✅ unchanged
-        method: "GET",
+    verifyResetOTP: builder.mutation<any, { email: string; code: string }>({
+      query: (body) => ({
+        url: `auth/verify-reset-password-OTP`,
+        method: "POST",
+        body,
       }),
     }),
-    resetPassword: builder.mutation({
-      query: ({ token, password }) => ({
-        url: `auth/reset`, // ✅ unchanged
+    resetPassword: builder.mutation<any, any>({
+      query: (body) => ({
+        url: `auth/reset-password`,
         method: "POST",
-        body: { token, password },
+        body,
       }),
     }),
   }),
@@ -124,12 +198,16 @@ export const {
   useRegisterMutation,
   useUpdatePasswordMutation,
   useUpdateSelfMutation,
-  useRequestPasswordChangeMutation,
-  useVerifyTokenQuery,
+  useForgotPasswordMutation,
+  useVerifyResetOTPMutation,
   useResetPasswordMutation,
   usePlaceOrderMutation,
   useGetMyOrdersQuery,
   useGetSingleOrderQuery,
+  useGetUsersQuery,
+  useUpdateUserMutation,
+  useDeleteUserMutation,
+  usePatchUpdateSelfMutation,
 } = authApi;
 
 export default authApi;

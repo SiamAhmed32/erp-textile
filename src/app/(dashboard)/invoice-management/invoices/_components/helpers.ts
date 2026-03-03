@@ -9,25 +9,78 @@ const coerceStatus = (value?: string | null): PIStatus =>
 const coerceType = (value?: string | null): ProductType =>
     TYPES.includes(value as ProductType) ? (value as ProductType) : "FABRIC";
 
-export const normalizeInvoice = (item: InvoiceApiItem): Invoice => ({
-    id: item.id ?? "",
-    piNumber: item.piNumber ?? "",
-    date: item.date ?? "",
-    status: coerceStatus(item.status),
-    orderId: item.orderId ?? "",
-    invoiceTermsId: item.invoiceTermsId ?? "",
-    createdAt: item.createdAt ?? "",
-    updatedAt: item.updatedAt ?? "",
-    order: item.order
-        ? {
-              ...item.order,
-              productType: coerceType(item.order.productType),
-              orderItems: item.order.orderItems ?? [],
-          }
-        : null,
-    invoiceTerms: item.invoiceTerms ?? null,
-    user: item.user ?? null,
-});
+export const normalizeInvoice = (item: InvoiceApiItem): Invoice => {
+    let totalAmount = 0;
+    const rawOrderItems = Array.isArray(item.order?.orderItems) ? item.order.orderItems : item.order?.orderItems ? [item.order.orderItems] : [];
+    
+    const normalizedOrderItems = rawOrderItems.map((oi: any) => {
+        const newItem = { ...oi };
+        
+        if (newItem.fabricItem) {
+            newItem.fabricItem = {
+                ...newItem.fabricItem,
+                fabricItemData: newItem.fabricItem.fabricItemData?.map((d: any) => {
+                    const qty = Number(d.quantityYds) || 0;
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.fabricItem.totalAmount) || newItem.fabricItem.fabricItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        if (newItem.labelItem) {
+            newItem.labelItem = {
+                ...newItem.labelItem,
+                labelItemData: newItem.labelItem.labelItemData?.map((d: any) => {
+                    const qty = Number(d.quantityDzn || d.quantityPcs || 0);
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.labelItem.totalAmount) || newItem.labelItem.labelItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        if (newItem.cartonItem) {
+            newItem.cartonItem = {
+                ...newItem.cartonItem,
+                cartonItemData: newItem.cartonItem.cartonItemData?.map((d: any) => {
+                    const qty = Number(d.cartonQty) || 0;
+                    const price = Number(d.unitPrice) || 0;
+                    const amt = Number(d.totalAmount) || (qty * price);
+                    return { ...d, totalAmount: amt };
+                })
+            };
+            totalAmount += Number(newItem.cartonItem.totalAmount) || newItem.cartonItem.cartonItemData?.reduce((s: number, d: any) => s + (Number(d.totalAmount) || 0), 0) || 0;
+        }
+        
+        return newItem;
+    });
+
+    return {
+        id: item.id ?? "",
+        piNumber: item.piNumber ?? "",
+        date: item.date ?? "",
+        status: coerceStatus(item.status),
+        orderId: item.orderId ?? "",
+        invoiceTermsId: item.invoiceTermsId ?? "",
+        createdAt: item.createdAt ?? "",
+        updatedAt: item.updatedAt ?? "",
+        totalAmount,
+        order: item.order
+            ? {
+                ...item.order,
+                productType: coerceType(item.order.productType),
+                orderItems: normalizedOrderItems,
+                buyer: item.order.buyer ?? null,
+                companyProfile: item.order.companyProfile ?? null,
+            }
+            : null,
+        invoiceTerms: item.invoiceTerms ?? null,
+        user: item.user ?? null,
+    };
+};
 
 export const toInvoiceFormData = (invoice: Invoice): InvoiceFormData => ({
     piNumber: invoice.piNumber || "",
@@ -37,13 +90,20 @@ export const toInvoiceFormData = (invoice: Invoice): InvoiceFormData => ({
     status: coerceStatus(invoice.status),
 });
 
-export const toInvoicePayload = (data: InvoiceFormData) => ({
-    piNumber: data.piNumber,
-    date: data.date,
-    orderId: data.orderId,
-    invoiceTermsId: data.invoiceTermsId,
-    status: coerceStatus(data.status),
-});
+export const toInvoicePayload = (data: InvoiceFormData, isUpdate = false) => {
+    const payload: any = {
+        piNumber: data.piNumber,
+        date: data.date ? new Date(data.date).toISOString() : data.date,
+        invoiceTermsId: data.invoiceTermsId,
+        status: coerceStatus(data.status),
+    };
+
+    if (!isUpdate) {
+        payload.orderId = data.orderId;
+    }
+
+    return payload;
+};
 
 export const formatDate = (value?: string | null) => {
     if (!value) return "-";
@@ -80,4 +140,67 @@ export const countByType = (items: Invoice[]) => {
         }
     });
     return counts;
+};
+
+export const numberToWords = (num: number): string => {
+    if (num === 0) return "Zero";
+
+    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    const teens = [
+        "Ten",
+        "Eleven",
+        "Twelve",
+        "Thirteen",
+        "Fourteen",
+        "Fifteen",
+        "Sixteen",
+        "Seventeen",
+        "Eighteen",
+        "Nineteen",
+    ];
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const thousands = ["", "Thousand", "Million", "Billion"];
+
+    const convertChunk = (n: number): string => {
+        let chunk = "";
+        if (n >= 100) {
+            chunk += ones[Math.floor(n / 100)] + " Hundred ";
+            n %= 100;
+        }
+        if (n >= 10 && n < 20) {
+            chunk += teens[n - 10] + " ";
+        } else {
+            if (n >= 20) {
+                chunk += tens[Math.floor(n / 10)] + " ";
+                n %= 10;
+            }
+            if (n > 0) {
+                chunk += ones[n] + " ";
+            }
+        }
+        return chunk.trim();
+    };
+
+    let result = "";
+    let i = 0;
+
+    const integerPart = Math.floor(num);
+    const decimalPart = Math.round((num - integerPart) * 100);
+
+    let temp = integerPart;
+    while (temp > 0) {
+        if (temp % 1000 !== 0) {
+            result = convertChunk(temp % 1000) + " " + thousands[i] + " " + result;
+        }
+        temp = Math.floor(temp / 1000);
+        i++;
+    }
+
+    result = result.trim();
+
+    if (decimalPart > 0) {
+        result += " and Cents " + convertChunk(decimalPart);
+    }
+
+    return result + " Only.";
 };
