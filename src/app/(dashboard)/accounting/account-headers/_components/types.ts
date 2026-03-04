@@ -28,6 +28,7 @@ export interface AccountHeader {
     openingBalance?: number;
     parentId: string | null;
     parent?: AccountHeader;
+    children?: AccountHeader[];
     isControlAccount: boolean;
     companyProfileId: string;
     level?: number;
