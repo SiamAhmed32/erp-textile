@@ -38,6 +38,7 @@ type Props = {
   showDeleted?: boolean;
   onToggleDeleted?: () => void;
   onRestore?: (buyer: Buyer) => void;
+  isLoading?: boolean;
 };
 
 export function BuyerList({
@@ -55,6 +56,7 @@ export function BuyerList({
   showDeleted = false,
   onToggleDeleted = () => {},
   onRestore = () => {},
+  isLoading = false,
 }: Props) {
   const sortOptions = [
     {
@@ -265,6 +267,7 @@ export function BuyerList({
           onPageChange,
         }}
         scrollAreaHeight="h-[calc(100vh-350px)]"
+        isLoading={isLoading}
       />
     </div>
   );

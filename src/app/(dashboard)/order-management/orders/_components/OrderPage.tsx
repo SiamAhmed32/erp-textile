@@ -2,13 +2,18 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
+import {
+  useGetAllQuery,
+  useLazyGetByIdQuery,
+  usePatchMutation,
+} from "@/store/services/commonApi";
 import OrdersTable from "./OrdersTable";
 import { Order, OrderApiItem } from "./types";
 import { normalizeOrder } from "./helpers";
 import { PrimaryHeading, CustomModal } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notifications";
+import { exportOrderToPdf } from "./orderPdf";
 
 const OrderPage = () => {
   const router = useRouter();
@@ -28,6 +33,7 @@ const OrderPage = () => {
   });
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [patchItem] = usePatchMutation();
+  const [getOrderById] = useLazyGetByIdQuery();
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -111,10 +117,20 @@ const OrderPage = () => {
   );
 
   const handleExport = useCallback(
-    (row: Order) => {
-      router.push(`/order-management/orders/${row.id}?export=pdf`);
+    async (row: Order) => {
+      try {
+        const payload = await getOrderById({
+          path: "orders",
+          id: row.id,
+        }).unwrap();
+        const fullOrder = normalizeOrder((payload as any)?.data || {});
+        await exportOrderToPdf(fullOrder);
+      } catch (err: any) {
+        notify.error("Could not export order PDF. Please try again.");
+        console.error("Export Order PDF Error:", err);
+      }
     },
-    [router],
+    [getOrderById],
   );
 
   const handleDelete = useCallback((row: Order) => {

@@ -2,7 +2,11 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
+import {
+  useGetAllQuery,
+  useLazyGetByIdQuery,
+  usePatchMutation,
+} from "@/store/services/commonApi";
 import InvoicesTable from "./InvoicesTable";
 import { InvoiceFormModal } from "./InvoiceFormModal";
 import { Invoice, InvoiceApiItem } from "./types";
@@ -12,6 +16,7 @@ import { PageHeader, CustomModal } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/lib/notifications";
+import { exportInvoiceToPdf } from "./invoicePdf";
 
 const InvoicePage = () => {
   const router = useRouter();
@@ -34,6 +39,7 @@ const InvoicePage = () => {
     dir: "desc",
   });
   const [patchItem] = usePatchMutation();
+  const [getInvoiceById] = useLazyGetByIdQuery();
 
   //  console.log("edit invoice:", editInvoiceId);
 
@@ -106,10 +112,20 @@ const InvoicePage = () => {
   }, []);
 
   const handleExport = useCallback(
-    (row: Invoice) => {
-      router.push(`/invoice-management/invoices/${row.id}?export=pdf`);
+    async (row: Invoice) => {
+      try {
+        const payload = await getInvoiceById({
+          path: "invoices",
+          id: row.id,
+        }).unwrap();
+        const fullInvoice = normalizeInvoice((payload as any)?.data || {});
+        await exportInvoiceToPdf(fullInvoice);
+      } catch (err: any) {
+        notify.error("Could not export the invoice PDF. Please try again.");
+        console.error("Export Invoice PDF Error:", err);
+      }
     },
-    [router],
+    [getInvoiceById],
   );
 
   const handleDelete = useCallback((row: Invoice) => {

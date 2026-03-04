@@ -41,12 +41,22 @@ export const drawHeader = async (
 
   // 1. Draw Date at the very top right (Professional Industry standard)
   if (docDate) {
-    const dateStr = typeof docDate === "string" ? docDate : format(docDate, "dd MMM yyyy");
+    const dateStr =
+      typeof docDate === "string"
+        ? (() => {
+            const parsed = new Date(docDate);
+            if (!Number.isNaN(parsed.getTime())) {
+              return format(parsed, "dd MMM yyyy");
+            }
+            // Fallback for non-ISO or malformed values
+            return String(docDate).split("T")[0];
+          })()
+        : format(docDate, "dd MMM yyyy");
     doc.setFontSize(9);
-    doc.setTextColor(120); // Subtle gray for metadata
+    doc.setTextColor(0); // Black text as requested
     doc.setFont("helvetica", "normal");
     doc.text(`Date: ${dateStr}`, pageWidth - margin, y, { align: "right" });
-    doc.setTextColor(0); // Reset for name
+    doc.setTextColor(0);
   }
 
   // 2. Draw Logo on the Top Left (Anchor the brand)

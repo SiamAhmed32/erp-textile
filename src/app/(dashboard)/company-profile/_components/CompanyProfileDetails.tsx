@@ -3,7 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Pencil } from "lucide-react";
-import { Container, PageHeader, PrimaryText } from "@/components/reusables";
+import {
+  Container,
+  PageHeader,
+  PrimaryText,
+  DetailsSkeleton,
+} from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -197,13 +202,11 @@ const CompanyProfileDetails = ({ id }: Props) => {
 
       <div className="mt-4" />
 
-      {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
-          Loading company details...
-        </PrimaryText>
+      {loading ? (
+        <DetailsSkeleton />
+      ) : (
+        profile && <CompanyProfileReadOnly profile={profile} />
       )}
-
-      {profile && <CompanyProfileReadOnly profile={profile} />}
     </Container>
   );
 };

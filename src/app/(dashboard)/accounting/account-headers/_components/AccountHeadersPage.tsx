@@ -109,7 +109,7 @@ const AccountHeadersPage = () => {
       <PageHeader
         title="Account Headers"
         breadcrumbItems={[
-          { label: "Dashboard", href: "/" },
+          // { label: "Dashboard", href: "/" },
           { label: "Accounting", href: "/accounting" },
           { label: "Account Headers" },
         ]}

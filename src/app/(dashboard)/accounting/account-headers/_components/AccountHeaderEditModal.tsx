@@ -113,9 +113,10 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
   const onSubmit = async (data: AccountHeaderFormData) => {
     if (!header) return;
     try {
+      const { companyProfileId: _, ...updatePayload } = data;
       await patchItem({
         path: `accounting/accountHeads/${header.id}`,
-        body: data,
+        body: updatePayload,
         invalidate: ["accounting/accountHeads"],
       }).unwrap();
       notify.success("Account head updated successfully");
@@ -138,39 +139,11 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* ── Group & Mode Section ────────────────────────────────── */}
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="space-y-1.5">
-              <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                Associated Company <span className="text-destructive">*</span>
-              </Label>
-              <Controller
-                name="companyProfileId"
-                control={control}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger className="h-11 bg-white border-zinc-200 font-semibold text-zinc-800">
-                      <SelectValue placeholder="Select Business Profile" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.companyProfileId && (
-                <p className="text-[10px] text-destructive font-bold uppercase">
-                  {errors.companyProfileId.message}
-                </p>
-              )}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
 
             <div className="space-y-1.5">
               <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                Financial Group
+                Group
               </Label>
               <Controller
                 name="type"
@@ -198,29 +171,31 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
                 )}
               />
             </div>
-          </div>
 
-          <div className="mt-5 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-zinc-200 shadow-sm">
-            <div className="space-y-0.5">
-              <Label className="text-zinc-800 font-bold text-sm">
-                Control Account
-              </Label>
-              <p className="text-[10px] text-zinc-400 font-medium">
-                Allow sub-accounts to be nested within this header
-              </p>
+            {/*  */}
+            <div className="mt-5 flex items-center justify-between bg-white px-4 py-3 rounded-lg border border-zinc-200 shadow-sm">
+              <div className="space-y-0.5">
+                <Label className="text-zinc-800 font-bold text-sm">
+                  Control Account
+                </Label>
+                {/* <p className="text-[10px] text-zinc-400 font-medium">
+                  Allow sub-accounts to be nested within this header
+                </p> */}
+              </div>
+              <Controller
+                name="isControlAccount"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
             </div>
-            <Controller
-              name="isControlAccount"
-              control={control}
-              render={({ field }) => (
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              )}
-            />
           </div>
         </div>
+
 
         {/* ── Hierarchy ───────────────────────────────────────────── */}
         <div className="space-y-1.5">
@@ -314,7 +289,7 @@ const AccountHeaderEditModal = ({ open, onOpenChange, header }: Props) => {
           </Button>
         </div>
       </form>
-    </CustomModal>
+    </CustomModal >
   );
 };
 

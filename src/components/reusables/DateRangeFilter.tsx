@@ -69,7 +69,7 @@ export default function DateRangeFilter({
         <Button
           variant="outline"
           className={cn(
-            "h-10 px-4 gap-2 bg-white border-slate-200 rounded-lg font-medium transition-all hover:bg-slate-50 text-sm shadow-sm shrink-0",
+            "h-10 px-2 sm:px-4 gap-1 sm:gap-2 bg-white border-slate-200 rounded-lg font-medium transition-all hover:bg-slate-50 text-sm shadow-sm",
             hasValue &&
               "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100",
             className,
