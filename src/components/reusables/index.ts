@@ -30,6 +30,7 @@ export { default as CustomModal } from './CustomModal';
 export { default as PageLoader } from './PageLoader';
 export { default as InPageLoader } from './InPageLoader';
 export { default as DetailsSkeleton } from './DetailsSkeleton';
+export { default as FormSkeleton } from './FormSkeleton';
 export { default as Breadcrumb } from './Breadcrumb';
 export { default as FormHeader } from './FormHeader';
 export { default as FormFooter } from './FormFooter';

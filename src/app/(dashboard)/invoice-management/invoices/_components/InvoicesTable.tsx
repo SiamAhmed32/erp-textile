@@ -479,14 +479,9 @@ const InvoicesTable = ({
         </div>
       </div>
 
-      {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
-          Loading invoices...
-        </PrimaryText>
-      )}
-
       <CustomTable
         data={data}
+        isLoading={loading}
         columns={columns}
         pagination={{
           currentPage: page,
