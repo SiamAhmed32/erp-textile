@@ -169,7 +169,7 @@ const AccountHeaderCreateModal = ({ open, onOpenChange }: Props) => {
 
             <div className="space-y-1.5">
               <Label className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
-                Financial Group
+                Group
               </Label>
               <Controller
                 name="type"
