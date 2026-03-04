@@ -7,11 +7,9 @@ import {
   DetailsSkeleton,
 } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
+import { useGetByIdQuery } from "@/store/services/commonApi";
 import { notify } from "@/lib/notifications";
-import { ArrowLeft, Download, Pencil, Copy } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Download, Pencil, Copy } from "lucide-react";
 import React from "react";
 import {
   normalizeInvoice,
@@ -28,8 +26,6 @@ type Props = {
 };
 
 const InvoiceDetails = ({ id, shouldExport = false }: Props) => {
-  const router = useRouter();
-
   const [invoice, setInvoice] = React.useState<Invoice | null>(null);
   const [error, setError] = React.useState("");
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
