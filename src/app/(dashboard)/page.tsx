@@ -118,16 +118,22 @@ function DashboardCard({
         className,
       )}
     >
-      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50">
+      <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50 max-[324px]:flex-col max-[324px]:items-start max-[324px]:gap-2">
         <div>
-          <h3 className="text-base font-bold text-slate-900">{title}</h3>
+          <h3 className="text-base font-bold text-slate-900 whitespace-nowrap">
+            {title}
+          </h3>
           {subtitle && (
             <p className="text-xs mt-0.5 font-bold uppercase tracking-widest leading-none text-slate-500">
               {subtitle}
             </p>
           )}
         </div>
-        {action}
+        {action ? (
+          <div className="max-[324px]:w-full max-[324px]:flex max-[324px]:justify-start">
+            {action}
+          </div>
+        ) : null}
       </div>
       <div className={cn("flex-1", noPad ? "" : "p-6")}>{children}</div>
     </div>
@@ -539,12 +545,6 @@ function CashFlowChart() {
 function OrderStatusChart() {
   const { data, isLoading } = useGetOrderStatusAnalyticsQuery(undefined);
   const rawData: Record<string, number>[] = data?.data ?? [];
-  const statusTotals = rawData.reduce<Record<string, number>>((acc, entry) => {
-    const [name, value] = Object.entries(entry)[0] || [];
-    if (!name) return acc;
-    acc[name] = Number(value) || 0;
-    return acc;
-  }, {});
   const allStatuses = rawData.flatMap((entry) =>
     Object.entries(entry)
       .filter(([_, v]) => v > 0)
@@ -555,13 +555,11 @@ function OrderStatusChart() {
       })),
   );
   const total = allStatuses.reduce((s, e) => s + e.value, 0);
-  const pipelineTotal =
-    (statusTotals.DRAFT || 0) + (statusTotals.PENDING || 0);
 
   return (
     <DashboardCard
       title="Order Status"
-      subtitle={`${pipelineTotal} Total Orders in Pipeline`}
+      subtitle={`${total} Total Orders in Pipeline`}
     >
       {isLoading ? (
         <Skeleton className="h-56 w-full rounded-2xl" />
@@ -1089,7 +1087,7 @@ export default function Dashboard() {
         <AlertBanner />
 
         {/* ── KEY PERFORMANCE INDICATORS ────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 [@media(width:1024px)]:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-4 gap-8">
           {kpis.map((k) => (
             <KPICard key={k.title} {...k} />
           ))}

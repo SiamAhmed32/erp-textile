@@ -9,6 +9,7 @@ import {
   FormFooter,
   RecoveryModal,
   NavigationGuard,
+  FormSkeleton,
 } from "@/components/reusables";
 import { useGetByIdQuery, usePatchMutation } from "@/store/services/commonApi";
 import {
@@ -249,19 +250,16 @@ const CompanyProfileEdit = ({ id }: Props) => {
         progress={progressData}
       />
 
-      {loading && (
-        <div className="mb-6 animate-pulse flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg border border-border/50">
-          <div className="h-4 w-4 rounded-full bg-muted border-2 border-muted-foreground/20 animate-spin" />
-          Loading company details...
-        </div>
+      {loading ? (
+        <FormSkeleton sections={3} />
+      ) : (
+        <CompanyProfileForm
+          data={draft}
+          onChange={handleChange}
+          isEditing
+          errors={errors}
+        />
       )}
-
-      <CompanyProfileForm
-        data={draft}
-        onChange={handleChange}
-        isEditing
-        errors={errors}
-      />
 
       <FormFooter
         cancelHref={`/company-profile/${id}`}

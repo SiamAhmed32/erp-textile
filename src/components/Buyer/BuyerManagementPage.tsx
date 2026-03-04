@@ -235,11 +235,8 @@ export function BuyerManagementPage() {
         showDeleted={showDeleted}
         onToggleDeleted={handleToggleDeleted}
         onRestore={handleRestore}
+        isLoading={loading}
       />
-
-      {loading && (
-        <p className="mt-4 text-sm text-muted-foreground">Loading buyers...</p>
-      )}
 
       <BuyerForm
         open={formOpen}

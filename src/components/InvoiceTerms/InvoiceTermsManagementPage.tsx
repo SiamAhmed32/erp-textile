@@ -89,6 +89,15 @@ export function InvoiceTermsManagementPage() {
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const {
     data: termsPayload,
     isFetching: loading,
@@ -98,6 +107,7 @@ export function InvoiceTermsManagementPage() {
     path: "invoice-terms",
     page,
     limit: 10,
+    search: debouncedSearch,
     sortBy: sort.field,
     sortOrder: sort.dir,
   });

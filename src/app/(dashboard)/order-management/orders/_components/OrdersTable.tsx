@@ -687,27 +687,29 @@ const OrdersTable = ({
           </div>
 
           {/* Row 3: Status, Dates */}
-          <div className="flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold flex-1 min-w-0">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {[
-                  "DRAFT",
-                  "PENDING",
-                  "PROCESSING",
-                  "APPROVED",
-                  "DELIVERED",
-                  "CANCELLED",
-                ].map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="col-span-2 sm:col-span-1">
+              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+                <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs font-bold w-full">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  {[
+                    "DRAFT",
+                    "PENDING",
+                    "PROCESSING",
+                    "APPROVED",
+                    "DELIVERED",
+                    "CANCELLED",
+                  ].map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <DateRangeFilter
               start={dateFrom}
@@ -717,7 +719,7 @@ const OrdersTable = ({
                 onDateToChange(end);
               }}
               placeholder="Order Dates"
-              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1 min-w-0"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs w-full"
             />
             <DateRangeFilter
               start={deliveryDateFrom}
@@ -727,7 +729,7 @@ const OrdersTable = ({
                 onDeliveryDateToChange(end);
               }}
               placeholder="Delivery Dates"
-              className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1 min-w-0"
+              className="h-10 sm:h-11 text-[10px] sm:text-xs w-full"
             />
           </div>
         </div>

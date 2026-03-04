@@ -9,6 +9,7 @@ import {
   FormHeader,
   RecoveryModal,
   NavigationGuard,
+  FormSkeleton,
 } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
@@ -228,12 +229,7 @@ const OrderEdit = ({ id }: Props) => {
   if (loadingOrder || !draft) {
     return (
       <Container className="pt-10">
-        <div className="flex flex-col items-center justify-center py-20 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 animate-pulse">
-          <div className="h-10 w-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">
-            Loading Order...
-          </p>
-        </div>
+        <FormSkeleton sections={2} />
       </Container>
     );
   }

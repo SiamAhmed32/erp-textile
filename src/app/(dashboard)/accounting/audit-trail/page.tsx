@@ -3,7 +3,6 @@
 import { Container, PageHeader } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,33 +15,18 @@ import {
   ArrowUpDown,
   FileDown,
   History as HistoryIcon,
-  Search,
+  CalendarDays,
 } from "lucide-react";
+import { DateRangeFilter } from "@/components/reusables";
 import { useGetAllQuery } from "@/store/services/commonApi";
+import { useGetSelfQuery } from "@/store/services/authApi";
 import { format } from "date-fns";
 import { useMemo, useState } from "react";
+import { AuditEntry } from "./types";
+import { exportAuditTrailToPdf } from "./auditTrailPdf";
+import { notify } from "@/lib/notifications";
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-interface AuditEntry {
-  id: string;
-  voucherNo: string;
-  category: string;
-  date: string;
-  narration: string;
-  status: string;
-  buyer?: { name: string } | null;
-  supplier?: { name: string } | null;
-  createdBy?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-  lines?: {
-    type: string;
-    amount: string | number;
-    accountHead?: { name: string };
-  }[];
-}
+// Locally removed Interface AuditEntry (now in types.ts)
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const getCategoryColor = (category: string) => {
@@ -101,62 +85,82 @@ const getEntryAmount = (entry: AuditEntry): number => {
 
 // ── Page ───────────────────────────────────────────────────────────────────────
 const AuditTrailPage = () => {
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
-    field: "createdAt",
+    field: "date",
     dir: "desc",
   });
 
-  const handleSearchSubmit = () => {
-    setSearch(searchInput);
-    setPage(1);
-  };
-
-  const { data: auditPayload, isLoading } = useGetAllQuery({
-    path: "accounting/ledger/audit-trail",
-    page,
-    limit: 10,
-    search: search || undefined,
-    sortBy: sort.field,
-    sortOrder: sort.dir,
+  const { data: companyPayload } = useGetAllQuery({
+    path: "company-profiles",
+    limit: 1,
   });
 
-  const auditItems = useMemo(() => {
-    const raw =
-      (auditPayload as any)?.data?.data || (auditPayload as any)?.data;
-    return Array.isArray(raw) ? (raw as AuditEntry[]) : [];
-  }, [auditPayload]);
+  const companyProfile = (companyPayload as any)?.data?.[0];
 
-  const totalPages = useMemo(() => {
-    const meta =
-      (auditPayload as any)?.meta || (auditPayload as any)?.data?.meta;
-    return meta?.pagination?.totalPages || meta?.totalPages || 1;
+  const { data: selfPayload } = useGetSelfQuery(undefined);
+  const currentUser = (selfPayload as any)?.data;
+  const userName = currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`
+    : "System Admin";
+
+  const handleExport = async () => {
+    if (!auditItems || auditItems.length === 0) {
+      notify.error("No data available to export.");
+      return;
+    }
+
+    try {
+      await exportAuditTrailToPdf(
+        auditItems,
+        companyProfile,
+        userName,
+        startDate,
+        endDate,
+      );
+      notify.success("Audit Trail exported successfully.");
+    } catch (error) {
+      console.error("Export Error:", error);
+      notify.error("Failed to export Audit Trail.");
+    }
+  };
+
+  const {
+    data: auditPayload,
+    isFetching: isLoading,
+    refetch,
+  } = useGetAllQuery(
+    {
+      path: "accounting/ledger/audit-trail",
+      // Remove page for report style, use high limit
+      limit: 1000,
+      sortBy: sort.field,
+      sortOrder: sort.dir,
+      filters: {
+        startDate,
+        endDate,
+      },
+    },
+    { skip: !startDate || !endDate },
+  );
+
+  const auditItems = useMemo(() => {
+    // Structure from commonApi/BaseController is { data: [...] }
+    const raw = (auditPayload as any)?.data;
+    return Array.isArray(raw) ? (raw as AuditEntry[]) : [];
   }, [auditPayload]);
 
   const sortOptions = [
     {
-      value: "createdAt_desc",
-      label: "Newest First",
-      field: "createdAt",
-      dir: "desc",
-    },
-    {
-      value: "createdAt_asc",
-      label: "Oldest First",
-      field: "createdAt",
-      dir: "asc",
-    },
-    {
       value: "date_desc",
-      label: "Date (Newest)",
+      label: "Newest First",
       field: "date",
       dir: "desc",
     },
     {
       value: "date_asc",
-      label: "Date (Oldest)",
+      label: "Oldest First",
       field: "date",
       dir: "asc",
     },
@@ -277,47 +281,46 @@ const AuditTrailPage = () => {
           { label: "Accounting", href: "/accounting/overview" },
           { label: "Audit Trail" },
         ]}
-        // icon={HistoryIcon}
-        // actions={
-        //   <Button
-        //     variant="outline"
-        //     className="flex items-center gap-2 h-11 px-4 rounded-lg border-slate-200 bg-white text-slate-600 font-semibold text-xs uppercase tracking-wider shadow-sm hover:bg-slate-50"
-        //   >
-        //     <FileDown className="size-3.5" />
-        //     <span>Export All</span>
-        //   </Button>
-        // }
+        actions={
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            className="flex items-center gap-2 bg-black h-11 px-4 rounded-lg border-slate-200  text-white font-semibold text-xs uppercase tracking-wider shadow-sm hover:bg-black/80 hover:text-white"
+          >
+            <FileDown className="size-3.5 " />
+            <span>Export Trail</span>
+          </Button>
+        }
       />
 
-      {/* Toolbar — Search + Sort (single filter → fits one row) */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2 mb-4">
-        {/* Left: Search Group */}
-        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search voucher no. or narration..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button
-            onClick={handleSearchSubmit}
-            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
+      <div
+        className="flex flex-col lg:flex-row lg:justify-end gap-4 p-4 sm:p-6 mb-6 rounded-xl"
+        style={{ backgroundColor: "#F9FCFC" }}
+      >
+        {/* Date Selection */}
+        <div className="flex flex-col gap-1.5 min-w-[200px] sm:min-w-[300px]">
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] px-1">
+            Report Period
+          </span>
+          <DateRangeFilter
+            start={startDate}
+            end={endDate}
+            onFilterChange={({ start, end }) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            placeholder="Select Range"
+            className="h-11 shadow-sm border-slate-200 text-xs sm:text-sm"
+          />
         </div>
 
-        {/* Right: Sort Group */}
-        <div className="flex items-center gap-2 xl:justify-end">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
+        {/* Sort (Right) */}
+        <div className="flex flex-col gap-1.5 min-w-[140px] sm:min-w-[180px]">
+          <span className="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em] px-1">
+            Sort Order
+          </span>
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm">
             <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
-              Sort By
-            </span>
             <Select
               value={currentSortValue}
               onValueChange={(val) => {
@@ -327,22 +330,18 @@ const AuditTrailPage = () => {
                     field: opt.field,
                     dir: opt.dir as "asc" | "desc",
                   });
-                  setPage(1);
                 }
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full sm:w-[140px]">
-                <SelectValue placeholder="Newest First" />
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-full">
+                <SelectValue placeholder="Sort" />
               </SelectTrigger>
-              <SelectContent
-                align="end"
-                className="rounded-xl shadow-xl border-slate-200"
-              >
+              <SelectContent align="end">
                 {sortOptions.map((opt) => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="text-xs font-semibold py-2.5"
+                    className="text-[10px] sm:text-xs font-medium"
                   >
                     {opt.label}
                   </SelectItem>
@@ -353,18 +352,51 @@ const AuditTrailPage = () => {
         </div>
       </div>
 
-      <CustomTable
-        data={auditItems}
-        columns={columns}
-        isLoading={isLoading}
-        pagination={{
-          currentPage: page,
-          totalPages: totalPages,
-          onPageChange: setPage,
-        }}
-        scrollAreaHeight="h-[calc(100vh-320px)]"
-        rowClassName="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0"
-      />
+      {!startDate || !endDate ? (
+        <div className="mt-10 py-20 bg-white rounded-3xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="size-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+            <CalendarDays className="size-10 text-slate-300" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">
+            Ready to generate report
+          </h3>
+          <p className="text-slate-500 max-w-sm mb-8">
+            Please select a date range from the toolbar above to fetch the audit
+            trail logs for that period.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-full">
+              <div className="size-1.5 rounded-full bg-slate-300" />
+              Real-time Logs
+            </div>
+            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-full">
+              <div className="size-1.5 rounded-full bg-slate-300" />
+              PDF Export Ready
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="animate-in fade-in duration-500">
+          <CustomTable
+            data={auditItems}
+            columns={columns}
+            isLoading={isLoading}
+            skeletonRows={10}
+            scrollAreaHeight="h-[calc(100vh-320px)]"
+            rowClassName="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0"
+          />
+          {!isLoading && auditItems.length > 0 && (
+            <div className="mt-4 flex justify-between items-center px-2">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+                Showing {auditItems.length} Records
+              </span>
+              <span className="text-xs font-bold text-primary">
+                End of Report
+              </span>
+            </div>
+          )}
+        </div>
+      )}
     </Container>
   );
 };

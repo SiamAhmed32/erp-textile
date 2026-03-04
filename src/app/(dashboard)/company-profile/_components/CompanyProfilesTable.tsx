@@ -297,14 +297,9 @@ const CompanyProfilesTable = ({
         </div>
       </div>
 
-      {loading && (
-        <PrimaryText className="text-sm text-muted-foreground">
-          Loading company profiles...
-        </PrimaryText>
-      )}
-
       <CustomTable
         data={data}
+        isLoading={loading}
         columns={columns}
         pagination={{
           currentPage: page,

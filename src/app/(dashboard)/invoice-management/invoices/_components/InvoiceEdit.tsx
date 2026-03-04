@@ -8,6 +8,7 @@ import {
   PrimaryText,
   FormHeader,
   FormFooter,
+  FormSkeleton,
 } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,20 +166,18 @@ const InvoiceEdit = ({ id }: Props) => {
           </PrimaryText>
         )}
 
-        {loading && (
-          <PrimaryText className="mb-6 text-sm text-muted-foreground animate-pulse">
-            Loading invoice data...
-          </PrimaryText>
+        {loading ? (
+          <FormSkeleton sections={2} />
+        ) : (
+          <InvoiceForm
+            data={draft}
+            orders={orders}
+            terms={terms}
+            onChange={handleChange}
+            errors={errors}
+            disableOrder
+          />
         )}
-
-        <InvoiceForm
-          data={draft}
-          orders={orders}
-          terms={terms}
-          onChange={handleChange}
-          errors={errors}
-          disableOrder
-        />
 
         <FormFooter
           cancelHref={`/invoice-management/invoices/${id}`}
