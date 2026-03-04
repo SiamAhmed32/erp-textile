@@ -20,6 +20,7 @@ const initialFormData = {
   type: "ISSUE" as "ISSUE" | "SETTLE" | "EXPENSE",
   remarks: "",
   cashAccountId: "",
+  advanceAccountId: "",
   expenseAccountId: "",
   companyProfileId: "",
 };
@@ -81,6 +82,18 @@ export default function TransactionEntryModal({
   const expenseAccounts = React.useMemo(() => {
     return accounts
       .filter((a: any) => a.type === "EXPENSE")
+      .map((a: any) => ({ name: a.name, _id: a.id }));
+  }, [accounts]);
+
+  const advanceAccounts = React.useMemo(() => {
+    return accounts
+      .filter(
+        (a: any) =>
+          a.type === "ASSET" &&
+          (a.name.toLowerCase().includes("advance") ||
+            a.name.toLowerCase().includes("staff") ||
+            a.name.toLowerCase().includes("employee")),
+      )
       .map((a: any) => ({ name: a.name, _id: a.id }));
   }, [accounts]);
 
@@ -150,6 +163,8 @@ export default function TransactionEntryModal({
       // Clean up empty optional fields
       const submissionData: any = { ...formData };
       if (!submissionData.expenseAccountId) delete submissionData.expenseAccountId;
+      if (!submissionData.cashAccountId) delete submissionData.cashAccountId;
+      if (!submissionData.advanceAccountId) delete submissionData.advanceAccountId;
       if (!submissionData.remarks) delete submissionData.remarks;
 
       await postEntry({
@@ -286,18 +301,30 @@ export default function TransactionEntryModal({
               />
             )}
 
-          {(formData.type === "EXPENSE" || formData.type === "SETTLE" || formData.type === "ISSUE") && (
+          {(formData.type === "ISSUE" || formData.type === "SETTLE") && (
             <SelectBox
-              label="Expense Category"
-              options={expenseAccounts}
-              value={formData.expenseAccountId}
-              name="expenseAccountId"
+              label="Advance Account"
+              options={advanceAccounts}
+              value={formData.advanceAccountId}
+              name="advanceAccountId"
               onChange={handleInputChange}
-              placeholder="Select expense"
-              required={formData.type === "EXPENSE"}
+              placeholder="Select advance account"
+              required
             />
           )}
         </div>
+
+        {(formData.type === "EXPENSE" || formData.type === "SETTLE" || formData.type === "ISSUE") && (
+          <SelectBox
+            label="Expense Category"
+            options={expenseAccounts}
+            value={formData.expenseAccountId}
+            name="expenseAccountId"
+            onChange={handleInputChange}
+            placeholder="Select expense"
+            required={formData.type === "EXPENSE"}
+          />
+        )}
 
         <InputField
           label="Purpose"

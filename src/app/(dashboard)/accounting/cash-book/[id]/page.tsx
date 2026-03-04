@@ -215,6 +215,9 @@ export default function CashBookDetailPage({
                     Type
                   </TableHead>
                   <TableHead className="font-bold text-[11px] text-slate-600 h-10 uppercase tracking-wider">
+                    Account
+                  </TableHead>
+                  <TableHead className="font-bold text-[11px] text-slate-600 h-10 uppercase tracking-wider">
                     Narration / Purpose
                   </TableHead>
                   <TableHead className="text-right font-bold text-[11px] text-slate-600 h-10 px-6 uppercase tracking-wider">
@@ -227,7 +230,7 @@ export default function CashBookDetailPage({
                   Array.from({ length: 4 }).map((_, i) => (
                     <TableRow key={i}>
                       <TableCell
-                        colSpan={5}
+                        colSpan={6}
                         className="h-12 animate-pulse bg-slate-50/10"
                       />
                     </TableRow>
@@ -235,7 +238,7 @@ export default function CashBookDetailPage({
                 ) : transactions.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="h-32 text-center text-slate-400 text-[10px] uppercase tracking-widest font-bold"
                     >
                       Empty Transaction Set
@@ -270,6 +273,15 @@ export default function CashBookDetailPage({
                           )}
                         >
                           {tx.type}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-xs font-medium text-slate-600">
+                          {tx.type === "ISSUE"
+                            ? (tx.advanceAccount?.name || tx.expenseAccount?.name || "—")
+                            : tx.type === "SETTLE"
+                              ? (tx.cashAccount?.name || "—")
+                              : (tx.expenseAccount?.name || "—")}
                         </span>
                       </TableCell>
                       <TableCell>
