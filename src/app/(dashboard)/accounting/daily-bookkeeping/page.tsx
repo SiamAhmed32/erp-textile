@@ -63,7 +63,9 @@ interface JournalEntry {
   | "SUPPLIER_DUE"
   | "PAYMENT"
   | "JOURNAL"
-  | "CONTRA";
+  | "CONTRA"
+  | "MOI"
+  | "CASH_BOOK";
   narration: string;
   status: "DRAFT" | "POSTED";
   lines: JournalLine[];
@@ -77,6 +79,8 @@ const CATEGORY_COLORS: Record<string, string> = {
   JOURNAL: "bg-zinc-100 text-zinc-700 border-zinc-200",
   BUYER_DUE: "bg-amber-50 text-amber-700 border-amber-200",
   SUPPLIER_DUE: "bg-sky-50 text-sky-700 border-sky-200",
+  MOI: "bg-purple-50 text-purple-700 border-purple-200",
+  CASH_BOOK: "bg-purple-50 text-purple-700 border-purple-200",
 };
 
 const API_PATH = "accounting/journal-entries";
@@ -558,6 +562,12 @@ export default function DailyBookkeepingList() {
             className="text-xs font-semibold rounded-lg my-0.5"
           >
             Contra
+          </SelectItem>
+          <SelectItem
+            value="MOI"
+            className="text-xs font-semibold rounded-lg my-0.5"
+          >
+            MOI (Cash Book)
           </SelectItem>
         </SelectContent>
       </Select>

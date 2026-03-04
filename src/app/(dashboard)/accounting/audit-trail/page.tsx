@@ -41,6 +41,9 @@ const getCategoryColor = (category: string) => {
       return "red";
     case "CONTRA":
       return "slate";
+    case "MOI":
+    case "CASH_BOOK":
+      return "purple";
     default:
       return "indigo";
   }
@@ -65,6 +68,10 @@ const getCategoryTags = (entry: AuditEntry) => {
       break;
     case "PAYMENT":
       tags.push("Due Reduced", "Cash Out");
+      break;
+    case "MOI":
+    case "CASH_BOOK":
+      tags.push("Cash Book Entry");
       break;
     default:
       tags.push("General Ledger");
