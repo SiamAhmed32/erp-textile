@@ -250,13 +250,12 @@ export default function TransactionEntryModal({
         {
           accountHeadId: submissionData.cashAccountId,
           type: transactionMeta.cashSide,
-          role: "cash",
+          amount: parseFloat(formData.amount),
         },
         {
           accountHeadId: counterAccountId,
           type: transactionMeta.counterSide,
-          role: "counter",
-          kind: transactionMeta.counterKind,
+          amount: parseFloat(formData.amount),
         },
       ];
 
