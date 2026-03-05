@@ -115,15 +115,23 @@ export default function BuyerLedgerPage() {
             </div>
             <div>
               <p className="font-semibold text-sm text-zinc-900">{row.name}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs text-zinc-400 flex items-center gap-1">
-                  <Phone className="w-3 h-3" /> {row.phone}
-                </span>
-                <span className="text-xs text-zinc-400 flex items-center gap-1">
-                  <MapPin className="w-3 h-3" /> {row.location}
-                </span>
-              </div>
             </div>
+          </div>
+        ),
+      },
+      {
+        header: "Phone",
+        accessor: (row: any) => (
+          <div className="text-xs text-zinc-600 font-medium">
+            {row.phone}
+          </div>
+        ),
+      },
+      {
+        header: "Location",
+        accessor: (row: any) => (
+          <div className="text-xs text-zinc-500">
+            {row.location}
           </div>
         ),
       },
