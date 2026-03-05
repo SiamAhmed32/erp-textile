@@ -123,7 +123,7 @@ export default function SupplierLedgerDetailPage() {
                 ),
             },
             {
-                header: "Amount (৳)",
+                header: "Payment Amount (৳)",
                 className: "text-right",
                 accessor: (row: LedgerEntry) => (
                     <div className="text-right">
@@ -131,30 +131,7 @@ export default function SupplierLedgerDetailPage() {
                             " text-sm font-bold",
                             row.debit > 0 ? "text-emerald-600" : "text-rose-600"
                         )}>
-                            {row.debit > 0 ? "-" : "+"} {fmt(row.debit || row.credit)}
-                        </span>
-                    </div>
-                ),
-            },
-            {
-                header: "Balance (৳)",
-                className: "text-right",
-                accessor: (row: LedgerEntry) => (
-                    <div className="text-right">
-                        <span
-                            className={cn(
-                                " text-sm font-bold",
-                                row.balance > 0
-                                    ? "text-rose-600"
-                                    : row.balance < 0
-                                        ? "text-emerald-600"
-                                        : "text-zinc-400"
-                            )}
-                        >
-                            {fmt(row.balance)}
-                        </span>
-                        <span className="text-[10px] text-zinc-400 ml-1">
-                            {row.balance > 0 ? "Cr" : row.balance < 0 ? "Dr" : ""}
+                            {fmt(row.debit || row.credit)}
                         </span>
                     </div>
                 ),
@@ -186,66 +163,7 @@ export default function SupplierLedgerDetailPage() {
 
             />
 
-            {/* Stats - Full Width */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 mt-2">
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Total Paid
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-emerald-600  ">
-                            {fmt(totalDebit)}
-                        </p>
-                        <ArrowDownLeft className="text-emerald-200 w-8 h-8 opacity-50" />
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">Payments Made</p>
-                </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Total Billed
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-rose-600  ">
-                            {fmt(totalCredit)}
-                        </p>
-                        <ArrowUpRight className="text-rose-200 w-8 h-8 opacity-50" />
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">Accounts Payable</p>
-                </div>
-                <div
-                    className={cn(
-                        "rounded-xl p-5 border shadow-sm",
-                        closingBalance > 0
-                            ? "bg-rose-50 border-rose-200"
-                            : closingBalance < 0
-                                ? "bg-emerald-50 border-emerald-200"
-                                : "bg-zinc-50 border-zinc-200"
-                    )}
-                >
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Balance Owed
-                    </p>
-                    <p
-                        className={cn(
-                            "text-3xl font-bold  ",
-                            closingBalance > 0
-                                ? "text-rose-700"
-                                : closingBalance < 0
-                                    ? "text-emerald-700"
-                                    : "text-zinc-400"
-                        )}
-                    >
-                        {fmt(closingBalance)}
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1">
-                        {closingBalance > 0
-                            ? <span className="text-rose-700 font-medium">We Owe Them (Cr)</span>
-                            : closingBalance < 0
-                                ? <span className="text-emerald-700 font-medium">Overpaid</span>
-                                : "Fully Settled"}
-                    </p>
-                </div>
-            </div>
+
 
             {/* Supplier Information Card */}
             <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-8 shadow-sm">

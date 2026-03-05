@@ -1,10 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CustomModal, InputField, SelectBox } from "@/components/reusables";
+import { CustomModal, InputField } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useGetAllQuery, usePostMutation } from "@/store/services/commonApi";
 import { notify } from "@/lib/notifications";
+import { cn } from "@/lib/utils";
 
 interface TransactionEntryModalProps {
   open: boolean;
@@ -20,6 +29,7 @@ const initialFormData = {
   type: "ISSUE" as "ISSUE" | "SETTLE" | "EXPENSE",
   remarks: "",
   cashAccountId: "",
+  advanceAccountId: "",
   expenseAccountId: "",
   companyProfileId: "",
 };
@@ -33,24 +43,35 @@ export default function TransactionEntryModal({
   const [formData, setFormData] = useState(initialFormData);
 
   const [postEntry] = usePostMutation();
+  const shouldFetchModalData = open;
+  const shouldFetchUsers = open && !defaultEmployeeId;
 
   // Fetch users for employee (staff) selection
-  const { data: usersResponse } = useGetAllQuery({
-    path: "users",
-    limit: 100,
-  });
+  const { data: usersResponse } = useGetAllQuery(
+    {
+      path: "users",
+      limit: 100,
+    },
+    { skip: !shouldFetchUsers },
+  );
 
   // Fetch accounts for cash/expense selection
-  const { data: accountsResponse } = useGetAllQuery({
-    path: "accounting/accountHeads",
-    limit: 1000,
-  });
+  const { data: accountsResponse } = useGetAllQuery(
+    {
+      path: "accounting/accountHeads",
+      limit: 1000,
+    },
+    { skip: !shouldFetchModalData },
+  );
 
   // Fetch companies
-  const { data: companiesResponse } = useGetAllQuery({
-    path: "company-profiles",
-    limit: 100,
-  });
+  const { data: companiesResponse } = useGetAllQuery(
+    {
+      path: "company-profiles",
+      limit: 100,
+    },
+    { skip: !shouldFetchModalData },
+  );
 
   const users = React.useMemo(() => (usersResponse as any)?.data || [], [usersResponse]);
   const accounts = React.useMemo(() => (accountsResponse as any)?.data || [], [accountsResponse]);
@@ -84,6 +105,23 @@ export default function TransactionEntryModal({
       .map((a: any) => ({ name: a.name, _id: a.id }));
   }, [accounts]);
 
+  const advanceAccounts = React.useMemo(() => {
+    const namedAdvanceAccounts = accounts
+      .filter((a: any) => a.name?.toLowerCase().includes("advance"))
+      .map((a: any) => ({ name: a.name, _id: a.id }));
+
+    if (namedAdvanceAccounts.length > 0) return namedAdvanceAccounts;
+
+    return accounts
+      .filter(
+        (a: any) =>
+          a.type === "ASSET" &&
+          !a.name?.toLowerCase().includes("cash") &&
+          !a.name?.toLowerCase().includes("bank"),
+      )
+      .map((a: any) => ({ name: a.name, _id: a.id }));
+  }, [accounts]);
+
   useEffect(() => {
     if (open) {
       setFormData({
@@ -94,13 +132,53 @@ export default function TransactionEntryModal({
   }, [open, defaultEmployeeId]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const handleSelectChange = (name: keyof typeof initialFormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const transactionMeta = React.useMemo(() => {
+    if (formData.type === "SETTLE") {
+      return {
+        cashLabel: "Debit - Return To (Cash/Bank)",
+        counterLabel: "Credit - Advance Account",
+        cashSide: "DEBIT",
+        counterSide: "CREDIT",
+        counterKind: "ADVANCE",
+      } as const;
+    }
+
+    if (formData.type === "EXPENSE") {
+      return {
+        cashLabel: "Credit - Paid From (Cash/Bank)",
+        counterLabel: "Debit - Expense Category",
+        cashSide: "CREDIT",
+        counterSide: "DEBIT",
+        counterKind: "EXPENSE",
+      } as const;
+    }
+
+    return {
+      cashLabel: "Credit - Paid From (Cash/Bank)",
+      counterLabel: "Debit - Advance Account",
+      cashSide: "CREDIT",
+      counterSide: "DEBIT",
+      counterKind: "ADVANCE",
+    } as const;
+  }, [formData.type]);
+
+  const isCounterExpense = transactionMeta.counterKind === "EXPENSE";
+  const counterAccountValue = isCounterExpense
+    ? formData.expenseAccountId
+    : formData.advanceAccountId;
+  const counterAccountOptions = isCounterExpense
+    ? expenseAccounts
+    : advanceAccounts;
 
   // Auto-select first cash account
   useEffect(() => {
@@ -129,6 +207,9 @@ export default function TransactionEntryModal({
         "Please select a Cash/Bank account to issue funds from",
       );
     }
+    if (formData.type === "ISSUE" && !formData.advanceAccountId) {
+      return notify.error("Please select an Advance account");
+    }
     if (
       formData.type === "EXPENSE" &&
       (!formData.cashAccountId || !formData.expenseAccountId)
@@ -137,12 +218,9 @@ export default function TransactionEntryModal({
     }
     if (
       formData.type === "SETTLE" &&
-      !formData.expenseAccountId &&
-      !formData.cashAccountId
+      (!formData.cashAccountId || !formData.advanceAccountId)
     ) {
-      return notify.error(
-        "Please select an Expense or Cash account for settlement",
-      );
+      return notify.error("Please select both Cash and Advance accounts for settlement");
     }
 
     setSaving(true);
@@ -150,7 +228,36 @@ export default function TransactionEntryModal({
       // Clean up empty optional fields
       const submissionData: any = { ...formData };
       if (!submissionData.expenseAccountId) delete submissionData.expenseAccountId;
+      if (!submissionData.advanceAccountId) delete submissionData.advanceAccountId;
+      if (submissionData.remarks) {
+        submissionData.remarks = String(submissionData.remarks)
+          .replace(/\s*\[MOI_MAP:[^\]]*\]\s*/g, " ")
+          .trim();
+      }
       if (!submissionData.remarks) delete submissionData.remarks;
+
+      if (submissionData.type === "EXPENSE") {
+        delete submissionData.advanceAccountId;
+      } else {
+        delete submissionData.expenseAccountId;
+      }
+
+      const counterAccountId = isCounterExpense
+        ? submissionData.expenseAccountId
+        : submissionData.advanceAccountId;
+
+      const lines = [
+        {
+          accountHeadId: submissionData.cashAccountId,
+          type: transactionMeta.cashSide,
+          amount: parseFloat(formData.amount),
+        },
+        {
+          accountHeadId: counterAccountId,
+          type: transactionMeta.counterSide,
+          amount: parseFloat(formData.amount),
+        },
+      ];
 
       await postEntry({
         path: "moi-cash-books",
@@ -158,6 +265,7 @@ export default function TransactionEntryModal({
           ...submissionData,
           amount: parseFloat(formData.amount),
           status: "APPROVED",
+          lines,
         },
         invalidate: ["moi-cash-books", "moi-cash-books/summaries"],
       }).unwrap();
@@ -211,24 +319,50 @@ export default function TransactionEntryModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4 py-2">
         <div className="grid grid-cols-2 gap-4">
-          <SelectBox
-            label="Transaction Type"
-            options={typeOptions}
-            value={formData.type}
-            name="type"
-            onChange={handleInputChange}
-            placeholder="Select type"
-            required
-          />
-          <SelectBox
-            label="Company"
-            options={companyOptions}
-            value={formData.companyProfileId}
-            name="companyProfileId"
-            onChange={handleInputChange}
-            placeholder="Select company"
-            required
-          />
+          <div className="space-y-1.5">
+            <Label className="text-[13px] font-medium text-slate-700">
+              Transaction Type <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.type}
+              onValueChange={(value) =>
+                handleSelectChange("type", value as "ISSUE" | "SETTLE" | "EXPENSE")
+              }
+            >
+              <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-xl border-slate-200">
+                {typeOptions.map((opt) => (
+                  <SelectItem key={opt._id} value={opt._id} className="text-sm">
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[13px] font-medium text-slate-700">
+              Company <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.companyProfileId}
+              onValueChange={(value) =>
+                handleSelectChange("companyProfileId", value)
+              }
+            >
+              <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
+                <SelectValue placeholder="Select company" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-xl border-slate-200">
+                {companyOptions.map((opt) => (
+                  <SelectItem key={opt._id} value={opt._id} className="text-sm">
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -243,15 +377,26 @@ export default function TransactionEntryModal({
         </div>
 
         {!defaultEmployeeId && (
-          <SelectBox
-            label="Staff / User"
-            options={userOptions}
-            value={formData.employeeId}
-            name="employeeId"
-            onChange={handleInputChange}
-            placeholder="Search staff member..."
-            required
-          />
+          <div className="space-y-1.5">
+            <Label className="text-[13px] font-medium text-slate-700">
+              Staff / User <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formData.employeeId}
+              onValueChange={(value) => handleSelectChange("employeeId", value)}
+            >
+              <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
+                <SelectValue placeholder="Search staff member..." />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
+                {userOptions.map((opt) => (
+                  <SelectItem key={opt._id} value={opt._id} className="text-sm">
+                    {opt.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         <InputField
@@ -269,33 +414,68 @@ export default function TransactionEntryModal({
           {(formData.type === "ISSUE" ||
             formData.type === "EXPENSE" ||
             formData.type === "SETTLE") && (
-              <SelectBox
-                label={
-                  formData.type === "SETTLE"
-                    ? "Return to (Cash/Bank)"
-                    : "Paid From (Cash/Bank)"
-                }
-                options={cashAccounts}
-                value={formData.cashAccountId}
-                name="cashAccountId"
-                onChange={handleInputChange}
-                placeholder="Select account"
-                required={
-                  formData.type === "ISSUE" || formData.type === "EXPENSE"
-                }
-              />
+              <div className="space-y-1.5">
+                <Label className="text-[13px] font-medium text-slate-700">
+                  {transactionMeta.cashLabel} <span className="text-red-500">*</span>
+                </Label>
+                <Select
+                  value={formData.cashAccountId}
+                  onValueChange={(value) =>
+                    handleSelectChange("cashAccountId", value)
+                  }
+                >
+                  <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
+                    {cashAccounts.map((opt: any) => (
+                      <SelectItem
+                        key={opt._id}
+                        value={opt._id}
+                        className="text-sm"
+                      >
+                        {opt.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
 
           {(formData.type === "EXPENSE" || formData.type === "SETTLE" || formData.type === "ISSUE") && (
-            <SelectBox
-              label="Expense Category"
-              options={expenseAccounts}
-              value={formData.expenseAccountId}
-              name="expenseAccountId"
-              onChange={handleInputChange}
-              placeholder="Select expense"
-              required={formData.type === "EXPENSE"}
-            />
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-medium text-slate-700">
+                {transactionMeta.counterLabel} <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={counterAccountValue}
+                onValueChange={(value) =>
+                  handleSelectChange(
+                    isCounterExpense ? "expenseAccountId" : "advanceAccountId",
+                    value,
+                  )
+                }
+              >
+                <SelectTrigger
+                  className={cn("h-11 border-slate-200 bg-white font-medium")}
+                >
+                  <SelectValue
+                    placeholder={
+                      isCounterExpense
+                        ? "Select expense"
+                        : "Select advance account"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
+                  {counterAccountOptions.map((opt: any) => (
+                    <SelectItem key={opt._id} value={opt._id} className="text-sm">
+                      {opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
 
