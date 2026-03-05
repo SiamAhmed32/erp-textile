@@ -128,40 +128,11 @@ export default function BuyerLedgerPage() {
         ),
       },
       {
-        header: "Total Invoiced",
-        accessor: (row: any) => (
-          <div className=" font-bold text-sm text-zinc-600">
-            ৳{" "}
-            {(Number(row.totalInvoiced) || 0).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-            })}
-          </div>
-        ),
-      },
-      {
         header: "Total Received",
         accessor: (row: any) => (
           <div className=" font-bold text-sm text-emerald-600">
             ৳{" "}
             {(Number(row.totalReceived) || 0).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-            })}
-          </div>
-        ),
-      },
-      {
-        header: "Due Balance",
-        accessor: (row: any) => (
-          <div
-            className={cn(
-              " font-bold text-sm",
-              (Number(row.balance) || 0) > 0
-                ? "text-rose-600"
-                : "text-emerald-600",
-            )}
-          >
-            ৳{" "}
-            {(Number(row.balance) || 0).toLocaleString("en-IN", {
               minimumFractionDigits: 2,
             })}
           </div>

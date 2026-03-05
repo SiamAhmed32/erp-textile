@@ -125,7 +125,7 @@ export default function BuyerLedgerDetailPage() {
                 ),
             },
             {
-                header: "Amount (৳)",
+                header: "Buyer Amount (৳)",
                 className: "text-right",
                 accessor: (row: LedgerEntry) => (
                     <div className="text-right">
@@ -133,30 +133,7 @@ export default function BuyerLedgerDetailPage() {
                             " text-sm font-bold",
                             row.debit > 0 ? "text-indigo-600" : "text-emerald-600"
                         )}>
-                            {row.debit > 0 ? "+" : "-"} {fmt(row.debit || row.credit)}
-                        </span>
-                    </div>
-                ),
-            },
-            {
-                header: "Balance (৳)",
-                className: "text-right",
-                accessor: (row: LedgerEntry) => (
-                    <div className="text-right">
-                        <span
-                            className={cn(
-                                " text-sm font-bold",
-                                row.balance > 0
-                                    ? "text-amber-600"
-                                    : row.balance < 0
-                                        ? "text-emerald-600"
-                                        : "text-zinc-400"
-                            )}
-                        >
-                            {fmt(row.balance)}
-                        </span>
-                        <span className="text-[10px] text-zinc-400 ml-1">
-                            {row.balance > 0 ? "Dr" : row.balance < 0 ? "Cr" : ""}
+                            {fmt(row.debit || row.credit)}
                         </span>
                     </div>
                 ),
@@ -188,66 +165,7 @@ export default function BuyerLedgerDetailPage() {
 
             />
 
-            {/* Stats - Full Width */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 mt-2">
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Total Invoiced
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-indigo-600  ">
-                            {fmt(totalDebit)}
-                        </p>
-                        <ArrowUpRight className="text-indigo-200 w-8 h-8 opacity-50" />
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">Accounts Receivable</p>
-                </div>
-                <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Total Received
-                    </p>
-                    <div className="flex items-center justify-between">
-                        <p className="text-3xl font-bold text-emerald-600  ">
-                            {fmt(totalCredit)}
-                        </p>
-                        <ArrowDownLeft className="text-emerald-200 w-8 h-8 opacity-50" />
-                    </div>
-                    <p className="text-xs text-zinc-400 mt-1">Payments Collected</p>
-                </div>
-                <div
-                    className={cn(
-                        "rounded-xl p-5 border shadow-sm",
-                        closingBalance > 0
-                            ? "bg-amber-50 border-amber-200"
-                            : closingBalance < 0
-                                ? "bg-emerald-50 border-emerald-200"
-                                : "bg-zinc-50 border-zinc-200"
-                    )}
-                >
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-2">
-                        Balance Due
-                    </p>
-                    <p
-                        className={cn(
-                            "text-3xl font-bold  ",
-                            closingBalance > 0
-                                ? "text-amber-700"
-                                : closingBalance < 0
-                                    ? "text-emerald-700"
-                                    : "text-zinc-400"
-                        )}
-                    >
-                        {fmt(closingBalance)}
-                    </p>
-                    <p className="text-xs text-zinc-400 mt-1 flex items-center gap-1">
-                        {closingBalance > 0
-                            ? <span className="text-amber-700 font-medium">Outstanding (Dr)</span>
-                            : closingBalance < 0
-                                ? <span className="text-emerald-700 font-medium">Credit Balance</span>
-                                : "Fully Settled"}
-                    </p>
-                </div>
-            </div>
+
 
             {/* Buyer Information Card */}
             <div className="bg-white border border-zinc-200 rounded-xl p-6 mb-8 shadow-sm">
