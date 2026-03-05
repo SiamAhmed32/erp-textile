@@ -73,9 +73,18 @@ export default function TransactionEntryModal({
     { skip: !shouldFetchModalData },
   );
 
-  const users = React.useMemo(() => (usersResponse as any)?.data || [], [usersResponse]);
-  const accounts = React.useMemo(() => (accountsResponse as any)?.data || [], [accountsResponse]);
-  const companies = React.useMemo(() => (companiesResponse as any)?.data || [], [companiesResponse]);
+  const users = React.useMemo(
+    () => (usersResponse as any)?.data || [],
+    [usersResponse],
+  );
+  const accounts = React.useMemo(
+    () => (accountsResponse as any)?.data || [],
+    [accountsResponse],
+  );
+  const companies = React.useMemo(
+    () => (companiesResponse as any)?.data || [],
+    [companiesResponse],
+  );
 
   // Filtering accounts for selection
   const cashAccounts = React.useMemo(() => {
@@ -132,13 +141,18 @@ export default function TransactionEntryModal({
   }, [open, defaultEmployeeId]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSelectChange = (name: keyof typeof initialFormData, value: string) => {
+  const handleSelectChange = (
+    name: keyof typeof initialFormData,
+    value: string,
+  ) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -197,7 +211,12 @@ export default function TransactionEntryModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.employeeId || !formData.amount || !formData.purpose || !formData.companyProfileId) {
+    if (
+      !formData.employeeId ||
+      !formData.amount ||
+      !formData.purpose ||
+      !formData.companyProfileId
+    ) {
       return notify.error("Please fill in required fields");
     }
 
@@ -220,15 +239,19 @@ export default function TransactionEntryModal({
       formData.type === "SETTLE" &&
       (!formData.cashAccountId || !formData.advanceAccountId)
     ) {
-      return notify.error("Please select both Cash and Advance accounts for settlement");
+      return notify.error(
+        "Please select both Cash and Advance accounts for settlement",
+      );
     }
 
     setSaving(true);
     try {
       // Clean up empty optional fields
       const submissionData: any = { ...formData };
-      if (!submissionData.expenseAccountId) delete submissionData.expenseAccountId;
-      if (!submissionData.advanceAccountId) delete submissionData.advanceAccountId;
+      if (!submissionData.expenseAccountId)
+        delete submissionData.expenseAccountId;
+      if (!submissionData.advanceAccountId)
+        delete submissionData.advanceAccountId;
       if (submissionData.remarks) {
         submissionData.remarks = String(submissionData.remarks)
           .replace(/\s*\[MOI_MAP:[^\]]*\]\s*/g, " ")
@@ -326,14 +349,17 @@ export default function TransactionEntryModal({
             <Select
               value={formData.type}
               onValueChange={(value) =>
-                handleSelectChange("type", value as "ISSUE" | "SETTLE" | "EXPENSE")
+                handleSelectChange(
+                  "type",
+                  value as "ISSUE" | "SETTLE" | "EXPENSE",
+                )
               }
             >
               <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent className="rounded-xl shadow-xl border-slate-200">
-                {typeOptions.map((opt) => (
+                {typeOptions.map((opt: any) => (
                   <SelectItem key={opt._id} value={opt._id} className="text-sm">
                     {opt.name}
                   </SelectItem>
@@ -355,7 +381,7 @@ export default function TransactionEntryModal({
                 <SelectValue placeholder="Select company" />
               </SelectTrigger>
               <SelectContent className="rounded-xl shadow-xl border-slate-200">
-                {companyOptions.map((opt) => (
+                {companyOptions.map((opt: any) => (
                   <SelectItem key={opt._id} value={opt._id} className="text-sm">
                     {opt.name}
                   </SelectItem>
@@ -389,7 +415,7 @@ export default function TransactionEntryModal({
                 <SelectValue placeholder="Search staff member..." />
               </SelectTrigger>
               <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
-                {userOptions.map((opt) => (
+                {userOptions.map((opt: any) => (
                   <SelectItem key={opt._id} value={opt._id} className="text-sm">
                     {opt.name}
                   </SelectItem>
@@ -414,38 +440,42 @@ export default function TransactionEntryModal({
           {(formData.type === "ISSUE" ||
             formData.type === "EXPENSE" ||
             formData.type === "SETTLE") && (
-              <div className="space-y-1.5">
-                <Label className="text-[13px] font-medium text-slate-700">
-                  {transactionMeta.cashLabel} <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={formData.cashAccountId}
-                  onValueChange={(value) =>
-                    handleSelectChange("cashAccountId", value)
-                  }
-                >
-                  <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
-                    <SelectValue placeholder="Select account" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
-                    {cashAccounts.map((opt: any) => (
-                      <SelectItem
-                        key={opt._id}
-                        value={opt._id}
-                        className="text-sm"
-                      >
-                        {opt.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-          {(formData.type === "EXPENSE" || formData.type === "SETTLE" || formData.type === "ISSUE") && (
             <div className="space-y-1.5">
               <Label className="text-[13px] font-medium text-slate-700">
-                {transactionMeta.counterLabel} <span className="text-red-500">*</span>
+                {transactionMeta.cashLabel}{" "}
+                <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.cashAccountId}
+                onValueChange={(value) =>
+                  handleSelectChange("cashAccountId", value)
+                }
+              >
+                <SelectTrigger className="h-11 border-slate-200 bg-white font-medium">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
+                  {cashAccounts.map((opt: any) => (
+                    <SelectItem
+                      key={opt._id}
+                      value={opt._id}
+                      className="text-sm"
+                    >
+                      {opt.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(formData.type === "EXPENSE" ||
+            formData.type === "SETTLE" ||
+            formData.type === "ISSUE") && (
+            <div className="space-y-1.5">
+              <Label className="text-[13px] font-medium text-slate-700">
+                {transactionMeta.counterLabel}{" "}
+                <span className="text-red-500">*</span>
               </Label>
               <Select
                 value={counterAccountValue}
@@ -469,7 +499,11 @@ export default function TransactionEntryModal({
                 </SelectTrigger>
                 <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
                   {counterAccountOptions.map((opt: any) => (
-                    <SelectItem key={opt._id} value={opt._id} className="text-sm">
+                    <SelectItem
+                      key={opt._id}
+                      value={opt._id}
+                      className="text-sm"
+                    >
                       {opt.name}
                     </SelectItem>
                   ))}
