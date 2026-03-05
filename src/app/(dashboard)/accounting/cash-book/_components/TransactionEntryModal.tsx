@@ -29,6 +29,7 @@ const initialFormData = {
   type: "ISSUE" as "ISSUE" | "SETTLE" | "EXPENSE",
   remarks: "",
   cashAccountId: "",
+  advanceAccountId: "",
   expenseAccountId: "",
   companyProfileId: "",
 };
@@ -104,6 +105,23 @@ export default function TransactionEntryModal({
       .map((a: any) => ({ name: a.name, _id: a.id }));
   }, [accounts]);
 
+  const advanceAccounts = React.useMemo(() => {
+    const namedAdvanceAccounts = accounts
+      .filter((a: any) => a.name?.toLowerCase().includes("advance"))
+      .map((a: any) => ({ name: a.name, _id: a.id }));
+
+    if (namedAdvanceAccounts.length > 0) return namedAdvanceAccounts;
+
+    return accounts
+      .filter(
+        (a: any) =>
+          a.type === "ASSET" &&
+          !a.name?.toLowerCase().includes("cash") &&
+          !a.name?.toLowerCase().includes("bank"),
+      )
+      .map((a: any) => ({ name: a.name, _id: a.id }));
+  }, [accounts]);
+
   useEffect(() => {
     if (open) {
       setFormData({
@@ -123,6 +141,44 @@ export default function TransactionEntryModal({
   const handleSelectChange = (name: keyof typeof initialFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  const transactionMeta = React.useMemo(() => {
+    if (formData.type === "SETTLE") {
+      return {
+        cashLabel: "Debit - Return To (Cash/Bank)",
+        counterLabel: "Credit - Advance Account",
+        cashSide: "DEBIT",
+        counterSide: "CREDIT",
+        counterKind: "ADVANCE",
+      } as const;
+    }
+
+    if (formData.type === "EXPENSE") {
+      return {
+        cashLabel: "Credit - Paid From (Cash/Bank)",
+        counterLabel: "Debit - Expense Category",
+        cashSide: "CREDIT",
+        counterSide: "DEBIT",
+        counterKind: "EXPENSE",
+      } as const;
+    }
+
+    return {
+      cashLabel: "Credit - Paid From (Cash/Bank)",
+      counterLabel: "Debit - Advance Account",
+      cashSide: "CREDIT",
+      counterSide: "DEBIT",
+      counterKind: "ADVANCE",
+    } as const;
+  }, [formData.type]);
+
+  const isCounterExpense = transactionMeta.counterKind === "EXPENSE";
+  const counterAccountValue = isCounterExpense
+    ? formData.expenseAccountId
+    : formData.advanceAccountId;
+  const counterAccountOptions = isCounterExpense
+    ? expenseAccounts
+    : advanceAccounts;
 
   // Auto-select first cash account
   useEffect(() => {
@@ -151,6 +207,9 @@ export default function TransactionEntryModal({
         "Please select a Cash/Bank account to issue funds from",
       );
     }
+    if (formData.type === "ISSUE" && !formData.advanceAccountId) {
+      return notify.error("Please select an Advance account");
+    }
     if (
       formData.type === "EXPENSE" &&
       (!formData.cashAccountId || !formData.expenseAccountId)
@@ -159,12 +218,9 @@ export default function TransactionEntryModal({
     }
     if (
       formData.type === "SETTLE" &&
-      !formData.expenseAccountId &&
-      !formData.cashAccountId
+      (!formData.cashAccountId || !formData.advanceAccountId)
     ) {
-      return notify.error(
-        "Please select an Expense or Cash account for settlement",
-      );
+      return notify.error("Please select both Cash and Advance accounts for settlement");
     }
 
     setSaving(true);
@@ -172,7 +228,37 @@ export default function TransactionEntryModal({
       // Clean up empty optional fields
       const submissionData: any = { ...formData };
       if (!submissionData.expenseAccountId) delete submissionData.expenseAccountId;
+      if (!submissionData.advanceAccountId) delete submissionData.advanceAccountId;
+      if (submissionData.remarks) {
+        submissionData.remarks = String(submissionData.remarks)
+          .replace(/\s*\[MOI_MAP:[^\]]*\]\s*/g, " ")
+          .trim();
+      }
       if (!submissionData.remarks) delete submissionData.remarks;
+
+      if (submissionData.type === "EXPENSE") {
+        delete submissionData.advanceAccountId;
+      } else {
+        delete submissionData.expenseAccountId;
+      }
+
+      const counterAccountId = isCounterExpense
+        ? submissionData.expenseAccountId
+        : submissionData.advanceAccountId;
+
+      const lines = [
+        {
+          accountHeadId: submissionData.cashAccountId,
+          type: transactionMeta.cashSide,
+          role: "cash",
+        },
+        {
+          accountHeadId: counterAccountId,
+          type: transactionMeta.counterSide,
+          role: "counter",
+          kind: transactionMeta.counterKind,
+        },
+      ];
 
       await postEntry({
         path: "moi-cash-books",
@@ -180,6 +266,7 @@ export default function TransactionEntryModal({
           ...submissionData,
           amount: parseFloat(formData.amount),
           status: "APPROVED",
+          lines,
         },
         invalidate: ["moi-cash-books", "moi-cash-books/summaries"],
       }).unwrap();
@@ -330,12 +417,7 @@ export default function TransactionEntryModal({
             formData.type === "SETTLE") && (
               <div className="space-y-1.5">
                 <Label className="text-[13px] font-medium text-slate-700">
-                  {formData.type === "SETTLE"
-                    ? "Return to (Cash/Bank)"
-                    : "Paid From (Cash/Bank)"}{" "}
-                  {(formData.type === "ISSUE" || formData.type === "EXPENSE") && (
-                    <span className="text-red-500">*</span>
-                  )}
+                  {transactionMeta.cashLabel} <span className="text-red-500">*</span>
                 </Label>
                 <Select
                   value={formData.cashAccountId}
@@ -364,27 +446,30 @@ export default function TransactionEntryModal({
           {(formData.type === "EXPENSE" || formData.type === "SETTLE" || formData.type === "ISSUE") && (
             <div className="space-y-1.5">
               <Label className="text-[13px] font-medium text-slate-700">
-                Expense Category{" "}
-                {formData.type === "EXPENSE" && (
-                  <span className="text-red-500">*</span>
-                )}
+                {transactionMeta.counterLabel} <span className="text-red-500">*</span>
               </Label>
               <Select
-                value={formData.expenseAccountId}
+                value={counterAccountValue}
                 onValueChange={(value) =>
-                  handleSelectChange("expenseAccountId", value)
+                  handleSelectChange(
+                    isCounterExpense ? "expenseAccountId" : "advanceAccountId",
+                    value,
+                  )
                 }
               >
                 <SelectTrigger
-                  className={cn(
-                    "h-11 border-slate-200 bg-white font-medium",
-                    formData.type !== "EXPENSE" && "text-muted-foreground",
-                  )}
+                  className={cn("h-11 border-slate-200 bg-white font-medium")}
                 >
-                  <SelectValue placeholder="Select expense" />
+                  <SelectValue
+                    placeholder={
+                      isCounterExpense
+                        ? "Select expense"
+                        : "Select advance account"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl shadow-xl border-slate-200 max-h-72">
-                  {expenseAccounts.map((opt: any) => (
+                  {counterAccountOptions.map((opt: any) => (
                     <SelectItem key={opt._id} value={opt._id} className="text-sm">
                       {opt.name}
                     </SelectItem>
