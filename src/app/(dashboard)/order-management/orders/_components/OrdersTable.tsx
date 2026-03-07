@@ -338,7 +338,7 @@ const OrdersTable = ({
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-3 2xl:px-4 gap-2 rounded-lg font-medium shrink-0",
+              "h-11 px-3 2xl:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
@@ -449,7 +449,7 @@ const OrdersTable = ({
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}
@@ -563,7 +563,7 @@ const OrdersTable = ({
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0",
+                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}

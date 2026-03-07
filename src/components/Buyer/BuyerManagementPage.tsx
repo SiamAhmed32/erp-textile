@@ -20,7 +20,6 @@ import {
   usePostMutation,
   usePutMutation,
 } from "@/store/services/commonApi";
-import { useDebounce } from "use-debounce";
 const emptyBuyer: BuyerFormData = {
   name: "",
   email: "",
@@ -64,7 +63,21 @@ export function BuyerManagementPage() {
   const [postItem] = usePostMutation();
   const [patchItem] = usePatchMutation();
   const [putItem] = usePutMutation();
-  const [searchValue] = useDebounce(search, 500);
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const handleSearchSubmit = React.useCallback(() => {
+    setDebouncedSearch(search);
+    setPage(1);
+  }, [search]);
+
   const {
     data: buyersPayload,
     isFetching: loading,
@@ -74,7 +87,7 @@ export function BuyerManagementPage() {
     path: "buyers",
     page,
     limit: 10,
-    search: searchValue || undefined,
+    search: debouncedSearch || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {
@@ -224,6 +237,7 @@ export function BuyerManagementPage() {
         buyers={buyers}
         search={search}
         onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
         sort={sort}
         onSortChange={setSort}
         onEdit={handleEdit}

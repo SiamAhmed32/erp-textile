@@ -94,8 +94,14 @@ export function InvoiceTermsManagementPage() {
   React.useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
+      setPage(1);
     }, 500);
     return () => clearTimeout(handler);
+  }, [search]);
+
+  const handleSearchSubmit = React.useCallback(() => {
+    setDebouncedSearch(search);
+    setPage(1);
   }, [search]);
 
   const {
@@ -239,6 +245,7 @@ export function InvoiceTermsManagementPage() {
         terms={terms}
         search={search}
         onSearchChange={setSearch}
+        onSearchSubmit={handleSearchSubmit}
         sort={sort}
         onSortChange={setSort}
         onCreate={handleCreate}

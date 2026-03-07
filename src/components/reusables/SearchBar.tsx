@@ -38,7 +38,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     };
 
     return (
-        <div className={cn("flex w-full gap-2 flex-1", containerClassName)}>
+        <div className={cn("flex w-full gap-2 flex-1 max-w-[350px]", containerClassName)}>
             <div className={cn("relative flex-1", className)}>
                 <Search className="h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2 left-3" />
                 <Input

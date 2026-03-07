@@ -176,12 +176,12 @@ const InvoicesTable = ({
             value={search}
             onChange={onSearchChange}
             onSearch={onSearchSubmit}
-            containerClassName="flex-1 min-w-[200px]"
+            containerClassName="flex-1 max-w-[350px]"
           />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+              "h-11 px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
@@ -276,7 +276,7 @@ const InvoicesTable = ({
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}
@@ -374,7 +374,7 @@ const InvoicesTable = ({
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0",
+                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}

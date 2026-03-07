@@ -5,6 +5,7 @@ import {
   CustomModal,
   DateRangeFilter,
   PageHeader,
+  SearchBar,
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,6 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { notify } from "@/lib/notifications";
-import { useDebounce } from "use-debounce";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface JournalLine {
@@ -415,16 +415,21 @@ export default function DailyBookkeepingList() {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 500);
+    }, 300);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const handleSearchSubmit = () => {
+    setDebouncedSearch(search);
+    setPage(1);
+  };
 
   // Modal state
   const [viewEntry, setViewEntry] = useState<JournalEntry | null>(null);
   const [postEntry, setPostEntry] = useState<JournalEntry | null>(null);
   const [deleteEntry, setDeleteEntry] = useState<JournalEntry | null>(null);
   const [reverseEntry, setReverseEntry] = useState<JournalEntry | null>(null);
-  const [searchValue] = useDebounce(search, 500);
+
   // API hooks — backend supports: category, status, dateFrom, dateTo, search
   const { data, isLoading, refetch } = useGetAllQuery({
     path: API_PATH,
@@ -492,31 +497,27 @@ export default function DailyBookkeepingList() {
     <div
       className={
         isMobile
-          ? "flex w-full gap-2"
-          : "flex w-full gap-2 lg:max-w-md lg:flex-1"
+          ? "flex w-full items-center gap-2"
+          : "flex w-full items-center gap-2 lg:max-w-md lg:flex-1"
       }
     >
-      <div className="relative flex-1">
-        <Input
-          placeholder={
-            isMobile ? "Search..." : "Search voucher no. or narration..."
-          }
-          className="h-11 border-zinc-200 bg-white text-sm rounded-lg shadow-sm"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
-      <Button
+      <SearchBar
+        placeholder={
+          isMobile ? "Search..." : "Search voucher no. or narration..."
+        }
+        value={search}
+        onChange={setSearch}
+        onSearch={handleSearchSubmit}
+        inputClassName="h-11 text-xs sm:text-sm"
+      />
+      {/* <Button
         className={cn(
-          "bg-black text-white hover:bg-black/90 font-bold h-11 rounded-lg shrink-0",
+          "bg-black text-white hover:bg-black/90 font-bold h-11 rounded-lg shrink-0 ml-auto",
           isMobile ? "px-4" : "px-6",
         )}
       >
         {isMobile ? <Search className="h-4 w-4" /> : "Search"}
-      </Button>
+      </Button> */}
     </div>
   );
 

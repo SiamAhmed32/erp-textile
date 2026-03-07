@@ -250,28 +250,28 @@ const LCsTable: React.FC<LCsTableProps> = ({
         <div className="hidden lg:flex flex-col gap-3">
           {/* Desktop Row 1: Search (Left) & Filters (Right) */}
           <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 lg:w-full lg:max-w-md xl:max-w-lg">
-              <SearchBar
-                placeholder="Search..."
-                value={search}
-                onChange={onSearchChange}
-                onSearch={onSearchSubmit}
-                containerClassName="lg:max-w-md xl:max-w-lg"
-                inputClassName="lg:max-w-xs xl:max-w-sm"
-              />
-              <Button
-                variant={showDeleted ? "destructive" : "outline"}
-                className={cn(
-                  "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
-                  !showDeleted && "bg-white border-slate-200 text-slate-500",
-                )}
-                onClick={onToggleDeleted}
-                title={showDeleted ? "Show Active LCs" : "Show Deleted LCs"}
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>{showDeleted ? "Exit" : "Trash"}</span>
-              </Button>
-            </div>
+            {/* <div className="flex items-center gap-2 lg:w-full lg:max-w-md xl:max-w-lg"> */}
+            <SearchBar
+              placeholder="Search..."
+              value={search}
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
+              containerClassName="lg:max-w-md xl:max-w-lg"
+              inputClassName="lg:max-w-xs xl:max-w-sm"
+            />
+            <Button
+              variant={showDeleted ? "destructive" : "outline"}
+              className={cn(
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
+                !showDeleted && "bg-white border-slate-200 text-slate-500",
+              )}
+              onClick={onToggleDeleted}
+              title={showDeleted ? "Show Active LCs" : "Show Deleted LCs"}
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>{showDeleted ? "Exit" : "Trash"}</span>
+            </Button>
+            {/* </div> */}
 
             {/* Desktop Filters (Right Align) */}
             <div className="flex items-center gap-3">
@@ -413,7 +413,7 @@ const LCsTable: React.FC<LCsTableProps> = ({
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+                "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}
