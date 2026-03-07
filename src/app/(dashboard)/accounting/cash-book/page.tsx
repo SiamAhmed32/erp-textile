@@ -144,10 +144,10 @@ export default function CashBookPage() {
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {row.lastTransaction
               ? new Date(row.lastTransaction).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
               : "No activity"}
           </span>
         ),
@@ -183,13 +183,14 @@ export default function CashBookPage() {
           { label: "Cash Book" },
         ]}
         actions={
-          <div className="items-center gap-2 hidden lg:flex">
+          <div className="flex items-center gap-2">
             <Button
-              className="bg-black text-white hover:bg-black/90 shadow-sm h-10 px-6 font-semibold"
+              className="bg-black text-white hover:bg-black/90 shadow-sm h-9 sm:h-10 px-3 sm:px-6 font-semibold text-xs sm:text-sm"
               onClick={() => setIsEntryModalOpen(true)}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Record Transaction
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Record Transaction</span>
+              <span className="sm:hidden">Record</span>
             </Button>
           </div>
         }
