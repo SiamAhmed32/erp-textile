@@ -185,7 +185,7 @@ export default function CashBookPage() {
       <PageHeader
         title="MOI (Staff Cash Book)"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+          //  { label: "Accounting", href: "/accounting/overview" },
           { label: "Cash Book" },
         ]}
         actions={

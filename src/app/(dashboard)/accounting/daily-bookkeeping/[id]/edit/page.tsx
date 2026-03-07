@@ -266,8 +266,8 @@ export default function BookkeepingEditPage() {
       // POSTED entries cannot be edited — backend will reject
       notify.error(
         err?.data?.error?.message ||
-          err?.data?.message ||
-          "Could not update the entry. Please try again.",
+        err?.data?.message ||
+        "Could not update the entry. Please try again.",
       );
     }
   };
@@ -289,7 +289,7 @@ export default function BookkeepingEditPage() {
         <PageHeader
           title="Edit Journal Entry"
           breadcrumbItems={[
-            { label: "Accounting", href: "/accounting/overview" },
+            //  { label: "Accounting", href: "/accounting/overview" },
             {
               label: "Daily Bookkeeping",
               href: "/accounting/daily-bookkeeping",
@@ -415,77 +415,77 @@ export default function BookkeepingEditPage() {
               {/* Buyer sub-ledger */}
               {(activeCategory === "BUYER_DUE" ||
                 activeCategory === "RECEIPT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Buyer</OptionalLabel>
-                  <Controller
-                    name="buyerId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? undefined : val)
-                        }
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Select a buyer..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No buyer attached —
-                          </SelectItem>
-                          {buyers.map((b) => (
-                            <SelectItem key={b.id} value={b.id}>
-                              {b.name}
-                              {b.location ? ` (${b.location})` : ""}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Buyer</OptionalLabel>
+                    <Controller
+                      name="buyerId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select a buyer..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No buyer attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link to a buyer for sub-ledger tracking.
-                  </HelperText>
-                </div>
-              )}
+                            {buyers.map((b) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                                {b.location ? ` (${b.location})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link to a buyer for sub-ledger tracking.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* Supplier sub-ledger */}
               {(activeCategory === "SUPPLIER_DUE" ||
                 activeCategory === "PAYMENT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Supplier</OptionalLabel>
-                  <Controller
-                    name="supplierId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? undefined : val)
-                        }
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white">
-                          <SelectValue placeholder="Select a supplier..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No supplier attached —
-                          </SelectItem>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Supplier</OptionalLabel>
+                    <Controller
+                      name="supplierId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white">
+                            <SelectValue placeholder="Select a supplier..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No supplier attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link to a supplier for sub-ledger tracking.
-                  </HelperText>
-                </div>
-              )}
+                            {suppliers.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link to a supplier for sub-ledger tracking.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* Voucher Lines */}
               <div className="space-y-4">
@@ -533,7 +533,7 @@ export default function BookkeepingEditPage() {
                                 className={cn(
                                   "bg-white",
                                   errors.lines?.[index]?.accountHeadId &&
-                                    "border-red-400",
+                                  "border-red-400",
                                 )}
                               >
                                 <SelectValue placeholder="Select account head..." />

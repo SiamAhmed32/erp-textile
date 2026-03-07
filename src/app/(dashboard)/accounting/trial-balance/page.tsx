@@ -172,7 +172,7 @@ export default function TrialBalancePage() {
       <PageHeader
         title="Trial Balance"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Trial Balance" },
         ]}
         actions={

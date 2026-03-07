@@ -180,7 +180,7 @@ export default function BuyerLedgerPage() {
       <PageHeader
         title="Buyer Ledger Summary"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Buyer Ledger" },
         ]}
         icon={Users}

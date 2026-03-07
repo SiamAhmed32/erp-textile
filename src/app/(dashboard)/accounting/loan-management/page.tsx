@@ -427,7 +427,7 @@ export default function LoanManagementPage() {
       <PageHeader
         title="Debt Portfolio"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Debt Portfolio" },
         ]}
         actions={

@@ -70,7 +70,7 @@ const BanksPage = () => {
     } catch (error: any) {
       notify.error(
         error?.data?.message ||
-          `Could not ${isArchiving ? "archive" : "restore"} the bank account. Please try again.`,
+        `Could not ${isArchiving ? "archive" : "restore"} the bank account. Please try again.`,
       );
     }
   };
@@ -81,7 +81,7 @@ const BanksPage = () => {
       <PageHeader
         title="Bank Management"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+          //  { label: "Accounting", href: "/accounting/overview" },
           { label: "Bank Management" },
         ]}
         actions={

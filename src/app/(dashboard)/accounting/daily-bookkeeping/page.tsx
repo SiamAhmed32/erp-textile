@@ -879,7 +879,7 @@ export default function DailyBookkeepingList() {
       <PageHeader
         title="Daily Bookkeeping"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Daily Bookkeeping" },
         ]}
         actions={
