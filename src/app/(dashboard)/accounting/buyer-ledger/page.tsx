@@ -6,12 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useGetAllQuery } from "@/store/services/commonApi";
 import { format } from "date-fns";
-import {
-  BookOpen,
-  ExternalLink,
-  Users,
-  ArrowUpDown,
-} from "lucide-react";
+import { BookOpen, ExternalLink, Users, ArrowUpDown } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Buyer } from "./_components/types";
@@ -114,17 +109,13 @@ export default function BuyerLedgerPage() {
       {
         header: "Phone",
         accessor: (row: any) => (
-          <div className="text-xs text-zinc-600 font-medium">
-            {row.phone}
-          </div>
+          <div className="text-xs text-zinc-600 font-medium">{row.phone}</div>
         ),
       },
       {
         header: "Location",
         accessor: (row: any) => (
-          <div className="text-xs text-zinc-500">
-            {row.location}
-          </div>
+          <div className="text-xs text-zinc-500">{row.location}</div>
         ),
       },
       {

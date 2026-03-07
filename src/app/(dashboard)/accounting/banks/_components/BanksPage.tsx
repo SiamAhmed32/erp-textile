@@ -4,10 +4,7 @@ import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  useGetAllQuery,
-  usePatchMutation,
-} from "@/store/services/commonApi";
+import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import { Bank } from "./types";
 import BankToolbar from "./BankToolbar";
 import BanksTable from "./BanksTable";

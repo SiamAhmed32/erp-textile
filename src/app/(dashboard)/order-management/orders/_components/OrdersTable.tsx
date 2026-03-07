@@ -13,7 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PrimaryText, DateRangeFilter, SearchBar } from "@/components/reusables";
+import {
+  PrimaryText,
+  DateRangeFilter,
+  SearchBar,
+} from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
@@ -289,15 +293,12 @@ const OrdersTable = ({
         header: "Amount",
         className: "",
         accessor: (row: Order) => {
-          const orderItem = Array.isArray(row.orderItems)
-            ? row.orderItems[0]
-            : row.orderItems;
-          const amount =
-            orderItem?.fabricItem?.totalAmount ||
-            orderItem?.labelItem?.totalAmount ||
-            orderItem?.cartonItem?.totalAmount ||
-            "-";
-          return <div className="px-4 py-2 font-semibold">{amount}</div>;
+          const amount = row.totalAmount ?? "-";
+          return (
+            <div className="px-4 py-2 font-semibold">
+              {amount !== "-" ? `৳${Number(amount).toLocaleString()}` : "-"}
+            </div>
+          );
         },
       },
       // {
@@ -375,7 +376,6 @@ const OrdersTable = ({
       <div className="flex flex-col gap-3">
         {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
         <div className="hidden xl:flex items-center gap-2 2xl:gap-3 w-full">
-
           <SearchBar
             placeholder="Search..."
             value={search}
