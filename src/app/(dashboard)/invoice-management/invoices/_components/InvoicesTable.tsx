@@ -2,7 +2,6 @@
 
 import React, { useMemo } from "react";
 import CustomTable from "@/components/reusables/CustomTable";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText, DateRangeFilter } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter, SearchBar } from "@/components/reusables";
 import { Invoice } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import InvoiceActions from "./InvoiceActions";
@@ -75,8 +74,8 @@ const InvoicesTable = ({
   onExport,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => {},
-  onRestore = () => {},
+  onToggleDeleted = () => { },
+  onRestore = () => { },
   sort,
   onSortChange,
 }: Props) => {
@@ -172,19 +171,13 @@ const InvoicesTable = ({
       <div className="flex flex-col gap-3">
         {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
         <div className="hidden xl:flex items-center gap-3">
-          <Input
+          <SearchBar
             placeholder="Search..."
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-[200px]"
+            onChange={onSearchChange}
+            onSearch={onSearchSubmit}
+            containerClassName="flex-1 min-w-[200px]"
           />
-          <Button
-            onClick={onSearchSubmit}
-            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            Search
-          </Button>
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
@@ -273,19 +266,13 @@ const InvoicesTable = ({
         <div className="hidden lg:flex xl:hidden flex-col gap-3">
           {/* Row 1: Search, Trash, Sort */}
           <div className="flex items-center gap-3">
-            <Input
+            <SearchBar
               placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
+              containerClassName="flex-1"
             />
-            <Button
-              onClick={onSearchSubmit}
-              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            >
-              Search
-            </Button>
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
@@ -376,20 +363,14 @@ const InvoicesTable = ({
         <div className="flex lg:hidden flex-col gap-2 sm:gap-3">
           {/* Row 1: Search, Search Btn, Trash */}
           <div className="flex items-center gap-2">
-            <Input
+            <SearchBar
               placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-0"
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
+              containerClassName="flex-1 min-w-0"
+              inputClassName="h-10 sm:h-11"
             />
-            <Button
-              onClick={onSearchSubmit}
-              className="h-10 sm:h-11 px-3 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            >
-              <Search className="h-4 w-4 sm:hidden" />
-              <span className="hidden sm:inline text-xs">Search</span>
-            </Button>
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(

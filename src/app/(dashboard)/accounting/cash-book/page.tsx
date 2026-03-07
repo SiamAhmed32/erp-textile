@@ -150,10 +150,10 @@ export default function CashBookPage() {
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {row.lastTransaction
               ? new Date(row.lastTransaction).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
               : "No activity"}
           </span>
         ),
@@ -272,10 +272,9 @@ export default function CashBookPage() {
                 value={searchInput}
                 onChange={setSearchInput}
                 onSearch={handleSearchSubmit}
-                showButton
-                inputClassName="h-10 sm:h-11"
+                inputClassName="h-9 sm:h-11 text-xs sm:text-sm"
               />
-              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
+              <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-9 sm:h-11 shadow-sm shrink-0">
                 <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
                 <span className="hidden sm:block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
                   Sort By
@@ -291,7 +290,7 @@ export default function CashBookPage() {
                       });
                   }}
                 >
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-semibold uppercase tracking-wider w-[80px] sm:w-[130px]">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-semibold uppercase tracking-wider w-[70px] sm:w-[130px]">
                     <SelectValue placeholder="Sort" />
                   </SelectTrigger>
                   <SelectContent
@@ -321,7 +320,7 @@ export default function CashBookPage() {
                   setDateRange(range);
                   setPage(1);
                 }}
-                className="h-10 sm:h-11 text-[10px] sm:text-xs flex-1"
+                className="h-9 sm:h-11 text-[10px] sm:text-xs flex-1"
               />
             </div>
           </div>

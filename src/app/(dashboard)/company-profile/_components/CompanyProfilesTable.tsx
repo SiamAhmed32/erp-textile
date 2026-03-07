@@ -4,7 +4,6 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { ChevronDown, ArrowUpDown, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PrimaryText } from "@/components/reusables";
+import { PrimaryText, SearchBar } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { CompanyProfile } from "./types";
 import { companyTypeOptions, statusOptions } from "./constants";
@@ -59,8 +58,8 @@ const CompanyProfilesTable = ({
   onRowClick,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => {},
-  onRestore = () => {},
+  onToggleDeleted = () => { },
+  onRestore = () => { },
 }: Props) => {
   const sortOptions = [
     {
@@ -131,11 +130,10 @@ const CompanyProfilesTable = ({
         header: "Status",
         accessor: (row: CompanyProfile) => (
           <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              row.status === "active"
-                ? "bg-emerald-100 text-emerald-700"
-                : "bg-slate-200 text-slate-700"
-            }`}
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${row.status === "active"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-slate-200 text-slate-700"
+              }`}
           >
             {row.status === "active" ? "Active" : "Inactive"}
           </span>
@@ -162,18 +160,13 @@ const CompanyProfilesTable = ({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         {/* Left: Search Group */}
         <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0">
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
+          <SearchBar
+            placeholder="Search..."
+            value={search}
+            onChange={onSearchChange}
+            containerClassName="flex-1"
+            inputClassName="h-11"
+          />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(

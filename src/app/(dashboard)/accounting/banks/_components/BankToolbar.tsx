@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Search, ArrowUpDown, Plus } from "lucide-react";
+import { ArrowUpDown, Plus } from "lucide-react";
+import { SearchBar } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -68,22 +68,14 @@ export default function BankToolbar({
 
       {/* Mobile row 3 + Tablet/Desktop row: Search + Filter */}
       <div className="flex items-center gap-2 sm:gap-3 w-full min-w-0 lg:justify-between">
-        <div className="flex items-center gap-2 flex-1 md:flex-[65] lg:flex-none lg:w-full lg:max-w-md min-w-0">
-          <Input
-            placeholder="Search banks..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSearch()}
-            className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-0"
-          />
-          <Button
-            onClick={onSearch}
-            className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            <Search className="h-4 w-4" />
-            <span className="hidden lg:inline">Search</span>
-          </Button>
-        </div>
+        <SearchBar
+          placeholder="Search banks..."
+          value={searchInput}
+          onChange={setSearchInput}
+          onSearch={onSearch}
+          containerClassName="flex-1 md:flex-[65] lg:flex-none lg:w-full lg:max-w-md min-w-0"
+          inputClassName="h-10 sm:h-11 text-xs sm:text-sm"
+        />
 
         <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink md:flex-[35] lg:flex-none lg:w-auto lg:ml-3 min-w-0 overflow-hidden">
           <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />

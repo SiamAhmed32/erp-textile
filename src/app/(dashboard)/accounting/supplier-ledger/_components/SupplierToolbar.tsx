@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
-import { Search, ChevronDown, ArrowUpDown } from "lucide-react";
+import { ChevronDown, ArrowUpDown } from "lucide-react";
+import { SearchBar } from "@/components/reusables";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,19 +57,13 @@ export default function SupplierToolbar({
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       {/* Left: Search Group */}
-      <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-        <div className="relative flex-1">
-          <Input
-            placeholder="Search supplier name, code, email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-          />
-        </div>
-        <Button className="h-11 px-6 bg-black text-white hover:bg-black/80 font-medium">
-          Search
-        </Button>
-      </div>
+      <SearchBar
+        placeholder="Search supplier name, code, email..."
+        value={search}
+        onChange={setSearch}
+        containerClassName="lg:max-w-md lg:flex-1"
+        inputClassName="h-9 sm:h-11 text-xs sm:text-sm"
+      />
 
       {/* Right: Filters Group */}
       <div className="flex flex-wrap items-center gap-2 lg:justify-end">

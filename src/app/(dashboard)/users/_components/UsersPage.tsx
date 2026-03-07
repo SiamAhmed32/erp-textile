@@ -14,7 +14,7 @@ import { usePutMutation } from "@/store/services/commonApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
-import { PageHeader, CustomModal } from "@/components/reusables";
+import { PageHeader, CustomModal, SearchBar } from "@/components/reusables";
 import {
   Plus,
   ChevronDown,
@@ -163,22 +163,14 @@ const UsersPage = () => {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: Search Group */}
         <div className="flex w-full items-center gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search by username, email, name..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button
-            onClick={handleSearchSubmit}
-            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-semibold rounded-lg shrink-0"
-          >
-            <SearchIcon className="h-4 w-4 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
+          <SearchBar
+            placeholder="Search by username, email, name..."
+            value={searchInput}
+            onChange={setSearchInput}
+            onSearch={handleSearchSubmit}
+            containerClassName="flex-1"
+            inputClassName="h-11"
+          />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(

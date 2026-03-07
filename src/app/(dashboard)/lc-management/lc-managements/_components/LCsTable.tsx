@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LCManagement } from "./types";
-import { DateRangeFilter } from "@/components/reusables";
+import { DateRangeFilter, SearchBar } from "@/components/reusables";
 import { formatDate } from "./utils";
 import { cn } from "@/lib/utils";
 
@@ -90,8 +90,8 @@ const LCsTable: React.FC<LCsTableProps> = ({
   onEdit,
   onDelete,
   showDeleted = false,
-  onToggleDeleted = () => {},
-  onRestore = () => {},
+  onToggleDeleted = () => { },
+  onRestore = () => { },
   sort,
   onSortChange,
 }) => {
@@ -251,19 +251,14 @@ const LCsTable: React.FC<LCsTableProps> = ({
           {/* Desktop Row 1: Search (Left) & Filters (Right) */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 lg:w-full lg:max-w-md xl:max-w-lg">
-              <Input
+              <SearchBar
                 placeholder="Search..."
                 value={search}
-                onChange={(e) => onSearchChange(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-                className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 lg:max-w-xs xl:max-w-sm"
+                onChange={onSearchChange}
+                onSearch={onSearchSubmit}
+                containerClassName="lg:max-w-md xl:max-w-lg"
+                inputClassName="lg:max-w-xs xl:max-w-sm"
               />
-              <Button
-                onClick={onSearchSubmit}
-                className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              >
-                Search
-              </Button>
               <Button
                 variant={showDeleted ? "destructive" : "outline"}
                 className={cn(
@@ -408,20 +403,13 @@ const LCsTable: React.FC<LCsTableProps> = ({
         <div className="flex lg:hidden flex-col gap-2">
           {/* Mobile Row 1: Search & Trash */}
           <div className="flex items-center gap-2">
-            <Input
+            <SearchBar
               placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
+              inputClassName="h-11 text-xs sm:text-sm"
             />
-            <Button
-              onClick={onSearchSubmit}
-              className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            >
-              <Search className="h-5 w-5 sm:hidden" />
-              <span className="hidden sm:inline">Search</span>
-            </Button>
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(

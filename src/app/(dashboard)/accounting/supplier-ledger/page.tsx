@@ -1,9 +1,8 @@
 "use client";
 
-import { Container, PageHeader } from "@/components/reusables";
+import { Container, PageHeader, SearchBar } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,7 +18,6 @@ import {
   ExternalLink,
   MapPin,
   Phone,
-  Search,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -219,24 +217,14 @@ export default function SupplierLedgerPage() {
       {/* Toolbar — Search + Sort (single filter → fits one row) */}
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2 mb-4">
         {/* Left: Search Group */}
-        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search by name or location..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button
-            onClick={handleSearchSubmit}
-            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
-        </div>
+        <SearchBar
+          placeholder="Search by name or location..."
+          value={searchInput}
+          onChange={setSearchInput}
+          onSearch={handleSearchSubmit}
+          containerClassName="xl:max-w-md"
+          inputClassName="h-10 sm:h-11"
+        />
 
         {/* Right: Sort Group */}
         <div className="flex items-center gap-2 xl:justify-end">

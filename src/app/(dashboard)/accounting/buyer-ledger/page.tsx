@@ -215,8 +215,8 @@ export default function BuyerLedgerPage() {
           value={searchInput}
           onChange={setSearchInput}
           onSearch={handleSearchSubmit}
-          // showButton
           containerClassName="xl:max-w-md"
+          inputClassName="h-10 sm:h-11"
         />
 
         {/* Right: Sort Group */}
