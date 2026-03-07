@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { useGetAllQuery } from "@/store/services/commonApi";
 import { ArrowUpDown, Eye, Plus } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TransactionEntryModal from "./_components/TransactionEntryModal";
 
 const fmt = (n: number) =>
@@ -28,16 +28,24 @@ const fmt = (n: number) =>
 export default function CashBookPage() {
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [sort, setSort] = useState<{ field: string; dir: "asc" | "desc" }>({
     field: "createdAt",
     dir: "desc",
   });
 
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [searchInput]);
+
   const handleSearchSubmit = () => {
-    setSearch(searchInput);
+    setDebouncedSearch(searchInput);
     setPage(1);
   };
 
@@ -79,7 +87,7 @@ export default function CashBookPage() {
     path: "moi-cash-books/summaries",
     page,
     limit: 10,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     sortBy: sort.field,
     sortOrder: sort.dir,
     filters: {
