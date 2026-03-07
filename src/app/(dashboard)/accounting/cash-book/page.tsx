@@ -201,14 +201,15 @@ export default function CashBookPage() {
         <div className="flex flex-col gap-3 py-2 mb-2">
           {/* DESKTOP VIEW (>1280px): Single row */}
           <div className="hidden xl:flex items-center justify-between gap-3">
-            <div className="flex w-full gap-2 max-w-md flex-1">
+            <div className="flex w-full gap-2 max-w-[400px] flex-1">
               <div className="relative flex-1">
+                <Search className="h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2 left-3" />
                 <Input
                   placeholder="Search staff members..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-                  className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
+                  className="h-11 bg-white border-slate-200 rounded-lg shadow-sm pl-9"
                 />
               </div>
               <Button
@@ -219,17 +220,17 @@ export default function CashBookPage() {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-[200px]">
-                <DateRangeFilter
-                  start={dateRange.start}
-                  end={dateRange.end}
-                  onFilterChange={(range) => {
-                    setDateRange(range);
-                    setPage(1);
-                  }}
-                  className="h-11 text-xs"
-                />
-              </div>
+
+              <DateRangeFilter
+                start={dateRange.start}
+                end={dateRange.end}
+                onFilterChange={(range) => {
+                  setDateRange(range);
+                  setPage(1);
+                }}
+                className="h-11 text-xs"
+              />
+
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
                 <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
