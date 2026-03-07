@@ -120,11 +120,11 @@ function DashboardCard({
     >
       <div className="px-6 py-5 flex items-center justify-between border-b border-slate-50 max-[324px]:flex-col max-[324px]:items-start max-[324px]:gap-2">
         <div>
-          <h3 className="text-base font-bold text-slate-900 whitespace-nowrap">
+          <h3 className="text-base font-semibold text-slate-900 whitespace-nowrap">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-xs mt-0.5 font-bold uppercase tracking-widest leading-none text-slate-500">
+            <p className="text-[10px] mt-0.5 font-bold uppercase tracking-widest leading-none text-slate-400">
               {subtitle}
             </p>
           )}
@@ -171,13 +171,13 @@ function KPICard({
         <Icon size={20} style={{ color: accent }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 leading-none">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 leading-none">
           {title}
         </p>
         {loading ? (
           <Skeleton className="h-8 w-24 mt-2" />
         ) : (
-          <p className="text-2xl font-black text-slate-900 mt-2 tracking-tight">
+          <p className="text-2xl font-bold text-slate-900 mt-2 tracking-tight">
             {value}
           </p>
         )}
@@ -185,7 +185,7 @@ function KPICard({
           <div className="flex items-center gap-1.5 mt-2">
             <span
               className={cn(
-                "flex items-center gap-0.5 text-xs font-bold",
+                "flex items-center gap-0.5 text-xs font-semibold",
                 up ? "text-emerald-500" : "text-rose-500",
               )}
             >
@@ -198,15 +198,18 @@ function KPICard({
             </span>
           </div>
         )}
-        <p className="text-[11px] text-slate-400 font-bold mt-1">{sub}</p>
+        <p className="text-[10px] text-slate-400 font-medium mt-1">{sub}</p>
       </div>
     </div>
   );
 }
 
 // ─── Alert Banner ───────────────────────────────────────────
-function AlertBanner() {
-  const { data } = useGetDashboardAlertsQuery(undefined);
+function AlertBanner({ dateRange }: { dateRange: DateRange }) {
+  const { data } = useGetDashboardAlertsQuery({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   const alerts: {
     type: "warning" | "info";
     text: string;
@@ -255,8 +258,11 @@ function AlertBanner() {
 }
 
 // ─── Revenue vs Expense (FULL WIDTH) ───────────────────────
-function RevenueTrendChart() {
-  const { data, isLoading } = useGetRevenueTrendQuery(undefined);
+function RevenueTrendChart({ dateRange }: { dateRange: DateRange }) {
+  const { data, isLoading } = useGetRevenueTrendQuery({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   const chartData: any[] = data?.data || [];
 
   const hasData = chartData.some((d) => d.revenue > 0 || d.expense > 0);
@@ -269,7 +275,7 @@ function RevenueTrendChart() {
   return (
     <DashboardCard
       title="Revenue vs Expense"
-      subtitle="12-Month Performance Overview"
+      subtitle="Performance Overview"
     >
       {isLoading ? (
         <Skeleton className="h-64 w-full rounded-2xl" />
@@ -386,9 +392,21 @@ function RevenueTrendChart() {
 }
 
 // ─── Aging Chart (AR & AP) ─────────────────────────────────
-function AgingChart({ type }: { type: "AR" | "AP" }) {
-  const arQuery = useGetARagingQuery(undefined, { skip: type !== "AR" });
-  const apQuery = useGetAPagingQuery(undefined, { skip: type !== "AP" });
+function AgingChart({ type, dateRange }: { type: "AR" | "AP"; dateRange: DateRange }) {
+  const arQuery = useGetARagingQuery(
+    {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    },
+    { skip: type !== "AR" },
+  );
+  const apQuery = useGetAPagingQuery(
+    {
+      startDate: dateRange.startDate,
+      endDate: dateRange.endDate,
+    },
+    { skip: type !== "AP" },
+  );
 
   const query = type === "AR" ? arQuery : apQuery;
   const data = query.data?.data || [];
@@ -463,8 +481,11 @@ function AgingChart({ type }: { type: "AR" | "AP" }) {
 }
 
 // ─── Cash Flow Chart ───────────────────────────────────────
-function CashFlowChart() {
-  const { data, isLoading } = useGetCashFlowQuery(undefined);
+function CashFlowChart({ dateRange }: { dateRange: DateRange }) {
+  const { data, isLoading } = useGetCashFlowQuery({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   const chartData: any[] = data?.data || [];
   const hasData = chartData.some((d) => d.inflow > 0 || d.outflow > 0);
 
@@ -542,8 +563,11 @@ function CashFlowChart() {
 }
 
 // ─── Order Status ──────────────────────────────────────────
-function OrderStatusChart() {
-  const { data, isLoading } = useGetOrderStatusAnalyticsQuery(undefined);
+function OrderStatusChart({ dateRange }: { dateRange: DateRange }) {
+  const { data, isLoading } = useGetOrderStatusAnalyticsQuery({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   const rawData: Record<string, number>[] = data?.data ?? [];
   const allStatuses = rawData.flatMap((entry) =>
     Object.entries(entry)
@@ -620,15 +644,10 @@ function OrderStatusChart() {
 }
 
 // ─── Order Volume ──────────────────────────────────────────
-function OrderTrendChart() {
-  const [range, setRange] = useState<DateRange>({
-    startDate: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    endDate: format(endOfDay(new Date()), "yyyy-MM-dd"),
-    label: "This Month",
-  });
+function OrderTrendChart({ dateRange }: { dateRange: DateRange }) {
   const { data, isLoading } = useGetOrderTrendQuery({
-    startDate: range.startDate,
-    endDate: range.endDate,
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
   });
   const chartData: any[] = data?.data || [];
   const hasData = chartData.some((d) => d.orders > 0);
@@ -637,7 +656,6 @@ function OrderTrendChart() {
     <DashboardCard
       title="Order Volume"
       subtitle="Historical Placement Frequency"
-      action={<DateFilter onFilterChange={setRange} />}
     >
       {isLoading ? (
         <Skeleton className="h-56 w-full rounded-2xl" />
@@ -696,16 +714,11 @@ function OrderTrendChart() {
 }
 
 // ─── Top Buyers ───────────────────────────────────────────
-function TopBuyersChart() {
-  const [range, setRange] = useState<DateRange>({
-    startDate: format(startOfMonth(new Date()), "yyyy-MM-dd"),
-    endDate: format(endOfDay(new Date()), "yyyy-MM-dd"),
-    label: "This Month",
-  });
+function TopBuyersChart({ dateRange }: { dateRange: DateRange }) {
   const { data, isLoading } = useGetTopBuyersQuery({
     limit: 5,
-    startDate: range.startDate,
-    endDate: range.endDate,
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
   });
   const buyers: { name: string; revenue: number; orders: number }[] =
     data?.data || [];
@@ -716,7 +729,6 @@ function TopBuyersChart() {
     <DashboardCard
       title="Top Buyers"
       subtitle="Ranked by Period Revenue Contribution"
-      action={<DateFilter onFilterChange={setRange} />}
     >
       {isLoading ? (
         <div className="space-y-6">
@@ -769,7 +781,7 @@ function TopBuyersChart() {
 }
 
 // ─── Recent Orders (Refined CustomTable Implementation) ──────
-function RecentOrdersTable() {
+function RecentOrdersTable({ dateRange }: { dateRange: DateRange }) {
   const { data: payload, isLoading: loading } = useGetAllQuery({
     path: "orders",
     page: 1,
@@ -777,6 +789,10 @@ function RecentOrdersTable() {
     sortBy: "createdAt",
     sortOrder: "desc",
     isDeleted: false,
+    filters: {
+      dateFrom: dateRange.startDate,
+      dateTo: dateRange.endDate,
+    },
   });
   const orders = (payload as any)?.data || [];
 
@@ -785,7 +801,7 @@ function RecentOrdersTable() {
       header: "Date",
       className: "px-6",
       accessor: (o: any) => (
-        <div className="text-slate-600 font-bold text-xs">
+        <div className="text-xs text-foreground whitespace-nowrap">
           {o.orderDate ? format(new Date(o.orderDate), "MMM dd, yyyy") : "—"}
         </div>
       ),
@@ -793,7 +809,7 @@ function RecentOrdersTable() {
     {
       header: "Order",
       accessor: (o: any) => (
-        <div className="font-black text-slate-900 underline decoration-indigo-200 underline-offset-4">
+        <div className="font-semibold text-foreground underline decoration-indigo-200 underline-offset-4">
           {o.orderNumber || "—"}
         </div>
       ),
@@ -801,7 +817,7 @@ function RecentOrdersTable() {
     {
       header: "Buyer",
       accessor: (o: any) => (
-        <div className="text-slate-900 font-black text-xs">
+        <div className="text-xs text-foreground whitespace-nowrap">
           {o.buyer?.name || "—"}
         </div>
       ),
@@ -809,16 +825,10 @@ function RecentOrdersTable() {
     {
       header: "Amount",
       accessor: (o: any) => {
-        const item = Array.isArray(o.orderItems)
-          ? o.orderItems[0]
-          : o.orderItems;
-        const amount =
-          item?.fabricItem?.totalAmount ||
-          item?.labelItem?.totalAmount ||
-          item?.cartonItem?.totalAmount ||
-          0;
+        // Now using the proper backend totalAmount
+        const amount = o.totalAmount || 0;
         return (
-          <div className="font-black text-slate-900">
+          <div className="font-semibold text-foreground">
             {takaSign}
             {Number(amount).toLocaleString()}
           </div>
@@ -832,7 +842,7 @@ function RecentOrdersTable() {
         <div className="flex justify-end pr-6">
           <span
             className={cn(
-              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest leading-none",
+              "px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-widest leading-none",
               statusBadge(o.status),
             )}
           >
@@ -874,8 +884,11 @@ function RecentOrdersTable() {
 }
 
 // ─── Quick Terminal & Financial Snapshot ────────────────────
-function CommandCenter() {
-  const { data: finData, isLoading } = useGetFinancialOverviewQuery(undefined);
+function CommandCenter({ dateRange }: { dateRange: DateRange }) {
+  const { data: finData, isLoading } = useGetFinancialOverviewQuery({
+    startDate: dateRange.startDate,
+    endDate: dateRange.endDate,
+  });
   const f = finData?.data;
 
   const actions = [
@@ -934,7 +947,7 @@ function CommandCenter() {
               asChild
               variant="outline"
               className={cn(
-                "h-auto min-h-[3.5rem] justify-start py-3 px-6 font-black text-[10px] uppercase tracking-widest rounded-2xl border-2 transition-all duration-300 shadow-sm",
+                "h-auto min-h-14 justify-start py-3 px-6 font-bold text-[10px] uppercase tracking-widest rounded-2xl border-2 transition-all duration-300 shadow-sm",
                 "bg-white text-slate-700 border-slate-100 whitespace-normal text-left leading-tight",
                 "hover:bg-black hover:text-white hover:border-black hover:-translate-y-0.5",
               )}
@@ -971,7 +984,7 @@ function CommandCenter() {
                 ) : (
                   <span
                     className={cn(
-                      "text-3xl font-black tracking-tighter transition-all group-hover:scale-105 origin-left",
+                      "text-3xl font-bold tracking-tighter transition-all group-hover:scale-105 origin-left",
                       m.color,
                     )}
                   >
@@ -997,9 +1010,15 @@ export default function Dashboard() {
   });
 
   const { data: summaryData, isLoading: loadingSummary } =
-    useGetSummaryAnalyticsQuery(undefined);
+    useGetSummaryAnalyticsQuery({
+      startDate: globalRange.startDate,
+      endDate: globalRange.endDate,
+    });
   const { data: financialData, isLoading: loadingFinancial } =
-    useGetFinancialOverviewQuery(undefined);
+    useGetFinancialOverviewQuery({
+      startDate: globalRange.startDate,
+      endDate: globalRange.endDate,
+    });
   const { data: revTrendData } = useGetRevenueTrendQuery(undefined);
 
   const financial = financialData?.data;
@@ -1064,17 +1083,18 @@ export default function Dashboard() {
                 Command Intelligence Alpha
               </span>
             </div>
-            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
+            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
               Business Overview
             </h1>
-            <p className="text-sm text-slate-400 font-bold italic tracking-wide">
+            <p className="text-sm text-slate-400 font-medium italic tracking-wide">
               Intelligence data for Moon Textile ERP System
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <DateFilter onFilterChange={setGlobalRange} />
             <Button
               asChild
-              className="h-12 px-8 bg-black text-white hover:bg-black/90 font-black rounded-lg gap-3 text-[11px] uppercase tracking-widest transition-all duration-300 shadow-sm hover:-translate-y-0.5 active:translate-y-0"
+              className="h-12 px-8 bg-black text-white hover:bg-black/90 font-bold rounded-lg gap-3 text-[11px] uppercase tracking-widest transition-all duration-300 shadow-sm hover:-translate-y-0.5 active:translate-y-0"
             >
               <Link href="/order-management/orders/add-new-order">
                 <Plus size={18} /> Create New Order
@@ -1084,7 +1104,7 @@ export default function Dashboard() {
         </div>
 
         {/* ── ALERTSBANNER ──────────────────────────────── */}
-        <AlertBanner />
+        <AlertBanner dateRange={globalRange} />
 
         {/* ── KEY PERFORMANCE INDICATORS ────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 3xl:grid-cols-4 gap-8">
@@ -1094,26 +1114,26 @@ export default function Dashboard() {
         </div>
 
         {/* ── FINANCIAL CORE (FULL WIDTH) ───────────────── */}
-        <RevenueTrendChart />
-        <AgingChart type="AR" />
-        <AgingChart type="AP" />
+        <RevenueTrendChart dateRange={globalRange} />
+        <AgingChart type="AR" dateRange={globalRange} />
+        <AgingChart type="AP" dateRange={globalRange} />
 
         {/* ── OPERATIONAL INSIGHTS (PAIRS) ──────────────── */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <CashFlowChart />
-          <OrderStatusChart />
+          <CashFlowChart dateRange={globalRange} />
+          <OrderStatusChart dateRange={globalRange} />
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <OrderTrendChart />
-          <TopBuyersChart />
+          <OrderTrendChart dateRange={globalRange} />
+          <TopBuyersChart dateRange={globalRange} />
         </div>
 
         {/* ── DATA LEDGER (FULL WIDTH) ──────────────────── */}
-        <RecentOrdersTable />
+        <RecentOrdersTable dateRange={globalRange} />
 
         {/* ── BOTTOM TERMINAL (COMMAND CENTER) ──────────── */}
-        <CommandCenter />
+        <CommandCenter dateRange={globalRange} />
       </div>
     </div>
   );
