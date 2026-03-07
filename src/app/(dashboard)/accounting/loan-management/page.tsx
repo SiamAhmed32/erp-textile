@@ -442,14 +442,14 @@ export default function LoanManagementPage() {
       />
 
       {/* Toolbar — Search + Sort (single filter → fits one row) */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-2">
         {/* Left: Search Group */}
         <SearchBar
           placeholder="Search lender entity or liability type..."
           value={searchInput}
           onChange={setSearchInput}
           onSearch={handleSearchSubmit}
-          containerClassName="xl:max-w-md xl:flex-1"
+          // containerClassName="xl:max-w-md xl:flex-1"
           inputClassName="h-10 sm:h-11 text-xs sm:text-sm"
         />
 

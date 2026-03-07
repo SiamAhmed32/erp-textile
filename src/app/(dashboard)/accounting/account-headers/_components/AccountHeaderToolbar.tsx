@@ -186,7 +186,7 @@ export default function AccountHeaderToolbar({
       </div>
 
       {/* Row 2: Type Filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 xl:hidden">
         <Select value={type} onValueChange={setType}>
           <SelectTrigger className="h-10 sm:h-11 text-[10px] sm:text-xs min-w-[120px] flex-1 font-bold bg-white border-slate-200 rounded-lg shadow-sm uppercase tracking-wider">
             <SelectValue placeholder="All Types" />

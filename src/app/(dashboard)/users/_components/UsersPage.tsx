@@ -162,19 +162,21 @@ const UsersPage = () => {
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: Search Group */}
-        <div className="flex w-full items-center gap-2 lg:max-w-md lg:flex-1">
+        {/* <div className="flex w-full items-center gap-2 lg:max-w-md lg:flex-1"> */}
+        <div className="flex items-center gap-2 flex-1">
+
           <SearchBar
             placeholder="Search by username, email, name..."
             value={searchInput}
             onChange={setSearchInput}
             onSearch={handleSearchSubmit}
-            containerClassName="flex-1"
+            //containerClassName="flex-1"
             inputClassName="h-11"
           />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={handleToggleDeleted}
@@ -186,6 +188,7 @@ const UsersPage = () => {
             </span>
           </Button>
         </div>
+        {/* </div> */}
 
         {/* Right: Filters Group */}
         <div className="flex items-center gap-2 w-full lg:w-auto lg:justify-end">

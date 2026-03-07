@@ -67,7 +67,8 @@ export default function BankToolbar({
       </Button>
 
       {/* Mobile row 3 + Tablet/Desktop row: Search + Filter */}
-      <div className="flex items-center gap-2 sm:gap-3 w-full min-w-0 lg:justify-between">
+      {/* <div className="flex flex-col sm:flex-row items-center gap-2 xl:gap-3 w-full min-w-0 xl:justify-between"> */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-2 mb-4">
         <SearchBar
           placeholder="Search banks..."
           value={searchInput}
@@ -77,7 +78,7 @@ export default function BankToolbar({
           inputClassName="h-10 sm:h-11 text-xs sm:text-sm"
         />
 
-        <div className="hidden sm:flex items-center gap-1.5 sm:gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink md:flex-[35] lg:flex-none lg:w-auto lg:ml-3 min-w-0 overflow-hidden">
+        <div className="ml-auto hidden sm:flex items-center gap-1.5 sm:gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink md:flex-[35] lg:flex-none lg:w-auto min-w-0 overflow-hidden">
           <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
           <span className="hidden lg:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
             Sort By

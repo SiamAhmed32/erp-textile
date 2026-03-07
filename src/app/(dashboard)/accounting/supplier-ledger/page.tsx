@@ -215,14 +215,13 @@ export default function SupplierLedgerPage() {
       />
 
       {/* Toolbar — Search + Sort (single filter → fits one row) */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between py-2 mb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between py-2 mb-4">
         {/* Left: Search Group */}
         <SearchBar
           placeholder="Search by name or location..."
           value={searchInput}
           onChange={setSearchInput}
           onSearch={handleSearchSubmit}
-          containerClassName="xl:max-w-md"
           inputClassName="h-10 sm:h-11"
         />
 
