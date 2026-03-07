@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
 import {
   Container,
-  InputField,
   DateRangeFilter,
   PageHeader,
+  SearchBar
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Plus, History, Eye, ArrowUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
-import { useGetAllQuery } from "@/store/services/commonApi";
 import {
   Select,
   SelectContent,
@@ -21,8 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { useGetAllQuery } from "@/store/services/commonApi";
+import { ArrowUpDown, Eye, Plus } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import TransactionEntryModal from "./_components/TransactionEntryModal";
-import { useDebounce } from "use-debounce";
 
 const fmt = (n: number) =>
   "TK " + Math.abs(n).toLocaleString("en-IN", { minimumFractionDigits: 2 });
@@ -144,10 +142,10 @@ export default function CashBookPage() {
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {row.lastTransaction
               ? new Date(row.lastTransaction).toLocaleDateString("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+              })
               : "No activity"}
           </span>
         ),
@@ -201,24 +199,13 @@ export default function CashBookPage() {
         <div className="flex flex-col gap-3 py-2 mb-2">
           {/* DESKTOP VIEW (>1280px): Single row */}
           <div className="hidden xl:flex items-center justify-between gap-3">
-            <div className="flex w-full gap-2 max-w-[400px] flex-1">
-              <div className="relative flex-1">
-                <Search className="h-4 w-4 text-slate-400 absolute top-1/2 -translate-y-1/2 left-3" />
-                <Input
-                  placeholder="Search staff members..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-                  className="h-11 bg-white border-slate-200 rounded-lg shadow-sm pl-9"
-                />
-              </div>
-              <Button
-                onClick={handleSearchSubmit}
-                className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-              >
-                Search
-              </Button>
-            </div>
+            <SearchBar
+              placeholder="Search staff members..."
+              value={searchInput}
+              onChange={setSearchInput}
+              onSearch={handleSearchSubmit}
+              containerClassName="max-w-[350px]"
+            />
             <div className="flex items-center gap-2">
 
               <DateRangeFilter
@@ -273,22 +260,14 @@ export default function CashBookPage() {
           <div className="flex xl:hidden flex-col gap-2 sm:gap-3">
             {/* Row 1: Search + Sort */}
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 flex-1">
-                <Input
-                  placeholder="Search staff members..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-                  className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
-                />
-                <Button
-                  onClick={handleSearchSubmit}
-                  className="h-10 sm:h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-                >
-                  <Search className="h-4 w-4 sm:hidden" />
-                  <span className="hidden sm:inline text-xs">Search</span>
-                </Button>
-              </div>
+              <SearchBar
+                placeholder="Search staff members..."
+                value={searchInput}
+                onChange={setSearchInput}
+                onSearch={handleSearchSubmit}
+                showButton
+                inputClassName="h-10 sm:h-11"
+              />
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
                 <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
                 <span className="hidden sm:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">

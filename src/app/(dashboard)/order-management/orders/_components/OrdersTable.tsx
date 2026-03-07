@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PrimaryText, DateRangeFilter } from "@/components/reusables";
+import { PrimaryText, DateRangeFilter, SearchBar } from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
@@ -375,19 +375,15 @@ const OrdersTable = ({
       <div className="flex flex-col gap-3">
         {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
         <div className="hidden xl:flex items-center gap-2 2xl:gap-3 w-full">
-          <Input
+
+          <SearchBar
             placeholder="Search..."
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-[150px]"
+            onChange={onSearchChange}
+            onSearch={onSearchSubmit}
+            containerClassName="max-w-[350px]"
           />
-          <Button
-            onClick={onSearchSubmit}
-            className="h-11 px-4 2xl:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            Search
-          </Button>
+
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
