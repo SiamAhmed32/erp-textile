@@ -31,19 +31,12 @@ const PageHeader = ({
         className,
       )}
     >
-      <div className="space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <Breadcrumb items={breadcrumbItems} />
 
-        <div
-          className={cn(
-            "gap-4",
-            forceSingleRow
-              ? "flex items-center justify-between"
-              : "flex flex-col sm:flex-row sm:items-center sm:justify-between",
-          )}
-        >
+        <div className="hidden">
           <div className="flex items-center gap-3">
-            {backHref && (
+            {/* {backHref && (
               <Button
                 variant="outline"
                 size="sm"
@@ -55,21 +48,23 @@ const PageHeader = ({
                   Back
                 </Link>
               </Button>
-            )}
+            )} */}
             <div className="flex items-center gap-2">
               {Icon && (
                 <div className="p-1 px-1.5 rounded-md border border-gray-100 bg-gray-50/50">
                   <Icon className="h-5 w-5 text-gray-500" />
                 </div>
               )}
-              <PrimaryHeading className="text-black! tracking-tight text-2xl">
+              {/* <PrimaryHeading className="text-black! tracking-tight text-2xl">
                 {title}
-              </PrimaryHeading>
+              </PrimaryHeading> */}
             </div>
           </div>
-
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
+
+        {actions && (
+          <div className="flex items-center gap-2 lg:ml-auto">{actions}</div>
+        )}
       </div>
     </div>
   );

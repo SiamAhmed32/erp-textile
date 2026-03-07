@@ -5,7 +5,8 @@ const PrimaryHeading = ({ className, children }: any) => {
   return (
     <h1
       className={cn(
-        "text-2xl font-bold tracking-tight text-foreground",
+        // "text-2xl font-bold tracking-tight text-foreground",
+        "text-2xl font-semibold tracking-tight text-foreground",
         className,
       )}
     >

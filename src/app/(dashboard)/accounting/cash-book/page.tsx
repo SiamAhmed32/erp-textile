@@ -4,7 +4,7 @@ import {
   Container,
   DateRangeFilter,
   PageHeader,
-  SearchBar
+  SearchBar,
 } from "@/components/reusables";
 import CustomTable from "@/components/reusables/CustomTable";
 import { Button } from "@/components/ui/button";
@@ -150,10 +150,10 @@ export default function CashBookPage() {
           <span className="text-xs text-muted-foreground whitespace-nowrap">
             {row.lastTransaction
               ? new Date(row.lastTransaction).toLocaleDateString("en-GB", {
-                day: "2-digit",
-                month: "short",
-                year: "numeric",
-              })
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                })
               : "No activity"}
           </span>
         ),
@@ -215,7 +215,6 @@ export default function CashBookPage() {
               containerClassName="max-w-[350px]"
             />
             <div className="flex items-center gap-2">
-
               <DateRangeFilter
                 start={dateRange.start}
                 end={dateRange.end}
@@ -228,7 +227,7 @@ export default function CashBookPage() {
 
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm shrink-0">
                 <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
                   Sort By
                 </span>
                 <Select
@@ -242,7 +241,7 @@ export default function CashBookPage() {
                       });
                   }}
                 >
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-semibold uppercase tracking-wider w-[140px]">
                     <SelectValue placeholder="Newest First" />
                   </SelectTrigger>
                   <SelectContent
@@ -278,7 +277,7 @@ export default function CashBookPage() {
               />
               <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-10 sm:h-11 shadow-sm shrink-0">
                 <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-                <span className="hidden sm:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+                <span className="hidden sm:block text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
                   Sort By
                 </span>
                 <Select
@@ -292,7 +291,7 @@ export default function CashBookPage() {
                       });
                   }}
                 >
-                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-bold uppercase tracking-wider w-[80px] sm:w-[130px]">
+                  <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-semibold uppercase tracking-wider w-[80px] sm:w-[130px]">
                     <SelectValue placeholder="Sort" />
                   </SelectTrigger>
                   <SelectContent
