@@ -13,7 +13,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { PrimaryText, DateRangeFilter } from "@/components/reusables";
+import {
+  PrimaryText,
+  DateRangeFilter,
+  SearchBar,
+} from "@/components/reusables";
 import { Order } from "./types";
 import { formatDate, statusBadgeClass } from "./helpers";
 import OrderActions from "./OrderActions";
@@ -289,66 +293,14 @@ const OrdersTable = ({
         header: "Amount",
         className: "",
         accessor: (row: Order) => {
-          const orderItem = Array.isArray(row.orderItems)
-            ? row.orderItems[0]
-            : row.orderItems;
-          const amount =
-            orderItem?.fabricItem?.totalAmount ||
-            orderItem?.labelItem?.totalAmount ||
-            orderItem?.cartonItem?.totalAmount ||
-            "-";
-          return <div className="px-4 py-2 font-semibold">{amount}</div>;
+          const amount = row.totalAmount ?? "-";
+          return (
+            <div className="px-4 py-2 font-semibold">
+              {amount !== "-" ? `৳${Number(amount).toLocaleString()}` : "-"}
+            </div>
+          );
         },
       },
-      // {
-      //     header: "Qty",
-      //     className: "p-0 text-center border-r",
-      //     accessor: (row: Order) => {
-      //         const items = extractItems(row);
-      //         return (
-      //             <div className="divide-y divide-border text-center">
-      //                 {items.map((item, i) => (
-      //                     <div key={i} className="px-4 py-2">
-      //                         {item.qty}
-      //                     </div>
-      //                 ))}
-      //             </div>
-      //         );
-      //     },
-      // },
-      // {
-      //     header: "Price",
-      //     className: "p-0 text-center border-r",
-      //     accessor: (row: Order) => {
-      //         const items = extractItems(row);
-      //         return (
-      //             <div className="divide-y divide-border text-center">
-      //                 {items.map((item, i) => (
-      //                     <div key={i} className="px-4 py-2">
-      //                         {item.price}
-      //                     </div>
-      //                 ))}
-      //             </div>
-      //         );
-      //     },
-      // },
-      // {
-      //     header: "Amount",
-      //     className: "p-0 text-center border-r",
-      //     accessor: (row: Order) => {
-      //         const items = extractItems(row);
-      //         return (
-      //             <div className="divide-y divide-border text-center font-medium">
-      //                 {items.map((item, i) => (
-      //                     <div key={i} className="px-4 py-2">
-      //                         {item.amount}
-      //                     </div>
-      //                 ))}
-      //             </div>
-      //         );
-      //     },
-      // },
-
       {
         header: "Actions",
         className: "text-left w-40 pr-4",
@@ -375,23 +327,18 @@ const OrdersTable = ({
       <div className="flex flex-col gap-3">
         {/* DESKTOP VIEW (>1280px) - ALL IN ONE LINE */}
         <div className="hidden xl:flex items-center gap-2 2xl:gap-3 w-full">
-          <Input
+          <SearchBar
             placeholder="Search..."
             value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-            className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-[150px]"
+            onChange={onSearchChange}
+            onSearch={onSearchSubmit}
+            containerClassName="max-w-[350px]"
           />
-          <Button
-            onClick={onSearchSubmit}
-            className="h-11 px-4 2xl:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-          >
-            Search
-          </Button>
+
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-3 2xl:px-4 gap-2 rounded-lg font-medium shrink-0",
+              "h-11 px-3 2xl:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}
@@ -493,23 +440,16 @@ const OrdersTable = ({
         <div className="hidden lg:flex xl:hidden flex-col gap-3">
           {/* Row 1: Search, SearchBtn, Trash, Sort */}
           <div className="flex items-center gap-3">
-            <Input
+            <SearchBar
               placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1"
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
             />
-            <Button
-              onClick={onSearchSubmit}
-              className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            >
-              Search
-            </Button>
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0",
+                "h-11 px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}
@@ -612,24 +552,18 @@ const OrdersTable = ({
         <div className="flex lg:hidden flex-col gap-2 sm:gap-3">
           {/* Row 1: Search, SearchBtn, Trash */}
           <div className="flex items-center gap-2">
-            <Input
+            <SearchBar
               placeholder="Search..."
               value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSearchSubmit()}
-              className="h-10 sm:h-11 bg-white border-slate-200 rounded-lg shadow-sm flex-1 min-w-0"
+              onChange={onSearchChange}
+              onSearch={onSearchSubmit}
+              inputClassName="h-10 sm:h-11"
+              buttonClassName="h-10 sm:h-11"
             />
-            <Button
-              onClick={onSearchSubmit}
-              className="h-10 sm:h-11 px-3 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            >
-              <Search className="h-4 w-4 sm:hidden" />
-              <span className="hidden sm:inline text-xs">Search</span>
-            </Button>
             <Button
               variant={showDeleted ? "destructive" : "outline"}
               className={cn(
-                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0",
+                "h-10 sm:h-11 px-3 gap-2 rounded-lg font-medium shrink-0 ml-auto",
                 !showDeleted && "bg-white border-slate-200 text-slate-500",
               )}
               onClick={onToggleDeleted}

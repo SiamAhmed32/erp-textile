@@ -3,9 +3,7 @@
 import React, { useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Search,
   Eye,
   SquarePen,
   Trash2,
@@ -22,11 +20,13 @@ import {
 import CustomTable from "@/components/reusables/CustomTable";
 import { Buyer } from "./types";
 import { cn } from "@/lib/utils";
+import { SearchBar } from "../reusables";
 
 type Props = {
   buyers: Buyer[];
   search: string;
   onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   sort: { field: string; dir: "asc" | "desc" };
   onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onEdit: (buyer: Buyer) => void;
@@ -45,6 +45,7 @@ export function BuyerList({
   buyers,
   search,
   onSearchChange,
+  onSearchSubmit,
   sort,
   onSortChange,
   onEdit,
@@ -54,8 +55,8 @@ export function BuyerList({
   totalPages,
   onPageChange,
   showDeleted = false,
-  onToggleDeleted = () => {},
-  onRestore = () => {},
+  onToggleDeleted = () => { },
+  onRestore = () => { },
   isLoading = false,
 }: Props) {
   const sortOptions = [
@@ -180,32 +181,20 @@ export function BuyerList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        {/* Left: Search Group */}
-        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => {
-                onSearchChange(e.target.value);
-                onPageChange(1);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && onPageChange(1)}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button
-            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            onClick={() => onPageChange(1)}
-          >
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 flex-1">
+          {/* Left: Search Group */}
+          <SearchBar
+            placeholder="Search..."
+            value={search}
+            onChange={onSearchChange}
+            onSearch={onSearchSubmit}
+            inputClassName="h-10 sm:h-11"
+          />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0",
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={onToggleDeleted}

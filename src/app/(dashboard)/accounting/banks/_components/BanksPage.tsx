@@ -4,10 +4,7 @@ import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/reusables";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  useGetAllQuery,
-  usePatchMutation,
-} from "@/store/services/commonApi";
+import { useGetAllQuery, usePatchMutation } from "@/store/services/commonApi";
 import { Bank } from "./types";
 import BankToolbar from "./BankToolbar";
 import BanksTable from "./BanksTable";
@@ -73,7 +70,7 @@ const BanksPage = () => {
     } catch (error: any) {
       notify.error(
         error?.data?.message ||
-          `Could not ${isArchiving ? "archive" : "restore"} the bank account. Please try again.`,
+        `Could not ${isArchiving ? "archive" : "restore"} the bank account. Please try again.`,
       );
     }
   };
@@ -84,7 +81,7 @@ const BanksPage = () => {
       <PageHeader
         title="Bank Management"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+          //  { label: "Accounting", href: "/accounting/overview" },
           { label: "Bank Management" },
         ]}
         actions={

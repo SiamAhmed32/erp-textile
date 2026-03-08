@@ -90,7 +90,7 @@ function RepaymentModal({
     } catch (err: any) {
       notify.error(
         err?.data?.message ||
-          "Could not record the repayment. Please try again.",
+        "Could not record the repayment. Please try again.",
       );
     }
   };
@@ -288,7 +288,7 @@ export default function LoanDetailPage({
       <PageHeader
         title={loan.lenderName || "Stakeholder Detail"}
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Debt Portfolio", href: "/accounting/loan-management" },
           { label: "Details" },
         ]}

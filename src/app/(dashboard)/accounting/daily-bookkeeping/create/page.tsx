@@ -341,8 +341,8 @@ export default function BookkeepingCreatePage() {
     } catch (error: any) {
       notify.error(
         error?.data?.error?.message ||
-          error?.data?.message ||
-          "Could not save the journal entry. Please try again.",
+        error?.data?.message ||
+        "Could not save the journal entry. Please try again.",
       );
     }
   };
@@ -355,7 +355,7 @@ export default function BookkeepingCreatePage() {
       <PageHeader
         title="New Journal Entry"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           {
             label: "Daily Bookkeeping",
             href: "/accounting/daily-bookkeeping",
@@ -536,93 +536,93 @@ export default function BookkeepingCreatePage() {
               {/* Buyer sub-ledger (BUYER_DUE / RECEIPT only) */}
               {(activeCategory === "BUYER_DUE" ||
                 activeCategory === "RECEIPT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Buyer</OptionalLabel>
-                  <Controller
-                    name="buyerId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) =>
-                          field.onChange(val === "__none__" ? undefined : val)
-                        }
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                          <SelectValue placeholder="Select a buyer..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No buyer attached —
-                          </SelectItem>
-                          {buyers.map((b) => (
-                            <SelectItem key={b.id} value={b.id}>
-                              {b.name}
-                              {b.location ? ` (${b.location})` : ""}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Buyer</OptionalLabel>
+                    <Controller
+                      name="buyerId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) =>
+                            field.onChange(val === "__none__" ? undefined : val)
+                          }
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                            <SelectValue placeholder="Select a buyer..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No buyer attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link this entry to a specific buyer for sub-ledger tracking.
-                    Leave blank for general entries.
-                  </HelperText>
-                </div>
-              )}
+                            {buyers.map((b) => (
+                              <SelectItem key={b.id} value={b.id}>
+                                {b.name}
+                                {b.location ? ` (${b.location})` : ""}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific buyer for sub-ledger tracking.
+                      Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* Supplier sub-ledger (SUPPLIER_DUE / PAYMENT only) */}
               {(activeCategory === "SUPPLIER_DUE" ||
                 activeCategory === "PAYMENT") && (
-                <div className="space-y-1.5">
-                  <OptionalLabel>Supplier</OptionalLabel>
-                  <Controller
-                    name="supplierId"
-                    control={control}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={(val) => {
-                          if (val === "__create__") {
-                            setIsSupplierFormOpen(true);
-                            // Reset the inner value so it doesn't stay stuck on "__create__"
-                            field.onChange(field.value);
-                          } else {
-                            field.onChange(
-                              val === "__none__" ? undefined : val,
-                            );
-                          }
-                        }}
-                        value={field.value || "__none__"}
-                      >
-                        <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
-                          <SelectValue placeholder="Select a supplier..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__none__">
-                            — No supplier attached —
-                          </SelectItem>
-                          <SelectItem
-                            value="__create__"
-                            className="text-indigo-600 font-medium"
-                          >
-                            + Create New Supplier
-                          </SelectItem>
-                          {suppliers.map((s) => (
-                            <SelectItem key={s.id} value={s.id}>
-                              {s.name}
+                  <div className="space-y-1.5">
+                    <OptionalLabel>Supplier</OptionalLabel>
+                    <Controller
+                      name="supplierId"
+                      control={control}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={(val) => {
+                            if (val === "__create__") {
+                              setIsSupplierFormOpen(true);
+                              // Reset the inner value so it doesn't stay stuck on "__create__"
+                              field.onChange(field.value);
+                            } else {
+                              field.onChange(
+                                val === "__none__" ? undefined : val,
+                              );
+                            }
+                          }}
+                          value={field.value || "__none__"}
+                        >
+                          <SelectTrigger className="bg-white h-11 rounded-xl border-zinc-200">
+                            <SelectValue placeholder="Select a supplier..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">
+                              — No supplier attached —
                             </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <HelperText>
-                    Link this entry to a specific supplier for sub-ledger
-                    tracking. Leave blank for general entries.
-                  </HelperText>
-                </div>
-              )}
+                            <SelectItem
+                              value="__create__"
+                              className="text-indigo-600 font-medium"
+                            >
+                              + Create New Supplier
+                            </SelectItem>
+                            {suppliers.map((s) => (
+                              <SelectItem key={s.id} value={s.id}>
+                                {s.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <HelperText>
+                      Link this entry to a specific supplier for sub-ledger
+                      tracking. Leave blank for general entries.
+                    </HelperText>
+                  </div>
+                )}
 
               {/* ── Voucher Lines ─────────────────────────────────────── */}
               <div className="space-y-4">
@@ -681,9 +681,9 @@ export default function BookkeepingCreatePage() {
                                   className={cn(
                                     "bg-white h-11 rounded-xl border-zinc-200",
                                     isLineLocked &&
-                                      "opacity-60 cursor-not-allowed bg-zinc-50",
+                                    "opacity-60 cursor-not-allowed bg-zinc-50",
                                     errors.lines?.[index]?.accountHeadId &&
-                                      "border-red-400 focus:ring-red-400",
+                                    "border-red-400 focus:ring-red-400",
                                   )}
                                 >
                                   <SelectValue placeholder="Select account head..." />
@@ -774,7 +774,7 @@ export default function BookkeepingCreatePage() {
                             className={cn(
                               " bg-white h-11 rounded-xl border-zinc-200",
                               errors.lines?.[index]?.amount &&
-                                "border-red-400 focus:ring-red-400",
+                              "border-red-400 focus:ring-red-400",
                             )}
                           />
                           <FieldError

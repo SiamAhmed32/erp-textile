@@ -285,7 +285,7 @@ const AuditTrailPage = () => {
       <PageHeader
         title="System Audit Trail"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+
           { label: "Audit Trail" },
         ]}
         actions={

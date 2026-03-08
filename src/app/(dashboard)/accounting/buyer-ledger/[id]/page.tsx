@@ -157,7 +157,7 @@ export default function BuyerLedgerDetailPage() {
             <PageHeader
                 title={buyer?.name || "Buyer Ledger"}
                 breadcrumbItems={[
-                    { label: "Accounting", href: "/accounting/overview" },
+                    //  { label: "Accounting", href: "/accounting/overview" },
                     { label: "Buyer Ledger", href: "/accounting/buyer-ledger" },
                     { label: buyer?.name || "Detail" },
                 ]}

@@ -89,7 +89,7 @@ export default function CashBookDetailPage({
         title={`${staff.name}'s Ledger`}
         backHref="/accounting/cash-book"
         breadcrumbItems={[
-          { label: "Accounting", href: "/accounting/overview" },
+          //  { label: "Accounting", href: "/accounting/overview" },
           { label: "Cash Book", href: "/accounting/cash-book" },
           { label: staff.name },
         ]}

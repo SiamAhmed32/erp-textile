@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Search, Eye, SquarePen, Trash2, ArrowUpDown } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Eye, SquarePen, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -14,11 +13,13 @@ import {
 import CustomTable from "@/components/reusables/CustomTable";
 import { InvoiceTerms } from "./types";
 import { cn } from "@/lib/utils";
+import { SearchBar } from "../reusables";
 
 type Props = {
   terms: InvoiceTerms[];
   search: string;
   onSearchChange: (value: string) => void;
+  onSearchSubmit: () => void;
   sort: { field: string; dir: "asc" | "desc" };
   onSortChange: (sort: { field: string; dir: "asc" | "desc" }) => void;
   onCreate: () => void;
@@ -35,6 +36,7 @@ export function InvoiceTermsList({
   terms,
   search,
   onSearchChange,
+  onSearchSubmit,
   sort,
   onSortChange,
   onCreate,
@@ -67,9 +69,10 @@ export function InvoiceTermsList({
     },
   ];
 
-  const currentSortValue =
-    sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
+  const currentSortValue = useMemo(() => {
+    return sortOptions.find((opt) => opt.field === sort.field && opt.dir === sort.dir)
       ?.value || "createdAt_desc";
+  }, [sort, sortOptions]);
 
   const columns = useMemo(
     () => [
@@ -145,22 +148,14 @@ export function InvoiceTermsList({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-        {/* Left: Search Group */}
-        <div className="flex w-full gap-2 xl:max-w-md xl:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search..."
-              value={search}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0">
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
-        </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <SearchBar
+          placeholder="Search..."
+          value={search}
+          onChange={onSearchChange}
+          onSearch={onSearchSubmit}
+          inputClassName="h-10 sm:h-11"
+        />
 
         {/* Right: Sort Group */}
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">

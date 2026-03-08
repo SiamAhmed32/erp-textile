@@ -155,7 +155,7 @@ export default function SupplierLedgerDetailPage() {
             <PageHeader
                 title={supplier?.name || "Supplier Ledger"}
                 breadcrumbItems={[
-                    { label: "Accounting", href: "/accounting/overview" },
+
                     { label: "Supplier Ledger", href: "/accounting/supplier-ledger" },
                     { label: supplier?.name || "Detail" },
                 ]}

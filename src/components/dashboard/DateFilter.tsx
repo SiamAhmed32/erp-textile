@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { format, subDays, startOfWeek, startOfMonth, subMonths, startOfYear, subYears, endOfDay, startOfDay } from "date-fns";
+import {
+    format,
+    startOfWeek,
+    startOfMonth,
+    subMonths,
+    startOfYear,
+    subYears,
+    endOfDay,
+    startOfDay,
+    endOfMonth,
+    endOfYear,
+} from "date-fns";
 import { ChevronDown, Calendar } from "lucide-react";
 import {
     DropdownMenu,
@@ -53,7 +64,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
                 const lastMonth = subMonths(new Date(), 1);
                 return {
                     startDate: format(startOfMonth(lastMonth), "yyyy-MM-dd"),
-                    endDate: format(startOfDay(startOfMonth(new Date())), "yyyy-MM-dd")
+                    endDate: format(endOfMonth(lastMonth), "yyyy-MM-dd")
                 };
             }
         },
@@ -68,7 +79,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
                 const lastYear = subYears(new Date(), 1);
                 return {
                     startDate: format(startOfYear(lastYear), "yyyy-MM-dd"),
-                    endDate: format(startOfDay(startOfYear(new Date())), "yyyy-MM-dd")
+                    endDate: format(endOfYear(lastYear), "yyyy-MM-dd")
                 };
             }
         },

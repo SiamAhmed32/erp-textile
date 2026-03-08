@@ -14,8 +14,14 @@ import { usePutMutation } from "@/store/services/commonApi";
 import UsersTable from "./UsersTable";
 import UserCreateModal from "./UserCreateModal";
 import UserEditModal from "./UserEditModal";
-import { PageHeader, CustomModal } from "@/components/reusables";
-import { Plus, ChevronDown, ArrowUpDown, Trash2 } from "lucide-react";
+import { PageHeader, CustomModal, SearchBar } from "@/components/reusables";
+import {
+  Plus,
+  ChevronDown,
+  ArrowUpDown,
+  Trash2,
+  Search as SearchIcon,
+} from "lucide-react";
 import { User } from "./types";
 import { notify } from "@/lib/notifications";
 import {
@@ -156,40 +162,38 @@ const UsersPage = () => {
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: Search Group */}
-        <div className="flex w-full gap-2 lg:max-w-md lg:flex-1">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search by username, email, name..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
-              className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
-            />
-          </div>
-          <Button
-            onClick={handleSearchSubmit}
-            className="h-11 px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg"
-          >
-            Search
-          </Button>
+        {/* <div className="flex w-full items-center gap-2 lg:max-w-md lg:flex-1"> */}
+        <div className="flex items-center gap-2 flex-1">
+
+          <SearchBar
+            placeholder="Search by username, email, name..."
+            value={searchInput}
+            onChange={setSearchInput}
+            onSearch={handleSearchSubmit}
+            //containerClassName="flex-1"
+            inputClassName="h-11"
+          />
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
-              "h-11 px-4 gap-2 rounded-lg font-medium",
+              "h-11 px-3 sm:px-4 gap-2 rounded-lg font-medium shrink-0 ml-auto",
               !showDeleted && "bg-white border-slate-200 text-slate-500",
             )}
             onClick={handleToggleDeleted}
             title={showDeleted ? "Show Active Users" : "Show Deleted Users"}
           >
             <Trash2 className="h-4 w-4" />
-            {showDeleted ? "Exit Trash" : "Trash"}
+            <span className="hidden sm:inline">
+              {showDeleted ? "Exit Trash" : "Trash"}
+            </span>
           </Button>
         </div>
+        {/* </div> */}
 
         {/* Right: Filters Group */}
-        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+        <div className="flex items-center gap-2 w-full lg:w-auto lg:justify-end">
           {/* Role Filter */}
-          <div className="w-full sm:max-w-[160px]">
+          <div className="flex-1 sm:w-[160px] sm:flex-none">
             <Select
               value={roleFilter}
               onValueChange={(val) => {
@@ -214,9 +218,9 @@ const UsersPage = () => {
           </div>
 
           {/* Sort Group */}
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 h-11 shadow-sm">
+          <div className="flex flex-1 items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm sm:flex-none">
             <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">
+            <span className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1 hidden sm:inline">
               Sort By
             </span>
             <Select
@@ -227,7 +231,7 @@ const UsersPage = () => {
                   setSort({ field: opt.field, dir: opt.dir as "asc" | "desc" });
               }}
             >
-              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-xs font-bold uppercase tracking-wider w-[140px]">
+              <SelectTrigger className="border-0 bg-transparent h-auto p-0 focus:ring-0 shadow-none text-[10px] sm:text-xs font-semibold uppercase tracking-wider w-full sm:w-[140px]">
                 <SelectValue placeholder="Newest First" />
               </SelectTrigger>
               <SelectContent
