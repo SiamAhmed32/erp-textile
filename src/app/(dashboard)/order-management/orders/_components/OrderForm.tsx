@@ -804,6 +804,23 @@ const OrderForm = ({
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        Qty (Pcs)
+                      </Label>
+                      <Input
+                        placeholder="Pieces"
+                        type="number"
+                        value={row.quantityPcs || ""}
+                        onChange={(e) =>
+                          onNestedChange(
+                            `orderItems.labelItem.labelItemData.${index}.quantityPcs`,
+                            e.target.value,
+                          )
+                        }
+                        className="h-10 border-slate-200"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                         Qty (Dzn)
                       </Label>
                       <Input

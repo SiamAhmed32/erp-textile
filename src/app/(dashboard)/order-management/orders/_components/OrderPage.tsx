@@ -7,6 +7,7 @@ import {
   useGetAllQuery,
   useLazyGetByIdQuery,
   usePatchMutation,
+  usePutMutation,
 } from "@/store/services/commonApi";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,7 +35,7 @@ const OrderPage = () => {
   const [deletingOrder, setDeletingOrder] = useState<Order | null>(null);
   const [patchItem] = usePatchMutation();
   const [getOrderById] = useLazyGetByIdQuery();
-
+  const [putItem] = usePutMutation();
   useEffect(() => {
     const handle = setTimeout(() => {
       setDebouncedSearch(search);
@@ -157,9 +158,10 @@ const OrderPage = () => {
 
   const handleRestore = useCallback(
     async (row: Order) => {
+      console.log({ row });
       try {
-        await patchItem({
-          path: `orders/${row.id}`,
+        await putItem({
+          path: `orders/${row.id}/soft-delete`,
           body: { isDeleted: false },
           invalidate: ["orders"],
         }).unwrap();
