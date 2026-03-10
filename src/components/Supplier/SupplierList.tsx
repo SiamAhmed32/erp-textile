@@ -202,13 +202,10 @@ export function SupplierList({
               className="h-11 bg-white border-slate-200 rounded-lg shadow-sm"
             />
           </div>
-          <Button
-            className="h-11 px-3 sm:px-6 bg-black text-white hover:bg-black/90 font-bold rounded-lg shrink-0"
-            onClick={() => onPageChange(1)}
-          >
-            <Search className="h-5 w-5 sm:hidden" />
-            <span className="hidden sm:inline">Search</span>
-          </Button>
+        </div>
+
+        {/* Right: Filters Group */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
           <Button
             variant={showDeleted ? "destructive" : "outline"}
             className={cn(
@@ -225,10 +222,6 @@ export function SupplierList({
               {showDeleted ? "Exit Trash" : "Trash"}
             </span>
           </Button>
-        </div>
-
-        {/* Right: Filters Group */}
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 xl:justify-end">
           <div className="col-span-2 sm:col-auto flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2 sm:px-3 h-11 shadow-sm shrink-0">
             <ArrowUpDown className="h-4 w-4 text-slate-400 shrink-0" />
             <span className="hidden xs:block text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap border-r pr-2 mr-1">

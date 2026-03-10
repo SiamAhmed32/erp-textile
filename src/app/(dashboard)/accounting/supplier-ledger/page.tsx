@@ -127,24 +127,24 @@ export default function SupplierLedgerPage() {
           </div>
         ),
       },
-      {
-        header: "Due Balance",
-        accessor: (row: any) => (
-          <div
-            className={cn(
-              " font-bold text-sm",
-              (Number(row.balance) || 0) > 0
-                ? "text-rose-600"
-                : "text-emerald-600",
-            )}
-          >
-            ৳{" "}
-            {(Number(row.balance) || 0).toLocaleString("en-IN", {
-              minimumFractionDigits: 2,
-            })}
-          </div>
-        ),
-      },
+      // {
+      //   header: "Due Balance",
+      //   accessor: (row: any) => (
+      //     <div
+      //       className={cn(
+      //         " font-bold text-sm",
+      //         (Number(row.balance) || 0) > 0
+      //           ? "text-rose-600"
+      //           : "text-emerald-600",
+      //       )}
+      //     >
+      //       ৳{" "}
+      //       {(Number(row.balance) || 0).toLocaleString("en-IN", {
+      //         minimumFractionDigits: 2,
+      //       })}
+      //     </div>
+      //   ),
+      // },
       {
         header: "Ledger",
         className: "text-right pr-4",
@@ -195,10 +195,7 @@ export default function SupplierLedgerPage() {
     <Container className="pb-10">
       <PageHeader
         title="Supplier Ledger Summary"
-        breadcrumbItems={[
-
-          { label: "Supplier Ledger" },
-        ]}
+        breadcrumbItems={[{ label: "Supplier Ledger" }]}
         icon={Users}
         actions={
           <Button
