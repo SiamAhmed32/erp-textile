@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useGetAllQuery } from "@/store/services/commonApi";
 import {
   ArrowUpDown,
@@ -127,24 +126,6 @@ export default function SupplierLedgerPage() {
           </div>
         ),
       },
-      // {
-      //   header: "Due Balance",
-      //   accessor: (row: any) => (
-      //     <div
-      //       className={cn(
-      //         " font-bold text-sm",
-      //         (Number(row.balance) || 0) > 0
-      //           ? "text-rose-600"
-      //           : "text-emerald-600",
-      //       )}
-      //     >
-      //       ৳{" "}
-      //       {(Number(row.balance) || 0).toLocaleString("en-IN", {
-      //         minimumFractionDigits: 2,
-      //       })}
-      //     </div>
-      //   ),
-      // },
       {
         header: "Ledger",
         className: "text-right pr-4",
